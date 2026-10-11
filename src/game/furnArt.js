@@ -166,7 +166,26 @@ function stove(g, W, H) {
   g.fillStyle = "rgba(255,255,255,.3)"; rr(g, 4, 4, W - 8, 1.4, 1); g.fill();
 }
 
+// ---- 나무 옷장(v3): 문 두 짝 + 손잡이 + 위 장식, 세로로 돌리면 문 한 짝씩 위아래 ----
+function wardrobe(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 2, 2.5);
+  rr(g, 2, 1, W - 4, H - 4, 3); fillStroke(g, woodGrad(g, 0, 0, 0, H, WOOD.mid, WOOD.lo));
+  rr(g, 1, 0.5, W - 2, 4, 2); fillStroke(g, woodGrad(g, 0, 0, 0, 4));                       // 위 장식판
+  const wide = W >= H, n = 2;
+  for (let i = 0; i < n; i++) {
+    const x = wide ? 4 + i * (W - 8) / n : 4, y = wide ? 6 : 6 + i * (H - 11) / n;
+    const w = wide ? (W - 8) / n - 1.5 : W - 8, h = wide ? H - 11 : (H - 11) / n - 1.5;
+    rr(g, x, y, w, h, 2); fillStroke(g, woodGrad(g, x, 0, x + w, 0, WOOD.hi, WOOD.mid), WOOD.line, 0.9);
+    g.strokeStyle = "rgba(110,67,37,.35)"; g.lineWidth = 0.7; rr(g, x + 2.5, y + 2.5, w - 5, h - 5, 1.5); g.stroke();
+    g.fillStyle = "#f2cf5b";                                                                    // 손잡이(가운데 쪽)
+    const hx = wide ? (i === 0 ? x + w - 3 : x + 3) : x + w / 2, hy = wide ? y + h / 2 : (i === 0 ? y + h - 3 : y + 3);
+    g.beginPath(); g.arc(hx, hy, 1.4, 0, 7); g.fill();
+  }
+  g.fillStyle = "rgba(255,255,255,.3)"; rr(g, 4, 1.5, W - 8, 1.2, 1); g.fill();
+}
+
 const DRAW = {
+  wardrobe_wood: (g, W, H) => wardrobe(g, W, H),
   stove_wood: (g, W, H) => stove(g, W, H),
   table_wood: (g, W, H) => table(g, W, H),
   chair_wood: (g, W, H, rot) => chair(g, rot),

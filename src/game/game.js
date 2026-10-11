@@ -117,6 +117,17 @@ export class Game {
     }
     return null;
   }
+  // 요리할 수 있는 곳: 내 집 조리대 앞(둘레 1칸) 또는 불 붙은 캠프파이어 가까이 → "stove" | "camp" | null
+  cookSpot() {
+    if (this.houseL && this.houseL.move) return null;
+    if (this.mode === "house") {
+      if (this.houseMid !== state.mid) return null;
+      const mx = Math.floor(this.me.x), my = Math.floor(this.me.y);
+      for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (this.furnAt(mx + dx, my + dy) === "stove_wood") return "stove";
+      return null;
+    }
+    return this.camp && this.camp.lit() && this.camp.near(this.me.x, this.me.y, 2.4) ? "camp" : null;
+  }
   move(dx, dy) {
     const m = this.me, r = 0.28;
     const ok = (x, y) => !this.blocked(x - r, y) && !this.blocked(x + r, y) && !this.blocked(x - r, y + 0.2) && !this.blocked(x + r, y + 0.2);
@@ -133,7 +144,8 @@ export class Game {
     if (this.mode === "house") {
       const room = this.data.rooms[this.room], f = this.front(), tx = Math.floor(m.x), ty = Math.floor(m.y);
       if (this.room === "living" && this.houseMid === state.mid && room.blocked.some(([x, y]) => x === f.x && y === f.y)) return { k: "bench", label: "만들기" };
-      if (this.houseMid === state.mid && this.furnAt(f.x, f.y) === "stove_wood") return { k: "stove", label: "요리" };
+      if (this.houseMid === state.mid && this.furnAt(f.x, f.y) === "stove_wood") return { k: "stove", label: "요리하기" };
+      if (this.houseMid === state.mid && this.furnAt(f.x, f.y) === "wardrobe_wood") return { k: "wardrobe", label: "옷 갈아입기" };
       if (room.door.some(([x, y]) => x === tx && y === ty)) return { k: "exit", label: this.room === "living" ? "밖으로" : "거실로" };
       const link = (room.links || []).find(l => l.x === tx && l.y === ty);
       if (link) return { k: "link", to: link.to, label: this.data.rooms[link.to].name };
@@ -195,6 +207,7 @@ export class Game {
     if (t.k === "bench") return this.ui.openCraft();
     if (t.k === "camp") return this.ui.openCamp();
     if (t.k === "stove") return this.ui.openCook("stove");
+    if (t.k === "wardrobe") return this.ui.openCloset(false);
     if (t.k === "bug") return this.bugs.catchIt(t.o);
     if (t.k === "fish") { this.fishing = { st: "wait", water: t.water, bx: t.fx + 0.5, by: t.fy + 0.5, until: performance.now() + 2000 + Math.random() * 4500 }; return; }
     this.busy = true;
@@ -349,6 +362,8 @@ export class Game {
     this.drawJoy();
     const t = this.fishing ? { label: this.fishing.st === "bite" ? "지금!" : "기다려요" } : this.target();
     this.ui.setAction(t ? t.label : null);
+    // 행동 버튼이 이미 '요리하기'(조리대 앞)면 따로 띄우지 않음
+    this.ui.setCook(this.camp.roast || this.fishing || this.deco || (t && t.k === "stove") ? null : this.cookSpot());
     requestAnimationFrame(t2 => this.loop(t2));
   }
 
@@ -379,7 +394,7 @@ export class Game {
     g.fillStyle = "rgba(255,253,246,.92)"; g.strokeStyle = "#2f5d3a"; g.lineWidth = 3;
     g.beginPath(); g.roundRect(M.x - 3, M.y - 3, M.w + 6, M.h + 6, 12); g.fill(); g.stroke();
     const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
-    drawMap(g, this.mapBase, this.world, M.x, M.y, M.w, M.h, marks, { x: this.me.x, y: this.me.y }, state.mid, m => familyOf(m).color, nameOf, false);
+    drawMap(g, this.mapBase, this.world, M.x, M.y, M.w, M.h, marks, { x: this.me.x, y: this.me.y }, state.mid, m => familyOf(m).color, nameOf, false, { camp: this.data.campfire });
   }
   drawBigMap(cv) {
     const g = cv.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
@@ -388,7 +403,7 @@ export class Game {
     const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
     let me = { x: this.me.x, y: this.me.y };
     if (this.mode === "house") { const hs = this.world.houseOf(this.houseMid); me = { x: hs.door.x + 0.5, y: hs.door.y + 0.5 }; }
-    drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true);
+    drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true, { camp: this.data.campfire, labels: this.data.help.mapLabels });
   }
 
   drawIsland(now, dt = 0) {

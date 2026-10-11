@@ -48,7 +48,8 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 .emo{width:44px;height:44px;border-radius:50%;border:3px solid var(--leaf);background:var(--panel);font-size:22px;padding:0;box-shadow:0 3px 0 rgba(0,0,0,.18);cursor:pointer}
 .emo:active{transform:translateY(2px)}
 #sGame #emotes{pointer-events:auto}
-#pMap{width:min(94vw,900px);height:min(88vh,600px);display:flex;flex-direction:column}
+#pMap{width:min(96vw,900px);height:min(94vh,620px);display:flex;flex-direction:column;padding:10px}
+#pMap h2{font-size:18px}
 #bigMap{flex:1;width:100%;min-height:0;border-radius:12px;display:block}
 #pCloset{width:min(94vw,640px)}
 .closet{display:flex;gap:14px;flex-wrap:wrap}
@@ -87,6 +88,11 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 .admin-sec{border-top:2px dashed var(--line);padding-top:10px;margin-top:10px}
 #rotate{position:fixed;inset:0;background:var(--leaf);color:#fff;display:none;place-items:center;text-align:center;font-family:var(--f-display);font-size:24px;z-index:50;padding:20px}
 @media (orientation:portrait) and (max-width:900px){ body.playing #rotate{display:grid} }
+#cookBtn{position:fixed;right:calc(24px + env(safe-area-inset-right,0px));bottom:calc(136px + env(safe-area-inset-bottom,0px));font-size:18px;padding:8px 16px;pointer-events:auto;box-shadow:0 4px 0 rgba(0,0,0,.2);z-index:5}
+#pHelp{width:min(94vw,640px)}
+.help-item{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;background:#fff}
+.help-item b{font-family:var(--f-display);font-weight:400;font-size:16px;display:block;margin-bottom:2px}
+.help-item .src{color:var(--muted);font-size:12px}
 #bSneak[aria-pressed="true"]{background:#eef7e6;border-color:var(--leaf)}
 #moveBar{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);background:var(--panel);border:3px solid var(--leaf);border-radius:14px;padding:6px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:70vw;font-size:14px;pointer-events:auto;z-index:15}
 #moveBar b{color:#c0392b;font-weight:400;font-family:var(--f-display)}
@@ -158,6 +164,7 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
       <button class="btn" id="bBag" type="button">가방</button>
       <button class="btn" id="bDex" type="button">도감</button>
       <button class="btn" id="bCloset" type="button">옷장</button>
+      <button class="btn" id="bHelp" type="button">도움말</button>
       <button class="btn ghost" id="bDeco" type="button" hidden>꾸미기</button>
       <button class="btn ghost" id="bHouse" type="button" hidden>우리 집 밖</button>
       <button class="btn ghost" id="bSneak" type="button" hidden aria-pressed="false">살금살금</button>
@@ -165,6 +172,7 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
     </div>
   </div>
   <button class="btn off" id="act" type="button" hidden>행동</button>
+  <button class="btn" id="cookBtn" type="button" hidden>🍳 요리하기</button>
   <div id="emotes" hidden><button class="emo" type="button" data-e="wave" aria-label="손 흔들기">👋</button><button class="emo" type="button" data-e="heart" aria-label="하트">💗</button><button class="emo" type="button" data-e="dance" aria-label="춤">💃</button></div>
   <div id="moveBar" hidden><span>걸어가서 집 지을 곳에 서요 (내가 선 곳이 문 앞)</span><b id="moveWhy"></b><button class="btn ghost" id="moveCancel" type="button">그만두기</button></div>
   <div id="net" hidden>인터넷 연결을 기다리는 중…</div>
@@ -202,6 +210,12 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   <h2>🏠 우리 집 밖</h2><p class="sub">지붕·벽·문·창문·우편함·울타리를 골라요. 다른 가족 폰에도 똑같이 보여요.</p>
   <div id="houseSet"><canvas id="housePrev" width="400" height="372"></canvas><div id="houseOpts"></div></div>
   <div class="row"><button class="btn ghost" type="button" id="houseMove">집 옮기기</button><button class="btn ghost" type="button" data-close>그만두기</button><button class="btn" type="button" id="houseSave">저장</button></div>
+</div>
+<div class="panel" id="pHelp" hidden>
+  <h2>📖 도움말</h2>
+  <div class="tabs" id="helpTabs"><button type="button" data-t="cook" aria-pressed="true">🍳 요리법</button><button type="button" data-t="craft" aria-pressed="false">🔨 만들기</button><button type="button" data-t="howto" aria-pressed="false">💡 하는 방법</button></div>
+  <div id="helpBody"></div>
+  <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
 </div>
 <div class="panel" id="pFish" hidden><div id="fishIcon"></div><h2 id="fishName"></h2><p class="sub" id="fishInfo"></p></div>
 <div class="panel" id="pMap" hidden><h2>섬 지도</h2><canvas id="bigMap"></canvas><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>

@@ -34,3 +34,5 @@ export function applyRoast(player, day, result, reqId) {
     roast: { ...player.roast, [day]: { ...player.roast?.[day], [n]: result } },
   }, { [`food_marsh_${result}`]: 1 });
 }
+// 불꽃놀이: 불 옆에 이만큼 모이면(대표님 결정 2026-10-12: 3명 이상)
+export const FIREWORKS_MIN = 3;

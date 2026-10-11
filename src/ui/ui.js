@@ -118,7 +118,7 @@ export class UI {
     this.bindBagActions();
     $("pBag").hidden = false;
   }
-  furnIcon(t) { return { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚", stove_wood: "🍳" }[t] || "📦"; }
+  furnIcon(t) { return { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚", stove_wood: "🍳", wardrobe_wood: "🚪" }[t] || "📦"; }
 
   // ---- 도감 ----
   openDex() {

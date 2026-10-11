@@ -68,5 +68,13 @@
       "branch": 8,
       "stone": 3
     }
+  },
+  "wardrobe_wood": {
+    "type": "wardrobe_wood",
+    "items": {
+      "branch": 10,
+      "weed": 4,
+      "flower_white": 1
+    }
   }
 }

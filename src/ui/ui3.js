@@ -29,6 +29,9 @@ export function installV3(UI) {
     $("houseMove").onclick = () => this.startHouseMove();
     $("moveCancel").onclick = () => { this.game.houseL.stopMove(); $("moveBar").hidden = true; };
     document.querySelectorAll("#dexTabs button").forEach(b => b.onclick = () => { this._dexTab = b.dataset.t; this.openDex(); });
+    $("cookBtn").addEventListener("pointerdown", e => { e.preventDefault(); if (this._cookSpot) this.openCook(this._cookSpot); });
+    $("bHelp").onclick = () => this.openHelp(this._helpTab || "cook");
+    document.querySelectorAll("#helpTabs button").forEach(b => b.onclick = () => this.openHelp(b.dataset.t));
     onState(w => {
       if (w === "camp" && !$("pCamp").hidden) this.renderCamp();
       if (w === "player") { if (!$("pCook").hidden) this.openCook(this._cookAt); this.updateV3Buttons(); }
@@ -53,7 +56,7 @@ export function installV3(UI) {
     const c = this.game.camp, open = c.open(), lit = c.lit(), fam = c.atFire();
     $("campStat").textContent = !open ? "불이 꺼져 있어요. 매일 저녁 7시~10시에 모여요 🌙"
       : lit ? `불이 활활! 지금 ${fam.length}명 모였어요 ${fam.map(m => nameOf(m)).join("·")}` : "아직 불이 없어요. 나뭇가지로 불을 붙여요";
-    $("campSub").textContent = lit ? `오늘 마시멜로 ${c.roastsLeft()}번 남음 · 6명이 다 모이면 불꽃놀이!` : "";
+    $("campSub").textContent = lit ? `오늘 마시멜로 ${c.roastsLeft()}번 남음 · 3명 이상 모이면 불꽃놀이!` : "";
     $("campLight").hidden = !open || lit;
     for (const id of ["campRoast", "campSing", "campCook"]) $(id).hidden = !lit;
     $("campMute").textContent = SP.isMuted() ? "🔇 소리 켜기" : "🔈 소리 끄기";
@@ -71,14 +74,22 @@ export function installV3(UI) {
         const date = new Date(d.day * 86400000);   // KST 일 번호 → 날짜(UTC 기준으로 그 날)
         const who = Object.keys(d.attendance || {}).sort();
         const roasts = Object.entries(d.roasts || {}).map(([m, r]) => `${esc(nameOf(m))} ${Object.values(r).map(x => ROAST_NAME[x] || x).join("·")}`).join(" / ");
-        return `<div class="mem"><b>${date.getUTCFullYear()}년 ${date.getUTCMonth() + 1}월 ${date.getUTCDate()}일</b>${who.length >= FAMILY.length ? " 🎆 모두 모였어요!" : ""}<div>모인 가족: ${who.map(m => esc(nameOf(m))).join(", ") || "-"}</div>${roasts ? `<div class="note">🍡 ${roasts}</div>` : ""}</div>`;
+        return `<div class="mem"><b>${date.getUTCFullYear()}년 ${date.getUTCMonth() + 1}월 ${date.getUTCDate()}일</b>${who.length >= FAMILY.length ? " 🎆 모두 모였어요!" : who.length >= 3 ? " 🎆 불꽃놀이!" : ""}<div>모인 가족: ${who.map(m => esc(nameOf(m))).join(", ") || "-"}</div>${roasts ? `<div class="note">🍡 ${roasts}</div>` : ""}</div>`;
       }).join("") : `<p class="note">아직 기록이 없어요. 저녁에 캠프파이어에 모여 봐요!</p>`;
     } catch { $("memList").innerHTML = `<p class="note">불러오지 못했어요. 연결을 확인해 주세요.</p>`; }
+  };
+
+  // 요리할 수 있는 곳 앞이면 '요리하기' 버튼 보이기 (spot: "stove" | "camp" | null)
+  proto.setCook = function (spot) {
+    this._cookSpot = spot;
+    const hide = !spot || this.modalOpen();
+    if ($("cookBtn").hidden !== hide) $("cookBtn").hidden = hide;
   };
 
   // ---- 요리 ---- at: "camp" | "stove"
   proto.openCook = function (at) {
     this._cookAt = at;
+    $("cookSub").textContent = (at === "camp" ? "🔥 캠프파이어에서 요리해요." : "🍳 조리대에서 요리해요.") + " 재료 얻는 곳은 '도움말 → 요리법'에 있어요. 만든 요리는 가방에서 '먹기'!";
     const inv = state.player ? state.player.inv : {}, items = this.data.items, recipes = this.data.cooking.recipes;
     const have = k => k.startsWith("kind:") ? Object.entries(inv).filter(([id, n]) => n > 0 && items[id] && items[id].kind === k.slice(5)).reduce((a, [, n]) => a + n, 0) : (inv[k] || 0);
     const label = k => k === "kind:fish" ? "물고기(아무거나)" : (items[k] || {}).name || k;
@@ -178,5 +189,29 @@ export function installV3(UI) {
   proto.houseMoveDone = function (r) {
     if (r.ok) { $("moveBar").hidden = true; this.toast("이사 완료! 🏠✨\n가족 모두의 섬에 새 자리로 보여요", 2600); }
     else this.toast(r.reason || "여기엔 지을 수 없어요");
+  };
+
+  // ---- 도움말: 요리법(재료·얻는 곳) / 만들기(작업대) / 하는 방법 ----
+  proto.openHelp = function (tab) {
+    this._helpTab = tab;
+    document.querySelectorAll("#helpTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === tab));
+    const items = this.data.items, help = this.data.help, inv = (state.player && state.player.inv) || {};
+    const name = k => k === "kind:fish" ? "물고기(아무거나)" : (items[k] || {}).name || k;
+    const have = k => k.startsWith("kind:") ? Object.entries(inv).filter(([id, n]) => n > 0 && items[id] && items[id].kind === k.slice(5)).reduce((a, [, n]) => a + n, 0) : (inv[k] || 0);
+    const need = list => Object.entries(list).map(([k, n]) => `${esc(name(k))} ${n}개 <span class="src">(${esc(help.sources[k] || "")}${have(k) ? ` · 가진 것 ${have(k)}` : ""})</span>`).join("<br>");
+    let html = "";
+    if (tab === "cook") {
+      html = `<p class="sub">요리는 <b>불 붙은 캠프파이어</b>(저녁 7~10시) 앞이나 <b>집 조리대</b> 앞에서 '🍳 요리하기'를 눌러 만들어요. 조리대는 작업대에서 만들어요.</p>`
+        + Object.values(this.data.cooking.recipes).map(r => { const o = items[r.out] || { icon: "🍽️", name: r.out };
+          return `<div class="help-item"><b>${o.icon} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
+    } else if (tab === "craft") {
+      html = `<p class="sub">거실의 작업대(망치) 앞에서 '만들기'를 눌러요.</p>`
+        + Object.values(this.data.recipes).map(r => { const o = this.craftOut(r);
+          return `<div class="help-item"><b>${o.icon} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
+    } else {
+      html = help.howto.map(([t, d]) => `<div class="help-item"><b>${esc(t)}</b>${esc(d)}</div>`).join("");
+    }
+    $("helpBody").innerHTML = html;
+    $("pHelp").hidden = false; $("cookBtn").hidden = true;
   };
 }

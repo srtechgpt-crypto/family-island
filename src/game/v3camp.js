@@ -1,6 +1,6 @@
-// v3 캠프파이어: 광장 불(저녁 7~10시), 모인 가족 수만큼 큰 불, 마시멜로 굽기, 노래 함께, 6명이면 불꽃놀이
+// v3 캠프파이어: 광장 불(저녁 7~10시), 모인 가족 수만큼 큰 불, 마시멜로 굽기, 노래 함께, 3명 이상이면 불꽃놀이
 import { CampFx } from "./campArt.js";
-import { isCampOpen, fireScale, familyAtFire, roastResult, ROAST_MS, kstDay } from "../domain/campfire.js";
+import { isCampOpen, fireScale, familyAtFire, roastResult, ROAST_MS, kstDay, FIREWORKS_MIN } from "../domain/campfire.js";
 import { songDurationMs } from "../domain/songTiming.js";
 import { serverNow } from "../services/fb.js";
 import * as CS from "../services/campfireStore.js";
@@ -49,7 +49,7 @@ export class CampLayer {
     else if (SP.songPlayingId() && (!s || !near)) SP.stopSong();
     if (lit && near) {
       const fam = this.atFire();
-      if (fam.length >= FAMILY.length && !(state.camp && state.camp.fireworks)) CS.fireworks();
+      if (fam.length >= FIREWORKS_MIN && !(state.camp && state.camp.fireworks)) CS.fireworks();
     }
     const f = state.camp && state.camp.fireworks;
     if (f && near && this.now() - (f.at || 0) < 60000) this.fx.fireworks(f.id, 0, 0, this.game.W, this.game.H, FAMILY.map(m => m.color));
