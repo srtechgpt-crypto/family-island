@@ -56,7 +56,8 @@ export class Game {
   fitTS() {
     if (this.mode === "house" && this.data.rooms[this.room]) {
       const r = this.data.rooms[this.room];
-      this.TS = Math.max(28, Math.floor(Math.min((this.H - 70) / (r.h + 0.6), (this.W - 260) / r.w)));
+      const free = this.deco ? this.W - this.decoReserve() - 16 : this.W - 260;   // 꾸미기 중엔 오른쪽 꾸미기 창을 피해서
+      this.TS = Math.max(24, Math.floor(Math.min((this.H - 70) / (r.h + 0.6), free / r.w)));
     } else this.TS = this.islandTS;
   }
 
@@ -264,11 +265,13 @@ export class Game {
     this.me.x = this.islandPos.x; this.me.y = this.islandPos.y + 0.4; this.me.dir = 0;
     W.enterPlace("island"); EM.enterEmotePlace("island"); this.ui.inHouse(false, null, true);
   }
-  houseOrigin() { const room = this.data.rooms[this.room]; return { ox: (this.W - room.w * this.TS) / 2, oy: (this.H - room.h * this.TS) / 2 + this.TS * 0.3 }; }
+  // 꾸미기 창(index.html #pDeco: 너비 min(46vw,340px), 오른쪽 12px)이 차지하는 폭
+  decoReserve() { return Math.min(this.W * 0.46, 340) + 24; }
+  houseOrigin() { const room = this.data.rooms[this.room], left = this.deco ? this.W - this.decoReserve() : this.W; return { ox: (left - room.w * this.TS) / 2, oy: (this.H - room.h * this.TS) / 2 + this.TS * 0.3 }; }
 
   // 꾸미기: 고른 가구를 바닥에 놓기 / 놓인 가구 누르기 → 선택
-  startDeco() { if (this.mode === "house" && this.houseMid === state.mid) { this.deco = { sel: null }; return true; } return false; }
-  stopDeco() { this.deco = null; }
+  startDeco() { if (this.mode === "house" && this.houseMid === state.mid) { this.deco = { sel: null }; this.fitTS(); return true; } return false; }
+  stopDeco() { this.deco = null; this.fitTS(); }
   decoSelect(furnId) { if (this.deco) this.deco.sel = furnId; }
   async decoTap(sx, sy) {
     const { ox, oy } = this.houseOrigin(), tx = Math.floor((sx - ox) / this.TS), ty = Math.floor((sy - oy) / this.TS);
