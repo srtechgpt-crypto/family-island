@@ -73,6 +73,7 @@ async function enter(mid) {
   const game = new Game($("game"), world, data, ui);
   ui.attach(game);
   if (EMU) window.__dbg = { game, state, world, data };   // 개발 시험용
+  setTimeout(() => ui.toast("왼쪽을 누르고 밀면 걸어요\n오른쪽 큰 버튼으로 줍기·낚시·문 열기", 4000), 800);
   if (state.isAdmin) {
     let last = 0; try { last = +localStorage.getItem("familyIsland.lastBackup") || 0; } catch { /* 무시 */ }
     if (Date.now() - last > 7 * 24 * 3600 * 1000) setTimeout(() => ui.toast("일주일이 지났어요. 가족 관리에서 백업을 받아 주세요", 3500), 2500);

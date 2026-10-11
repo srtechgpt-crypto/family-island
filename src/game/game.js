@@ -392,7 +392,15 @@ export class Game {
   }
 
   drawJoy() {
-    if (!this.joy) return;
+    if (!this.joy) {
+      // 조작 안내: 왼쪽 아래에 흐린 조이스틱 자리
+      if (this.deco || this.fishing) return;
+      const g = this.g, x = 90, y = this.H - 90;
+      g.fillStyle = "rgba(255,255,255,.18)"; g.beginPath(); g.arc(x, y, 46, 0, 7); g.fill();
+      g.fillStyle = "rgba(255,255,255,.35)"; g.beginPath(); g.arc(x, y, 20, 0, 7); g.fill();
+      g.font = "14px Jua, sans-serif"; g.textAlign = "center"; g.fillStyle = "rgba(255,255,255,.9)"; g.fillText("누르고 밀면 걸어요", x, y - 56);
+      return;
+    }
     const g = this.g, j = this.joy;
     g.fillStyle = "rgba(255,255,255,.25)"; g.beginPath(); g.arc(j.ox, j.oy, 46, 0, 7); g.fill();
     const d = Math.min(46, Math.hypot(j.dx, j.dy)), a = Math.atan2(j.dy, j.dx);

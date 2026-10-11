@@ -20,7 +20,8 @@ html,body{height:100%;margin:0;overflow:hidden;background:var(--sea);color:var(-
 [hidden]{display:none!important}
 #game{position:fixed;inset:0;width:100%;height:100%;display:block}
 .screen{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:linear-gradient(#7fcbe0,#4aa9c9)}
-#sGame{background:none;padding:0;display:block}
+#sGame{background:none;padding:0;display:block;pointer-events:none}
+#sGame #act,#sGame #net{pointer-events:auto}
 .card{width:min(94vw,460px);max-height:92%;overflow:auto;background:var(--panel);border:4px solid var(--leaf);border-radius:22px;padding:20px;box-shadow:0 6px 0 rgba(0,0,0,.25);user-select:text}
 .card h1{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0 0 6px;color:var(--leaf)}
 .card h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0 0 6px}
@@ -45,7 +46,7 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 #act.off{opacity:.45}
 #net{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 54px);transform:translateX(-50%);background:#d9574a;color:#fff;font-family:var(--f-display);padding:4px 14px;border-radius:12px}
 #busy{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:rgba(36,53,42,.75);color:#fff;padding:4px 12px;border-radius:10px;font-size:13px}
-#toast{position:fixed;left:50%;top:26%;transform:translateX(-50%);background:var(--panel);border:3px solid var(--leaf);border-radius:16px;padding:10px 18px;font-family:var(--f-display);font-size:20px;text-align:center;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.2);max-width:80vw;z-index:30}
+#toast{white-space:pre-line;position:fixed;left:50%;top:26%;transform:translateX(-50%);background:var(--panel);border:3px solid var(--leaf);border-radius:16px;padding:10px 18px;font-family:var(--f-display);font-size:20px;text-align:center;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.2);max-width:80vw;z-index:30}
 .panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:86%;overflow:auto;background:var(--panel);border:4px solid var(--leaf);border-radius:20px;padding:16px;box-shadow:0 6px 0 rgba(0,0,0,.25);z-index:20}
 .panel h2{font-family:var(--f-display);font-weight:400;margin:0 0 4px;font-size:24px}
 .panel .sub{margin:0 0 10px;color:var(--muted);font-size:13px}
