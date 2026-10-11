@@ -1,6 +1,7 @@
 // 게임 화면: 섬·집 그리기, 걷기, 행동(흔들기·줍기·낚시·문), 꾸미기
 import { T, WATER } from "./world.js";
-import { SPR, DROP_SPR, FORAGE_SPR, renderGround, houseSprite, furnSprite } from "./sprites.js";
+import { SPR, DROP_SPR, FORAGE_SPR, renderGround, houseSprite } from "./sprites.js";
+import { furnArt } from "./furnArt.js";
 import { drawCharacter } from "./character.js";
 import { renderMapBase, drawMap } from "./minimap.js";
 import * as EM from "../services/emoteStore.js";
@@ -17,7 +18,6 @@ import { pickFish, judge } from "../domain/fishing.js";
 import { canPlace } from "../domain/placement.js";
 import { zoneOf } from "../domain/rounds.js";
 
-const FURN_ICON = { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚" };
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
 
 export class Game {
@@ -433,9 +433,9 @@ export class Game {
       const d = this.data.furniture[f.type]; if (!d) continue;
       const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
       list.push({ y: f.y + h, f: () => {
-        g.drawImage(furnSprite(f.type, w, h), ox + f.x * TS, oy + f.y * TS, w * TS, h * TS);
-        g.font = `${Math.round(TS * 0.7)}px sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
-        g.fillText(FURN_ICON[f.type] || "", ox + (f.x + w / 2) * TS, oy + (f.y + h / 2) * TS); g.textBaseline = "alphabetic";
+        g.imageSmoothingEnabled = true;
+        g.drawImage(furnArt(f.type, w, h, f.rot || 0), ox + f.x * TS, oy + f.y * TS, w * TS, h * TS);
+        g.imageSmoothingEnabled = false;
         if (this.deco && this.deco.picked === id) { g.strokeStyle = "#ffd35c"; g.lineWidth = 3; g.strokeRect(ox + f.x * TS, oy + f.y * TS, w * TS, h * TS); }
       } });
     }
