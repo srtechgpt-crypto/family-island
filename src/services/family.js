@@ -40,6 +40,11 @@ export async function linkMember(fid, uid, mid, reqUid) {
   await update(ref(db, fpath(fid)), changes);
 }
 
+// 내 모습 저장(현재 세션만 규칙이 받아줌)
+export async function saveAppearance(fid, mid, look) {
+  await set(ref(db, fpath(fid, "members", mid, "appearance")), { ...look, ses: state.ses });
+}
+
 export async function renameMember(fid, mid, name) {
   await set(ref(db, fpath(fid, "members", mid, "name")), name);
 }
@@ -85,7 +90,10 @@ export async function startSession(fid, mid) {
   onValue(ref(db, fpath(fid, "members", mid, "ses")), s => {
     if (s.val() && s.val() !== state.ses && !state.kicked) { state.kicked = true; emit("kicked"); }
   });
-  onValue(ref(db, fpath(fid, "members")), s => { state.members = s.val() || {}; emit("members"); });
+  await new Promise(resolve => {
+    let first = true;
+    onValue(ref(db, fpath(fid, "members")), s => { state.members = s.val() || {}; emit("members"); if (first) { first = false; resolve(); } }, () => resolve());
+  });
   return ses;
 }
 

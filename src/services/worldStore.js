@@ -66,7 +66,8 @@ export async function dropItems(spots, item) {
 // 재접속: 오늘·어제 회차의 내 claim 중 아직 안 받은 것
 export async function myRecentClaims() {
   const now = serverNow();
-  const rounds = [roundOf(now), roundOf(now - 24 * 3600 * 1000)];
+  // 최근 14회차(앱을 며칠 안 켜도 줍던 중 꺼진 물건을 받음)
+  const rounds = Array.from({ length: 14 }, (_, i) => roundOf(now - i * 24 * 3600 * 1000));
   const out = [];
   for (const r of rounds) {
     let all = null;
@@ -79,35 +80,40 @@ export async function myRecentClaims() {
 }
 
 // ---- 가족 위치 ----
-let presRef = null, presPlace = null, lastSent = 0, lastPos = null;
-const others = new Map();  // ses → {m,x,y,d,t}
-let presUnsub = null;
+// 가족 위치 전체(presence/*)를 한 번만 받아 두고, 게임 화면(지금 있는 곳)과 미니맵(모두)이 나눠 쓴다
+let presRef = null, presPlace = null, lastSent = 0, lastPos = null, presAllUnsub = null;
+let presenceAll = {};
+const others = new Map();  // 지금 있는 곳의 다른 가족: ses → {m,x,y,tx,ty,d,walk}
 export const othersHere = () => others;
+export const allPresence = () => presenceAll;
+
+function syncOthers() {
+  const here = presenceAll[presPlace] || {};
+  const seen = new Set();
+  for (const [ses, v] of Object.entries(here)) {
+    if (ses === state.ses || !v || v.m === state.mid) continue;
+    // 옛 기기·꺼진 앱의 흔적은 빼기: 그 사람의 현재 세션만, 10분 넘게 소식 없으면 숨김
+    const cur = state.members[v.m];
+    if (!cur || cur.ses !== ses || (typeof v.t === "number" && serverNow() - v.t > 10 * 60 * 1000)) continue;
+    seen.add(ses);
+    const o = others.get(ses);
+    if (o) { o.tx = v.x; o.ty = v.y; o.d = v.d; o.m = v.m; }
+    else others.set(ses, { m: v.m, x: v.x, y: v.y, tx: v.x, ty: v.y, d: v.d, walk: 0 });
+  }
+  for (const k of [...others.keys()]) if (!seen.has(k)) others.delete(k);
+}
 
 export function enterPlace(place) {
-  if (presRef) { remove(presRef).catch(() => {}); }
-  if (presUnsub) presUnsub();
+  if (presRef) { onDisconnect(presRef).cancel().catch(() => {}); remove(presRef).catch(() => {}); }
   others.clear();
   presPlace = place;
   presRef = ref(db, fpath(state.fid, "presence", place, state.ses));
   onDisconnect(presRef).remove();
-  presUnsub = onValue(ref(db, fpath(state.fid, "presence", place)), s => {
-    const all = s.val() || {};
-    const seen = new Set();
-    for (const [ses, v] of Object.entries(all)) {
-      if (ses === state.ses || !v || v.m === state.mid) continue;
-      // 옛 기기·꺼진 앱의 흔적은 빼기: 그 사람의 현재 세션만, 10분 넘게 소식 없으면 숨김
-      const cur = state.members[v.m];
-      if (!cur || cur.ses !== ses || (typeof v.t === "number" && serverNow() - v.t > 10 * 60 * 1000)) continue;
-      seen.add(ses);
-      const o = others.get(ses);
-      if (o) { o.tx = v.x; o.ty = v.y; o.d = v.d; o.m = v.m; }
-      else others.set(ses, { m: v.m, x: v.x, y: v.y, tx: v.x, ty: v.y, d: v.d, walk: 0 });
-    }
-    for (const k of [...others.keys()]) if (!seen.has(k)) others.delete(k);
-  }, () => {});
+  if (!presAllUnsub) presAllUnsub = onValue(ref(db, fpath(state.fid, "presence")), s => { presenceAll = s.val() || {}; syncOthers(); }, () => {});
+  else syncOthers();
   lastPos = null;
 }
+export const currentPlace = () => presPlace;
 
 export function sendPos(x, y, d, force) {
   if (!presRef) return;

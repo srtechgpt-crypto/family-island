@@ -1,0 +1,5 @@
+{
+  "hairStyles": [{"id":"bun","name":"쪽머리"},{"id":"short","name":"짧은 머리"},{"id":"long","name":"긴 머리"},{"id":"pony","name":"포니테일"},{"id":"pig","name":"양갈래"},{"id":"bob","name":"단발"}],
+  "hairColors": ["#2b1d16","#3a2a20","#5a3a26","#7a4a2a","#a8743e","#d9b26a","#c9c9cf","#e89aa8"],
+  "clothColors": ["#f2a7b8","#f5b971","#f7e08a","#bfe39a","#7fcfa8","#8fd3e8","#6f9bd1","#a596e3","#b48ead","#ffffff","#56637a","#7a4a32"]
+}

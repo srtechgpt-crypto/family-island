@@ -45,6 +45,15 @@ export const SPR = {
 for (const [k, col] of Object.entries({ red: "#ff6f8e", yellow: "#ffd35c", white: "#ffffff" })) {
   SPR.flower[k] = sprite(16, 16, g => { px(g, "#3d8a3a", 7, 9, 1, 5); px(g, col, 6, 5, 3, 3); px(g, col, 5, 6, 5, 1); px(g, col, 7, 4, 1, 5); px(g, "#e8a33c", 7, 6, 1, 1); });
 }
+// 버섯·약초(v2)
+const mush = (cap, dot) => sprite(16, 16, g => { px(g, "#f3ead8", 7, 9, 3, 5); px(g, cap, 4, 5, 9, 4); px(g, cap, 5, 4, 7, 1); if (dot) { px(g, dot, 6, 6, 1, 1); px(g, dot, 10, 5, 1, 1); px(g, dot, 9, 7, 1, 1); } px(g, "rgba(0,0,0,.15)", 5, 14, 7, 1); });
+export const FORAGE_SPR = {
+  mushroom_red: mush("#e3463b", "#fff"),
+  mushroom_brown: mush("#9a6a42", "#c79a6e"),
+  mushroom_white: mush("#f4f1ea", "#d9d2c4"),
+  herb_mint: sprite(16, 16, g => { px(g, "#3d8a3a", 7, 8, 1, 6); for (const [x, y] of [[4, 6], [9, 5], [5, 9], [9, 9]]) { px(g, "#5fc46a", x, y, 3, 2); px(g, "#86d98e", x, y, 1, 1); } }),
+  herb_chamomile: sprite(16, 16, g => { px(g, "#3d8a3a", 7, 8, 1, 6); px(g, "#3d8a3a", 10, 9, 1, 5); for (const [cx, cy] of [[7, 6], [10, 8]]) { px(g, "#fff", cx - 1, cy, 3, 1); px(g, "#fff", cx, cy - 1, 1, 3); px(g, "#ffd35c", cx, cy, 1, 1); } }),
+};
 export const DROP_SPR = {
   apple: sprite(16, 16, g => { px(g, "#e3463b", 6, 7, 4, 4); px(g, "#ff8a7f", 7, 8, 1, 1); px(g, "#5a3a1e", 8, 6, 1, 1); }),
   orange: sprite(16, 16, g => { px(g, "#f39a2b", 6, 7, 4, 4); px(g, "#ffc777", 7, 8, 1, 1); px(g, "#3d7f2e", 8, 6, 1, 1); }),

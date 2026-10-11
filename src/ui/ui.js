@@ -4,6 +4,9 @@ import { FAMILY, familyOf, nameOf } from "../config/gameConfig.js";
 import * as P from "../services/playerStore.js";
 import * as F from "../services/family.js";
 import { onConnection } from "../services/fb.js";
+import { sendEmote } from "../services/emoteStore.js";
+import { drawCharacter } from "../game/character.js";
+import { appearanceOf, validateAppearance } from "../domain/appearance.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -18,6 +21,14 @@ export class UI {
     $("bAdmin").onclick = () => this.openAdmin();
     $("act").addEventListener("pointerdown", e => { e.preventDefault(); this.game && this.game.act(); });
     $("decoDone").onclick = () => this.decoClose();
+    $("bCloset").onclick = () => this.openCloset(false);
+    $("closetCancel").onclick = () => { if (!this._closetFirst) $("pCloset").hidden = true; else this.saveCloset(); };
+    $("closetSave").onclick = () => this.saveCloset();
+    document.querySelectorAll("#emotes .emo").forEach(b => b.addEventListener("pointerdown", async e => {
+      e.preventDefault();
+      const r = await sendEmote(b.dataset.e);
+      if (!r.ok && r.reason === "연결 없음") this.toast("인터넷 연결을 기다리는 중이에요");
+    }));
     setInterval(() => this.clock(), 10000); this.clock();
     onConnection(c => { $("net").hidden = c; });
     onState(w => {
@@ -26,7 +37,7 @@ export class UI {
       if (w === "kicked") { this.closeAll(); $("pKicked").hidden = false; }
     });
   }
-  attach(game) { this.game = game; $("hud").hidden = false; $("act").hidden = false; $("bAdmin").hidden = !state.isAdmin; this.who(); }
+  attach(game) { this.game = game; $("hud").hidden = false; $("act").hidden = false; $("emotes").hidden = false; $("bAdmin").hidden = !state.isAdmin; this.who(); }
   modalOpen() { return [...document.querySelectorAll(".panel")].some(p => !p.hidden && p.id !== "pDeco"); }
   closeAll() { document.querySelectorAll(".panel").forEach(p => p.hidden = true); }
 
@@ -45,6 +56,52 @@ export class UI {
     $("pFish").hidden = false; clearTimeout(this._ft); this._ft = setTimeout(() => $("pFish").hidden = true, 2600);
   }
   inHouse(mine, owner, left) { $("bDeco").hidden = !mine || !!left; if (!left && !mine) this.toast(`${owner}네 집에 놀러 왔어요`); }
+
+  // ---- 큰 지도 ----
+  openMap() {
+    $("pMap").hidden = false;
+    const draw = () => { if ($("pMap").hidden || !this.game) return; this.game.drawBigMap($("bigMap")); setTimeout(draw, 500); };
+    requestAnimationFrame(draw);
+  }
+
+  // ---- 옷장(처음 들어올 때 + 언제든) ----
+  openCloset(first) {
+    this._closetFirst = !!first;
+    const cur = state.members[state.mid] && state.members[state.mid].appearance;
+    this._look = { ...appearanceOf(cur, state.mid) };
+    $("closetTitle").textContent = first ? "내 모습 고르기" : "옷장";
+    $("closetSub").textContent = first ? "새 모습으로 바뀌었어요! 머리와 옷을 골라 보세요. 나중에 옷장에서 언제든 바꿀 수 있어요." : "머리와 옷을 골라요. 다른 가족 폰에도 똑같이 보여요.";
+    $("closetCancel").textContent = first ? "이대로 할래요" : "그만두기";
+    this.renderCloset(); $("pCloset").hidden = false;
+    const tick = () => { if ($("pCloset").hidden) return; this.drawClosetPrev(); requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }
+  renderCloset() {
+    const L = this._look, pal = this.data.appearance;
+    const chips = (id, items, key) => { $(id).innerHTML = items.map(([v, t]) => `<button type="button" aria-pressed="${L[key] === v}" data-v="${v}">${esc(t)}</button>`).join("");
+      $(id).querySelectorAll("button").forEach(b => b.onclick = () => { L[key] = b.dataset.v; this.renderCloset(); }); };
+    const sw = (id, cols, key) => { $(id).innerHTML = cols.map((c, i) => `<button type="button" aria-label="색 ${i + 1}" aria-pressed="${L[key] === i}" style="background:${c}" data-i="${i}"></button>`).join("");
+      $(id).querySelectorAll("button").forEach(b => b.onclick = () => { L[key] = +b.dataset.i; this.renderCloset(); }); };
+    chips("cHair", pal.hairStyles.map(h => [h.id, h.name]), "hairStyle");
+    sw("cHairC", pal.hairColors, "hairColor");
+    sw("cTop", pal.clothColors, "topColor");
+    chips("cKind", [["pants", "바지"], ["skirt", "치마"]], "bottomType");
+    sw("cBot", pal.clothColors, "bottomColor");
+  }
+  drawClosetPrev() {
+    const c = $("closetPrev"), g = c.getContext("2d"), t = performance.now() / 1000;
+    g.setTransform(2, 0, 0, 2, 0, 0); g.clearRect(0, 0, 150, 190);
+    g.fillStyle = "#7ab857"; for (let i = 0; i < 12; i++) g.fillRect((i * 37) % 150, (i * 53) % 190, 2, 5);
+    drawCharacter(g, this._look, this.data.appearance, 75, 170, 140, 0, t, false, null);
+  }
+  async saveCloset() {
+    const v = validateAppearance({ v: 1, ...this._look });
+    if (!v.ok) { this.toast("고른 모습을 저장할 수 없어요"); return; }
+    this.busy(true);
+    try { await F.saveAppearance(state.fid, state.mid, v.appearance); $("pCloset").hidden = true; this.toast("새 모습을 저장했어요!"); }
+    catch (e) { this.toast("저장하지 못했어요. 연결을 확인하고 다시 눌러 주세요"); }
+    this.busy(false);
+  }
 
   // ---- 가방 ----
   openBag() {

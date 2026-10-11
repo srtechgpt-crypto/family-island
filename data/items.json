@@ -17,5 +17,10 @@
   "fish_catfish": { "name": "메기", "kind": "fish", "icon": "🐟" },
   "fish_goldfish": { "name": "금붕어", "kind": "fish", "icon": "🐟" },
   "fish_carp": { "name": "잉어", "kind": "fish", "icon": "🐟" },
-  "fish_medaka": { "name": "송사리", "kind": "fish", "icon": "🐟" }
+  "fish_medaka": { "name": "송사리", "kind": "fish", "icon": "🐟" },
+  "mushroom_red": { "name": "빨간 버섯", "kind": "material", "icon": "🍄" },
+  "mushroom_brown": { "name": "갈색 버섯", "kind": "material", "icon": "🍄‍🟫" },
+  "mushroom_white": { "name": "하얀 버섯", "kind": "material", "icon": "🍄" },
+  "herb_mint": { "name": "박하 잎", "kind": "material", "icon": "🌿" },
+  "herb_chamomile": { "name": "캐모마일", "kind": "material", "icon": "🌼" }
 }

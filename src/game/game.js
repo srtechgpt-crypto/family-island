@@ -1,9 +1,16 @@
 // 게임 화면: 섬·집 그리기, 걷기, 행동(흔들기·줍기·낚시·문), 꾸미기
 import { T, WATER } from "./world.js";
-import { SPR, DROP_SPR, renderGround, personSprite, houseSprite, furnSprite } from "./sprites.js";
+import { SPR, DROP_SPR, FORAGE_SPR, renderGround, houseSprite, furnSprite } from "./sprites.js";
+import { drawCharacter } from "./character.js";
+import { renderMapBase, drawMap } from "./minimap.js";
+import * as EM from "../services/emoteStore.js";
+import { appearanceOf } from "../domain/appearance.js";
+import { emoteProgress } from "../domain/emotes.js";
+import { mapMarkers } from "../domain/mapMarkers.js";
+import { pickForage } from "../domain/forage.js";
 import { state, onState } from "../state.js";
 import { FAMILY, familyOf, nameOf, FISH_WINDOW } from "../config/gameConfig.js";
-import { isConnected } from "../services/fb.js";
+import { isConnected, serverNow } from "../services/fb.js";
 import * as W from "../services/worldStore.js";
 import * as P from "../services/playerStore.js";
 import { pickFish, judge } from "../domain/fishing.js";
@@ -24,9 +31,13 @@ export class Game {
     this.mode = "island"; this.houseMid = null; this.room = "living"; this.housePlayer = null; this.houseUnsub = null;
     this.keys = {}; this.joy = null; this.fishing = null; this.busy = false; this.deco = null;
     this.lastZone = null;
+    this.mapBase = renderMapBase(world);
+    this.forageOK = !!(data.forage && data.forage.ver === 1);   // 버섯 후보 목록 버전이 앱과 맞을 때만
+    this.forageRound = null; this.forageList = [];
+    this.MM = { x: 12, y: 58, w: 150, h: 112 };   // 미니맵 자리(화면 왼쪽 위, 시계 아래)
     this.resize(); addEventListener("resize", () => this.resize());
     this.bindInput();
-    W.enterPlace("island");
+    W.enterPlace("island"); EM.enterEmotePlace("island");
     W.watchAround(Math.floor(this.me.x), Math.floor(this.me.y));
     this.last = performance.now();
     requestAnimationFrame(t => this.loop(t));
@@ -55,6 +66,8 @@ export class Game {
     addEventListener("keyup", e => { this.keys[e.key] = false; });
     this.cv.addEventListener("pointerdown", e => {
       if (this.deco) { this.decoTap(e.clientX, e.clientY); return; }
+      const M = this.MM;
+      if (this.mode === "island" && e.clientX >= M.x && e.clientX <= M.x + M.w && e.clientY >= M.y && e.clientY <= M.y + M.h) { this.ui.openMap(); return; }
       if (this.fishing) { this.act(); return; }
       if (e.clientX < this.W * 0.6) this.joy = { id: e.pointerId, ox: e.clientX, oy: e.clientY, dx: 0, dy: 0 };
     });
@@ -115,6 +128,7 @@ export class Game {
         else if (o.k === "weed") { if (!W.isTaken(o.zone, o.id)) consider(o, "pick", "뽑기"); }
       }
       for (const o of this.world.weedsFor(round)) if (Math.abs(o.x - m.x) < 2 && Math.abs(o.y - m.y) < 2 && !W.isTaken(o.zone, o.id)) consider(o, "pick", "뽑기");
+      for (const o of this.forageToday(round)) if (Math.abs(o.x - m.x) < 2 && Math.abs(o.y - m.y) < 2 && !W.isTaken(o.zone, o.id)) consider({ ...o, round }, "forage", o.item.startsWith("herb") ? "뜯기" : "캐기");
     }
     if (!best) for (const o of this.nearObjects()) {
       if (o.k === "tree") consider(o, "tree", "흔들기");
@@ -124,6 +138,14 @@ export class Game {
     const f = this.front(), t = this.world.tile(f.x, f.y);
     if (WATER[t]) return { k: "fish", water: WATER[t], fx: f.x, fy: f.y, label: "낚시" };
     return null;
+  }
+  forageToday(round) {
+    if (!this.forageOK) return [];
+    if (round !== this.forageRound) {
+      this.forageRound = round;
+      this.forageList = pickForage(this.data.forage.candidates, round, 24).map(c => ({ ...c, k: "forage", zone: zoneOf(c.x, c.y) }));
+    }
+    return this.forageList;
   }
   nearZones() { const zx = Math.floor(this.me.x / 16), zy = Math.floor(this.me.y / 16), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(`z${zx + dx}_${zy + dy}`); return out; }
   nearObjects() {
@@ -138,7 +160,7 @@ export class Game {
     if (this.fishing) return this.fishPress();
     if (this.busy) return;
     const t = this.target(); if (!t) return;
-    const needNet = ["drop", "pick", "tree", "rock", "fish", "bench"].includes(t.k);
+    const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "forage"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "door") return this.enterHouse(t.h.mid);
     if (t.k === "exit") return this.room === "living" ? this.leaveHouse() : this.goRoom(this.data.rooms[this.room].back.room, this.data.rooms[this.room].back);
@@ -150,6 +172,11 @@ export class Game {
       if (t.k === "tree") await this.shakeTree(t.o);
       else if (t.k === "rock") await this.gain(t.o.zone, `${t.o.id}_s_${state.mid}`, "stone", 1, "오늘은 이 돌에서 더 안 나와요");
       else if (t.k === "drop") await this.gain(t.o.zone, t.o.id, t.o.item, 1);
+      else if (t.k === "forage") {
+        // 고른 순간의 회차와 오늘 목록이 같을 때만(오전 5시를 넘겼으면 다시 보기)
+        if (W.today() !== t.o.round || !this.forageToday(W.today()).some(f => f.id === t.o.id)) this.ui.toast("새 날이 밝았어요! 숲을 다시 둘러봐요");
+        else await this.gain(t.o.zone, t.o.id, t.o.item, 1);
+      }
       else if (t.k === "pick") {
         const item = t.o.k === "flower" ? "flower_" + (t.o.c || "red") : t.o.k === "shell" ? "shell" : "weed";
         await this.gain(t.o.zone, t.o.id, item, 1);
@@ -222,7 +249,7 @@ export class Game {
     if (this.houseUnsub) this.houseUnsub();
     if (mid === state.mid) { this.housePlayer = state.player; this.houseUnsub = null; }
     else { this.housePlayer = null; this.houseUnsub = P.watchPlayer(mid, p => { this.housePlayer = p; }); }
-    W.enterPlace("house_" + mid);
+    W.enterPlace("house_" + mid); EM.enterEmotePlace("house_" + mid);
     this.ui.inHouse(mid === state.mid, nameOf(mid));
   }
   goRoom(id, at) {
@@ -235,7 +262,7 @@ export class Game {
     if (this.houseUnsub) this.houseUnsub(); this.houseUnsub = null;
     this.mode = "island"; this.deco = null; this.ui.decoClose(); this.fitTS();
     this.me.x = this.islandPos.x; this.me.y = this.islandPos.y + 0.4; this.me.dir = 0;
-    W.enterPlace("island"); this.ui.inHouse(false, null, true);
+    W.enterPlace("island"); EM.enterEmotePlace("island"); this.ui.inHouse(false, null, true);
   }
   houseOrigin() { const room = this.data.rooms[this.room]; return { ox: (this.W - room.w * this.TS) / 2, oy: (this.H - room.h * this.TS) / 2 + this.TS * 0.3 }; }
 
@@ -275,8 +302,9 @@ export class Game {
       if (this.fishing.st === "wait" && now > this.fishing.until) { this.fishing.st = "bite"; this.fishing.biteAt = now; this.ui.bite(); }
       else if (this.fishing.st === "bite" && now - this.fishing.biteAt > (FISH_WINDOW[state.mid] || FISH_WINDOW.default) + 150) { this.fishing = null; this.ui.toast("앗, 놓쳤어요. 쏙! 할 때 눌러요"); }
     }
+    this.me.moving = !!(mx || my);
     if (mx || my) {
-      const sp = 4.2 * dt; this.move(mx * sp, my * sp); this.me.walk += dt * 9;
+      const sp = 4.2 * dt; this.move(mx * sp, my * sp); this.me.walk += dt / 1.2;
       this.me.dir = Math.abs(mx) > Math.abs(my) ? (mx < 0 ? 1 : 2) : (my < 0 ? 3 : 0);
     }
     W.sendPos(this.me.x, this.me.y, this.me.dir);
@@ -287,24 +315,50 @@ export class Game {
     }
     for (const o of W.othersHere().values()) {
       const dx = o.tx - o.x, dy = o.ty - o.y, d = Math.hypot(dx, dy);
-      if (d > 6) { o.x = o.tx; o.y = o.ty; } else if (d > 0.01) { const k = Math.min(1, dt * 8); o.x += dx * k; o.y += dy * k; o.walk += dt * 9; }
+      o.moving = d > 0.03;
+      if (d > 6) { o.x = o.tx; o.y = o.ty; } else if (d > 0.01) { const k = Math.min(1, dt * 8); o.x += dx * k; o.y += dy * k; o.walk += dt / 1.2; }
     }
-    if (this.mode === "island") this.drawIsland(now); else this.drawHouse();
+    if (this.mode === "island") { this.drawIsland(now); this.drawMini(); } else this.drawHouse();
     this.drawJoy();
     const t = this.fishing ? { label: this.fishing.st === "bite" ? "지금!" : "기다려요" } : this.target();
     this.ui.setAction(t ? t.label : null);
     requestAnimationFrame(t2 => this.loop(t2));
   }
 
-  drawPerson(mid, x, y, dir, walk) {
-    const f = { ...(familyOf(mid) || FAMILY[0]), name: nameOf(mid) }, g = this.g, TS = this.TS;
-    const spr = personSprite(f.color, dir, Math.floor(walk) % 2);
-    const w = TS, h = TS * 1.25;
-    g.drawImage(spr, x - w / 2, y - h + TS * 0.3, w, h);
+  // 감정: 내 것은 내 세션 기록, 다른 가족은 그 사람의 현재 세션 기록만
+  emoteOf(mid) {
+    const cur = mid === state.mid ? state.ses : state.members[mid] && state.members[mid].ses;
+    const e = cur && EM.emotesHere()[cur];
+    if (!e || e.m !== mid) return null;
+    const p = emoteProgress(e, serverNow());
+    return p === null ? null : { kind: e.kind, p };
+  }
+  drawPerson(mid, x, y, dir, walk, moving) {
+    const g = this.g, TS = this.TS, f = familyOf(mid) || FAMILY[0], name = nameOf(mid);
+    const look = appearanceOf(state.members[mid] && state.members[mid].appearance, mid);
+    const s = TS * 1.6;
+    const { headTop } = drawCharacter(g, look, this.data.appearance, x, y + TS * 0.25, s, dir, walk, moving, this.emoteOf(mid));
     g.font = `${Math.round(TS * 0.36)}px Jua, sans-serif`; g.textAlign = "center";
-    const tw = g.measureText(f.name).width + 10;
-    g.fillStyle = "rgba(255,253,246,.92)"; g.beginPath(); g.roundRect(x - tw / 2, y - h - TS * 0.12, tw, TS * 0.42, 8); g.fill();
-    g.fillStyle = f.color; g.fillText(f.name, x, y - h + TS * 0.2);
+    const tw = g.measureText(name).width + 10, ty = headTop - TS * 0.12;
+    g.fillStyle = "rgba(255,253,246,.92)"; g.beginPath(); g.roundRect(x - tw / 2, ty - TS * 0.42, tw, TS * 0.42, 8); g.fill();
+    g.fillStyle = f.color; g.fillText(name, x, ty - TS * 0.1);
+  }
+
+  drawMini() {
+    const g = this.g, M = this.MM;
+    g.fillStyle = "rgba(255,253,246,.92)"; g.strokeStyle = "#2f5d3a"; g.lineWidth = 3;
+    g.beginPath(); g.roundRect(M.x - 3, M.y - 3, M.w + 6, M.h + 6, 12); g.fill(); g.stroke();
+    const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
+    drawMap(g, this.mapBase, this.world, M.x, M.y, M.w, M.h, marks, { x: this.me.x, y: this.me.y }, state.mid, m => familyOf(m).color, nameOf, false);
+  }
+  drawBigMap(cv) {
+    const g = cv.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
+    cv.width = w * dpr; cv.height = h * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.fillStyle = "#4aa9c9"; g.fillRect(0, 0, w, h);
+    const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
+    let me = { x: this.me.x, y: this.me.y };
+    if (this.mode === "house") { const hs = this.world.houseOf(this.houseMid); me = { x: hs.door.x + 0.5, y: hs.door.y + 0.5 }; }
+    drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true);
   }
 
   drawIsland(now) {
@@ -335,10 +389,12 @@ export class Game {
     }
     for (const o of this.world.weedsFor(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id))
       list.push({ y: o.y + 0.3, f: () => g.drawImage(SPR.weed, o.x * TS - camX, o.y * TS - camY, TS, TS) });
+    for (const o of this.forageToday(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id))
+      list.push({ y: o.y + 0.3, f: () => g.drawImage(FORAGE_SPR[o.item] || FORAGE_SPR.mushroom_red, o.x * TS - camX, o.y * TS - camY, TS, TS) });
     for (const d of this.fruitDrops())
       list.push({ y: d.y + 0.4, f: () => g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS) });
-    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk) });
-    list.push({ y: m.y, f: () => this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk) });
+    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving) });
+    list.push({ y: m.y, f: () => this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving) });
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     if (this.fishing) {
       const bx = this.fishing.bx * TS - camX, by = this.fishing.by * TS - camY, bite = this.fishing.st === "bite";
@@ -383,8 +439,8 @@ export class Game {
         if (this.deco && this.deco.picked === id) { g.strokeStyle = "#ffd35c"; g.lineWidth = 3; g.strokeRect(ox + f.x * TS, oy + f.y * TS, w * TS, h * TS); }
       } });
     }
-    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, ox + o.x * TS, oy + o.y * TS, o.d || 0, o.walk) });
-    list.push({ y: this.me.y, f: () => this.drawPerson(state.mid, ox + this.me.x * TS, oy + this.me.y * TS, this.me.dir, this.me.walk) });
+    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, ox + o.x * TS, oy + o.y * TS, o.d || 0, o.walk, o.moving) });
+    list.push({ y: this.me.y, f: () => this.drawPerson(state.mid, ox + this.me.x * TS, oy + this.me.y * TS, this.me.dir, this.me.walk, this.me.moving) });
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     g.font = `${Math.round(TS * 0.45)}px Jua, sans-serif`; g.textAlign = "center"; g.fillStyle = "#fffdf6";
     const owner = nameOf(this.houseMid);

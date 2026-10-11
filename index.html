@@ -44,6 +44,23 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 .menu{display:flex;gap:8px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
 #act{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:100px;height:100px;border-radius:50%;font-size:20px;padding:0}
 #act.off{opacity:.45}
+#emotes{position:fixed;right:calc(128px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;pointer-events:auto}
+.emo{width:44px;height:44px;border-radius:50%;border:3px solid var(--leaf);background:var(--panel);font-size:22px;padding:0;box-shadow:0 3px 0 rgba(0,0,0,.18);cursor:pointer}
+.emo:active{transform:translateY(2px)}
+#sGame #emotes{pointer-events:auto}
+#pMap{width:min(94vw,900px);height:min(88vh,600px);display:flex;flex-direction:column}
+#bigMap{flex:1;width:100%;min-height:0;border-radius:12px;display:block}
+#pCloset{width:min(94vw,640px)}
+.closet{display:flex;gap:14px;flex-wrap:wrap}
+#closetPrev{width:150px;height:190px;background:#8cc76a;border-radius:14px;flex:none}
+.copts{flex:1;min-width:240px;display:flex;flex-direction:column;gap:8px}
+.copts .lab{font-size:14px;font-weight:bold}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{font-family:var(--f-display);font-size:15px;border:2px solid var(--line);border-radius:10px;background:#fff;padding:3px 10px;cursor:pointer;color:var(--ink)}
+.chips button[aria-pressed="true"]{border-color:var(--leaf);background:#eef7e6}
+.sw{display:flex;gap:5px;flex-wrap:wrap}
+.sw button{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px var(--line);cursor:pointer;padding:0}
+.sw button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--leaf)}
 #net{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 54px);transform:translateX(-50%);background:#d9574a;color:#fff;font-family:var(--f-display);padding:4px 14px;border-radius:12px}
 #busy{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:rgba(36,53,42,.75);color:#fff;padding:4px 12px;border-radius:10px;font-size:13px}
 #toast{white-space:pre-line;position:fixed;left:50%;top:26%;transform:translateX(-50%);background:var(--panel);border:3px solid var(--leaf);border-radius:16px;padding:10px 18px;font-family:var(--f-display);font-size:20px;text-align:center;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.2);max-width:80vw;z-index:30}
@@ -120,16 +137,18 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   <div class="hud" id="hud" hidden>
     <div style="display:flex;flex-direction:column;gap:6px">
       <div class="chip" id="clock"></div>
-      <div class="chip who" id="who"></div>
+      <div class="chip who" id="who" hidden></div>
     </div>
     <div class="menu">
       <button class="btn" id="bBag" type="button">가방</button>
       <button class="btn" id="bDex" type="button">도감</button>
+      <button class="btn" id="bCloset" type="button">옷장</button>
       <button class="btn ghost" id="bDeco" type="button" hidden>꾸미기</button>
       <button class="btn ghost" id="bAdmin" type="button" hidden>가족 관리</button>
     </div>
   </div>
   <button class="btn off" id="act" type="button" hidden>행동</button>
+  <div id="emotes" hidden><button class="emo" type="button" data-e="wave" aria-label="손 흔들기">👋</button><button class="emo" type="button" data-e="heart" aria-label="하트">💗</button><button class="emo" type="button" data-e="dance" aria-label="춤">💃</button></div>
   <div id="net" hidden>인터넷 연결을 기다리는 중…</div>
   <div id="busy" hidden>저장하는 중…</div>
 </section>
@@ -148,6 +167,18 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   <div class="row"><button class="btn ghost" id="decoDone" type="button">꾸미기 끝</button></div>
 </div>
 <div class="panel" id="pFish" hidden><div id="fishIcon"></div><h2 id="fishName"></h2><p class="sub" id="fishInfo"></p></div>
+<div class="panel" id="pMap" hidden><h2>섬 지도</h2><canvas id="bigMap"></canvas><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pCloset" hidden>
+  <h2 id="closetTitle">옷장</h2><p class="sub" id="closetSub">머리와 옷을 골라요. 다른 가족 폰에도 똑같이 보여요.</p>
+  <div class="closet"><canvas id="closetPrev" width="300" height="380"></canvas>
+    <div class="copts">
+      <div><span class="lab">머리 모양</span><div class="chips" id="cHair"></div></div>
+      <div><span class="lab">머리색</span><div class="sw" id="cHairC"></div></div>
+      <div><span class="lab">윗옷</span><div class="sw" id="cTop"></div></div>
+      <div><span class="lab">아래옷</span><div class="chips" id="cKind"></div><div class="sw" id="cBot" style="margin-top:6px"></div></div>
+    </div></div>
+  <div class="row"><button class="btn ghost" type="button" id="closetCancel">그만두기</button><button class="btn" type="button" id="closetSave">저장</button></div>
+</div>
 <div class="panel" id="pKicked" hidden><h2>다른 기기에서 들어왔어요</h2><p>같은 이름으로 다른 폰에서 섬에 들어와서, 이 폰은 멈췄어요.</p><div class="row"><button class="btn" id="kickedReload" type="button">이 폰으로 다시 들어가기</button></div></div>
 <div class="panel" id="pAdmin" hidden>
   <h2>가족 관리</h2>
