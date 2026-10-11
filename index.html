@@ -87,6 +87,21 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 .admin-sec{border-top:2px dashed var(--line);padding-top:10px;margin-top:10px}
 #rotate{position:fixed;inset:0;background:var(--leaf);color:#fff;display:none;place-items:center;text-align:center;font-family:var(--f-display);font-size:24px;z-index:50;padding:20px}
 @media (orientation:portrait) and (max-width:900px){ body.playing #rotate{display:grid} }
+#bSneak[aria-pressed="true"]{background:#eef7e6;border-color:var(--leaf)}
+#moveBar{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);background:var(--panel);border:3px solid var(--leaf);border-radius:14px;padding:6px 10px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:70vw;font-size:14px;pointer-events:auto;z-index:15}
+#moveBar b{color:#c0392b;font-weight:400;font-family:var(--f-display)}
+.camp-stat{font-family:var(--f-display);font-size:17px;margin:0 0 8px}
+.camp-btns{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.camp-btns .btn{font-size:17px}
+.tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.tabs button{font-family:var(--f-display);font-size:16px;border:2px solid var(--line);border-radius:12px;background:#fff;padding:3px 12px;cursor:pointer;color:var(--ink)}
+.tabs button[aria-pressed="true"]{border-color:var(--leaf);background:#eef7e6}
+.cell .mini{margin-top:4px;font-family:var(--f-display);font-size:13px;border:2px solid var(--leaf);border-radius:8px;background:#fff;color:var(--ink);padding:1px 8px;cursor:pointer}
+#houseSet{display:flex;gap:12px;flex-wrap:wrap}
+#housePrev{width:200px;height:186px;background:#9fd57f;border-radius:12px;flex:none}
+#houseOpts{flex:1;min-width:230px;display:flex;flex-direction:column;gap:8px}
+.mem{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;background:#fff}
+.mem b{font-family:var(--f-display);font-weight:400;font-size:16px}
 #ver{position:fixed;left:6px;bottom:4px;font-size:10px;color:rgba(255,255,255,.7)}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
@@ -144,11 +159,14 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
       <button class="btn" id="bDex" type="button">도감</button>
       <button class="btn" id="bCloset" type="button">옷장</button>
       <button class="btn ghost" id="bDeco" type="button" hidden>꾸미기</button>
+      <button class="btn ghost" id="bHouse" type="button" hidden>우리 집 밖</button>
+      <button class="btn ghost" id="bSneak" type="button" hidden aria-pressed="false">살금살금</button>
       <button class="btn ghost" id="bAdmin" type="button" hidden>가족 관리</button>
     </div>
   </div>
   <button class="btn off" id="act" type="button" hidden>행동</button>
   <div id="emotes" hidden><button class="emo" type="button" data-e="wave" aria-label="손 흔들기">👋</button><button class="emo" type="button" data-e="heart" aria-label="하트">💗</button><button class="emo" type="button" data-e="dance" aria-label="춤">💃</button></div>
+  <div id="moveBar" hidden><span>걸어가서 집 지을 곳에 서요 (내가 선 곳이 문 앞)</span><b id="moveWhy"></b><button class="btn ghost" id="moveCancel" type="button">그만두기</button></div>
   <div id="net" hidden>인터넷 연결을 기다리는 중…</div>
   <div id="busy" hidden>저장하는 중…</div>
 </section>
@@ -156,8 +174,8 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 <div id="toast" hidden></div>
 
 <div class="panel" id="pBag" hidden><h2>가방</h2><p class="sub">모은 재료·물고기·만든 가구</p><div class="grid" id="bagGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
-<div class="panel" id="pDex" hidden><h2>물고기 도감</h2><p class="sub" id="dexSub"></p><div class="grid" id="dexGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
-<div class="panel" id="pCraft" hidden><h2>작업대</h2><p class="sub">재료가 모이면 가구를 만들 수 있어요.</p><div id="craftList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pDex" hidden><h2>도감</h2><div class="tabs" id="dexTabs"><button type="button" data-t="fish" aria-pressed="true">🐟 물고기</button><button type="button" data-t="bug" aria-pressed="false">🦋 곤충</button><button type="button" data-t="food" aria-pressed="false">🍳 요리</button></div><p class="sub" id="dexSub"></p><div class="grid" id="dexGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pCraft" hidden><h2>작업대</h2><p class="sub">재료가 모이면 가구와 도구를 만들 수 있어요.</p><div id="craftList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pDeco" hidden>
   <h2>꾸미기</h2><p class="sub" id="decoHint"></p>
   <div class="row" id="decoPick" hidden style="justify-content:flex-start;margin:0 0 10px">
@@ -165,6 +183,25 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   </div>
   <div class="grid" id="decoGrid"></div>
   <div class="row"><button class="btn ghost" id="decoDone" type="button">꾸미기 끝</button></div>
+</div>
+<div class="panel" id="pCamp" hidden>
+  <h2>🔥 캠프파이어</h2><p class="camp-stat" id="campStat"></p><p class="sub" id="campSub"></p>
+  <div class="camp-btns">
+    <button class="btn" type="button" id="campLight">불 붙이기 (나뭇가지 1)</button>
+    <button class="btn" type="button" id="campRoast">🍡 마시멜로 굽기</button>
+    <button class="btn" type="button" id="campSing">🎵 노래 부르기</button>
+    <button class="btn" type="button" id="campCook">🍳 요리하기</button>
+    <button class="btn ghost" type="button" id="campMem">📖 가족 추억</button>
+    <button class="btn ghost" type="button" id="campMute">🔈 소리 끄기</button>
+  </div>
+  <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
+</div>
+<div class="panel" id="pCook" hidden><h2>🍳 요리</h2><p class="sub" id="cookSub">재료를 모아 요리를 만들어요. 가방에서 '먹기'를 누르면 요리 도감에 올라요.</p><div id="cookList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pMem" hidden><h2>📖 가족 추억</h2><p class="sub">캠프파이어에 모인 날들</p><div id="memList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pHouse" hidden>
+  <h2>🏠 우리 집 밖</h2><p class="sub">지붕·벽·문·창문·우편함·울타리를 골라요. 다른 가족 폰에도 똑같이 보여요.</p>
+  <div id="houseSet"><canvas id="housePrev" width="400" height="372"></canvas><div id="houseOpts"></div></div>
+  <div class="row"><button class="btn ghost" type="button" id="houseMove">집 옮기기</button><button class="btn ghost" type="button" data-close>그만두기</button><button class="btn" type="button" id="houseSave">저장</button></div>
 </div>
 <div class="panel" id="pFish" hidden><div id="fishIcon"></div><h2 id="fishName"></h2><p class="sub" id="fishInfo"></p></div>
 <div class="panel" id="pMap" hidden><h2>섬 지도</h2><canvas id="bigMap"></canvas><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>

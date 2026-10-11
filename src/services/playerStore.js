@@ -6,6 +6,10 @@ import { craft } from "../domain/crafting.js";
 import { place, store, rotate } from "../domain/placement.js";
 import { addItems } from "../domain/inventory.js";
 import { updateDex } from "../domain/fishing.js";
+import { cook, eat } from "../domain/cooking.js";
+import { applyRoast } from "../domain/campfire.js";
+import { applyCatch, markFled, releaseInsect } from "../domain/insects.js";
+import { removeItems } from "../domain/inventory.js";
 import { state, emit } from "../state.js";
 
 export const norm = raw => {
@@ -75,3 +79,37 @@ export function addFish(fish, at) {
 
 // 처음 들어온 사람: 빈 데이터 만들기
 export const ensurePlayer = () => tx(p => p.rev > 0 ? { ok: true, player: p, changed: false } : { ok: true, player: { ...p, rev: 1 } });
+
+// ---- 버전 3 ----
+// 요리: 재료 차감 + 요리 1개
+export function cookDish(recipeId, cooking, items) { const req = "k_" + rid(10); return tx(p => cook(p, recipeId, cooking, items, req)); }
+// 먹기: 1개 차감 + 요리 도감
+export async function eatFood(itemId, items, at) {
+  const req = "e_" + rid(10), first = !(state.player && state.player.cookDex && state.player.cookDex[itemId]);
+  const r = await tx(p => eat(p, itemId, items, req, at));
+  return { ...r, first };
+}
+// 마시멜로 결과(하루 3번)
+export async function saveRoast(day, result) {
+  const req = "r_" + rid(10); let n = 0;
+  const r = await tx(p => { n = (p.camp && p.camp[day] && p.camp[day].n) || 0; return applyRoast(p, day, result, req); });
+  return { ...r, n };   // n: 오늘 몇 번째(0~2) — 가족 추억 기록 자리
+}
+// 곤충
+export async function catchInsect(inst, slot, at) {
+  const req = "i_" + rid(10), first = !(state.player && state.player.insectDex && state.player.insectDex[inst.species]);
+  const r = await tx(p => applyCatch(p, inst, slot, req, at));
+  return { ...r, first };
+}
+export const fleeInsect = (instId, slot) => tx(p => markFled(p, instId, slot));
+export function freeInsect(itemId) { const req = "x_" + rid(10); return tx(p => releaseInsect(p, itemId, req)); }
+// 캠프 점화 뒤 나뭇가지 1개(그날 한 번, 같은 세션에서만)
+export function payIgnition(day) {
+  const req = "ignite_" + day;
+  return tx(p => {
+    if (p.done[req]) return { ok: true, player: p, changed: false };
+    const r = removeItems(p.inv, { branch: 1 });
+    if (!r.ok) return { ok: true, player: p, changed: false };   // 없으면 공짜 불
+    return { ok: true, player: { ...p, inv: r.inv, done: { ...p.done, [req]: true }, rev: p.rev + 1 } };
+  });
+}

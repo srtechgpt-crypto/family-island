@@ -1,0 +1,75 @@
+{
+  "ver": 1,
+  "recipes": {
+    "grilled_mushroom": {
+      "out": "food_grilled_mushroom",
+      "items": {
+        "mushroom_brown": 2
+      }
+    },
+    "grilled_fish": {
+      "out": "food_grilled_fish",
+      "items": {
+        "kind:fish": 2
+      }
+    },
+    "fruit_juice": {
+      "out": "food_fruit_juice",
+      "items": {
+        "apple": 1,
+        "orange": 1
+      }
+    },
+    "herb_tea": {
+      "out": "food_herb_tea",
+      "items": {
+        "herb_mint": 1,
+        "herb_chamomile": 1
+      }
+    },
+    "mushroom_soup": {
+      "out": "food_mushroom_soup",
+      "items": {
+        "mushroom_brown": 1,
+        "mushroom_white": 1,
+        "herb_mint": 1
+      }
+    },
+    "fruit_skewer": {
+      "out": "food_fruit_skewer",
+      "items": {
+        "apple": 2,
+        "orange": 1
+      }
+    },
+    "mushroom_skewer": {
+      "out": "food_mushroom_skewer",
+      "items": {
+        "mushroom_brown": 2,
+        "mushroom_white": 1
+      }
+    },
+    "fruit_tea": {
+      "out": "food_fruit_tea",
+      "items": {
+        "apple": 1,
+        "herb_chamomile": 1
+      }
+    },
+    "honey_apple": {
+      "out": "food_honey_apple",
+      "items": {
+        "apple": 1,
+        "honey": 1
+      }
+    },
+    "honey_herb_tea": {
+      "out": "food_honey_herb_tea",
+      "items": {
+        "herb_mint": 1,
+        "herb_chamomile": 1,
+        "honey": 1
+      }
+    }
+  }
+}

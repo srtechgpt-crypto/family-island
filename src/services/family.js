@@ -1,7 +1,8 @@
 // 가족 만들기·입장 신청·승인·세션 (규칙은 docs/데이터구조.md)
-import { db, ref, get, set, update, remove, onValue, serverTimestamp, fpath, rid } from "./fb.js";
-import { FAMILY, ADMIN_MID } from "../config/gameConfig.js";
+import { db, ref, get, set, update, remove, onValue, runTransaction, serverTimestamp, fpath, rid } from "./fb.js";
+import { FAMILY, ADMIN_MID, APP_VERSION } from "../config/gameConfig.js";
 import { state, emit } from "../state.js";
+import { restoreMerge } from "../domain/restore.js";
 
 const LS_FID = "familyIsland.fid";
 export const savedFid = () => { try { return localStorage.getItem(LS_FID); } catch { return null; } };
@@ -85,7 +86,7 @@ export function watchRequests(fid, cb) {
 // 세션 시작: 이 기기가 지금 이 자리의 주인. 다른 기기가 들어오면 kicked.
 export async function startSession(fid, mid) {
   const ses = rid(16);
-  await update(ref(db, fpath(fid, "members", mid)), { ses, seen: serverTimestamp() });
+  await update(ref(db, fpath(fid, "members", mid)), { ses, seen: serverTimestamp(), app: APP_VERSION });   // app: 집 옮기기는 가족 모두 새 버전일 때만
   state.ses = ses;
   onValue(ref(db, fpath(fid, "members", mid, "ses")), s => {
     if (s.val() && s.val() !== state.ses && !state.kicked) { state.kicked = true; emit("kicked"); }
@@ -99,7 +100,7 @@ export async function startSession(fid, mid) {
 
 // 백업: 가족 데이터(비밀 제외) 한 파일
 export async function backupFamily(fid) {
-  const parts = ["meta", "members", "uidMap", "players", "claims", "drops"];
+  const parts = ["meta", "members", "uidMap", "players", "claims", "drops", "housing", "camplog"];
   const out = { app: "family-island", version: 1, at: Date.now(), fid };
   for (const p of parts) out[p] = (await get(ref(db, fpath(fid, p)))).val();
   return out;
@@ -108,8 +109,12 @@ export async function backupFamily(fid) {
 export async function restorePlayers(fid, backup) {
   if (!backup || backup.app !== "family-island" || !backup.players) throw new Error("가족 섬 백업 파일이 아니에요");
   const members = (await get(ref(db, fpath(fid, "members")))).val() || {};
-  const changes = {};
-  // 그 사람의 현재 세션으로 써야 규칙이 받아준다(옛 기기 쓰기 차단 규칙)
-  for (const [mid, p] of Object.entries(backup.players)) changes[`players/${mid}`] = { ...p, ses: (members[mid] && members[mid].ses) || null };
-  await update(ref(db, fpath(fid)), changes);
+  const failed = [];
+  // 사람마다 트랜잭션: 저장 직전의 최신 값 위에 백업을 합친다(그사이 가족이 저장한 것도 반영)
+  for (const [mid, p] of Object.entries(backup.players)) {
+    try {
+      await runTransaction(ref(db, fpath(fid, "players", mid)), cur => restoreMerge(cur, p, members[mid] && members[mid].ses), { applyLocally: false });
+    } catch { failed.push(mid); }
+  }
+  if (failed.length) throw new Error(failed.map(m => FAMILY.find(f => f.mid === m)?.name || m).join(", ") + " 복원 실패");
 }

@@ -1,0 +1,746 @@
+{
+  "ver": 1,
+  "species": {
+    "cabbage_white": {
+      "name": "배추흰나비",
+      "bands": [
+        "day"
+      ],
+      "places": [
+        "flower"
+      ],
+      "rarity": "common",
+      "flee": false
+    },
+    "swallowtail": {
+      "name": "호랑나비",
+      "bands": [
+        "day",
+        "evening"
+      ],
+      "places": [
+        "flower"
+      ],
+      "rarity": "normal",
+      "flee": true
+    },
+    "yellow_butterfly": {
+      "name": "노랑나비",
+      "bands": [
+        "day"
+      ],
+      "places": [
+        "flower"
+      ],
+      "rarity": "common",
+      "flee": false
+    },
+    "red_dragonfly": {
+      "name": "고추잠자리",
+      "bands": [
+        "day",
+        "evening"
+      ],
+      "places": [
+        "water"
+      ],
+      "rarity": "normal",
+      "flee": true
+    },
+    "cicada": {
+      "name": "참매미",
+      "bands": [
+        "day"
+      ],
+      "places": [
+        "tree"
+      ],
+      "rarity": "common",
+      "flee": false
+    },
+    "ladybug": {
+      "name": "칠성무당벌레",
+      "bands": [
+        "day",
+        "evening"
+      ],
+      "places": [
+        "flower",
+        "grass"
+      ],
+      "rarity": "common",
+      "flee": false
+    },
+    "stag_beetle": {
+      "name": "사슴벌레",
+      "bands": [
+        "evening",
+        "night"
+      ],
+      "places": [
+        "tree"
+      ],
+      "rarity": "rare",
+      "flee": true
+    },
+    "firefly": {
+      "name": "애반딧불이",
+      "bands": [
+        "night"
+      ],
+      "places": [
+        "water"
+      ],
+      "rarity": "normal",
+      "flee": true
+    },
+    "grasshopper": {
+      "name": "벼메뚜기",
+      "bands": [
+        "day",
+        "evening"
+      ],
+      "places": [
+        "grass"
+      ],
+      "rarity": "common",
+      "flee": false
+    },
+    "honeybee": {
+      "name": "꿀벌",
+      "bands": [
+        "day"
+      ],
+      "places": [
+        "flower"
+      ],
+      "rarity": "normal",
+      "flee": true
+    },
+    "cricket": {
+      "name": "왕귀뚜라미",
+      "bands": [
+        "evening",
+        "night"
+      ],
+      "places": [
+        "grass"
+      ],
+      "rarity": "common",
+      "flee": false
+    },
+    "tiger_beetle": {
+      "name": "길앞잡이",
+      "bands": [
+        "day"
+      ],
+      "places": [
+        "sand"
+      ],
+      "rarity": "normal",
+      "flee": true
+    }
+  },
+  "candidates": [
+    {
+      "id": "i001",
+      "x": 40,
+      "y": 38,
+      "place": "flower"
+    },
+    {
+      "id": "i002",
+      "x": 19,
+      "y": 18,
+      "place": "flower"
+    },
+    {
+      "id": "i003",
+      "x": 18,
+      "y": 44,
+      "place": "flower"
+    },
+    {
+      "id": "i004",
+      "x": 67,
+      "y": 76,
+      "place": "flower"
+    },
+    {
+      "id": "i005",
+      "x": 46,
+      "y": 15,
+      "place": "flower"
+    },
+    {
+      "id": "i006",
+      "x": 39,
+      "y": 14,
+      "place": "flower"
+    },
+    {
+      "id": "i007",
+      "x": 39,
+      "y": 86,
+      "place": "flower"
+    },
+    {
+      "id": "i008",
+      "x": 88,
+      "y": 23,
+      "place": "flower"
+    },
+    {
+      "id": "i009",
+      "x": 88,
+      "y": 33,
+      "place": "flower"
+    },
+    {
+      "id": "i010",
+      "x": 50,
+      "y": 87,
+      "place": "flower"
+    },
+    {
+      "id": "i011",
+      "x": 18,
+      "y": 43,
+      "place": "flower"
+    },
+    {
+      "id": "i012",
+      "x": 67,
+      "y": 77,
+      "place": "flower"
+    },
+    {
+      "id": "i013",
+      "x": 69,
+      "y": 50,
+      "place": "flower"
+    },
+    {
+      "id": "i014",
+      "x": 46,
+      "y": 14,
+      "place": "flower"
+    },
+    {
+      "id": "i015",
+      "x": 94,
+      "y": 77,
+      "place": "flower"
+    },
+    {
+      "id": "i016",
+      "x": 24,
+      "y": 19,
+      "place": "flower"
+    },
+    {
+      "id": "i017",
+      "x": 107,
+      "y": 38,
+      "place": "flower"
+    },
+    {
+      "id": "i018",
+      "x": 74,
+      "y": 49,
+      "place": "flower"
+    },
+    {
+      "id": "i019",
+      "x": 18,
+      "y": 42,
+      "place": "flower"
+    },
+    {
+      "id": "i020",
+      "x": 67,
+      "y": 70,
+      "place": "flower"
+    },
+    {
+      "id": "i021",
+      "x": 58,
+      "y": 10,
+      "place": "tree"
+    },
+    {
+      "id": "i022",
+      "x": 69,
+      "y": 15,
+      "place": "tree"
+    },
+    {
+      "id": "i023",
+      "x": 69,
+      "y": 79,
+      "place": "tree"
+    },
+    {
+      "id": "i024",
+      "x": 108,
+      "y": 52,
+      "place": "tree"
+    },
+    {
+      "id": "i025",
+      "x": 58,
+      "y": 13,
+      "place": "tree"
+    },
+    {
+      "id": "i026",
+      "x": 69,
+      "y": 14,
+      "place": "tree"
+    },
+    {
+      "id": "i027",
+      "x": 69,
+      "y": 66,
+      "place": "tree"
+    },
+    {
+      "id": "i028",
+      "x": 69,
+      "y": 78,
+      "place": "tree"
+    },
+    {
+      "id": "i029",
+      "x": 108,
+      "y": 55,
+      "place": "tree"
+    },
+    {
+      "id": "i030",
+      "x": 39,
+      "y": 50,
+      "place": "tree"
+    },
+    {
+      "id": "i031",
+      "x": 58,
+      "y": 12,
+      "place": "tree"
+    },
+    {
+      "id": "i032",
+      "x": 69,
+      "y": 67,
+      "place": "tree"
+    },
+    {
+      "id": "i033",
+      "x": 39,
+      "y": 51,
+      "place": "tree"
+    },
+    {
+      "id": "i034",
+      "x": 69,
+      "y": 16,
+      "place": "tree"
+    },
+    {
+      "id": "i035",
+      "x": 69,
+      "y": 76,
+      "place": "tree"
+    },
+    {
+      "id": "i036",
+      "x": 69,
+      "y": 84,
+      "place": "tree"
+    },
+    {
+      "id": "i037",
+      "x": 62,
+      "y": 30,
+      "place": "tree"
+    },
+    {
+      "id": "i038",
+      "x": 69,
+      "y": 75,
+      "place": "tree"
+    },
+    {
+      "id": "i039",
+      "x": 51,
+      "y": 63,
+      "place": "tree"
+    },
+    {
+      "id": "i040",
+      "x": 108,
+      "y": 56,
+      "place": "tree"
+    },
+    {
+      "id": "i041",
+      "x": 75,
+      "y": 79,
+      "place": "water"
+    },
+    {
+      "id": "i042",
+      "x": 75,
+      "y": 78,
+      "place": "water"
+    },
+    {
+      "id": "i043",
+      "x": 76,
+      "y": 58,
+      "place": "water"
+    },
+    {
+      "id": "i044",
+      "x": 76,
+      "y": 59,
+      "place": "water"
+    },
+    {
+      "id": "i045",
+      "x": 102,
+      "y": 32,
+      "place": "water"
+    },
+    {
+      "id": "i046",
+      "x": 78,
+      "y": 38,
+      "place": "water"
+    },
+    {
+      "id": "i047",
+      "x": 78,
+      "y": 39,
+      "place": "water"
+    },
+    {
+      "id": "i048",
+      "x": 23,
+      "y": 79,
+      "place": "water"
+    },
+    {
+      "id": "i049",
+      "x": 78,
+      "y": 50,
+      "place": "water"
+    },
+    {
+      "id": "i050",
+      "x": 78,
+      "y": 51,
+      "place": "water"
+    },
+    {
+      "id": "i051",
+      "x": 78,
+      "y": 52,
+      "place": "water"
+    },
+    {
+      "id": "i052",
+      "x": 74,
+      "y": 37,
+      "place": "water"
+    },
+    {
+      "id": "i053",
+      "x": 78,
+      "y": 33,
+      "place": "water"
+    },
+    {
+      "id": "i054",
+      "x": 23,
+      "y": 73,
+      "place": "water"
+    },
+    {
+      "id": "i055",
+      "x": 78,
+      "y": 41,
+      "place": "water"
+    },
+    {
+      "id": "i056",
+      "x": 78,
+      "y": 25,
+      "place": "water"
+    },
+    {
+      "id": "i057",
+      "x": 25,
+      "y": 72,
+      "place": "water"
+    },
+    {
+      "id": "i058",
+      "x": 78,
+      "y": 56,
+      "place": "water"
+    },
+    {
+      "id": "i059",
+      "x": 78,
+      "y": 40,
+      "place": "water"
+    },
+    {
+      "id": "i060",
+      "x": 78,
+      "y": 24,
+      "place": "water"
+    },
+    {
+      "id": "i061",
+      "x": 73,
+      "y": 7,
+      "place": "sand"
+    },
+    {
+      "id": "i062",
+      "x": 42,
+      "y": 7,
+      "place": "sand"
+    },
+    {
+      "id": "i063",
+      "x": 54,
+      "y": 7,
+      "place": "sand"
+    },
+    {
+      "id": "i064",
+      "x": 48,
+      "y": 7,
+      "place": "sand"
+    },
+    {
+      "id": "i065",
+      "x": 19,
+      "y": 83,
+      "place": "sand"
+    },
+    {
+      "id": "i066",
+      "x": 53,
+      "y": 7,
+      "place": "sand"
+    },
+    {
+      "id": "i067",
+      "x": 95,
+      "y": 87,
+      "place": "sand"
+    },
+    {
+      "id": "i068",
+      "x": 119,
+      "y": 64,
+      "place": "sand"
+    },
+    {
+      "id": "i069",
+      "x": 119,
+      "y": 65,
+      "place": "sand"
+    },
+    {
+      "id": "i070",
+      "x": 26,
+      "y": 9,
+      "place": "sand"
+    },
+    {
+      "id": "i071",
+      "x": 66,
+      "y": 7,
+      "place": "sand"
+    },
+    {
+      "id": "i072",
+      "x": 119,
+      "y": 60,
+      "place": "sand"
+    },
+    {
+      "id": "i073",
+      "x": 11,
+      "y": 21,
+      "place": "sand"
+    },
+    {
+      "id": "i074",
+      "x": 119,
+      "y": 61,
+      "place": "sand"
+    },
+    {
+      "id": "i075",
+      "x": 79,
+      "y": 88,
+      "place": "sand"
+    },
+    {
+      "id": "i076",
+      "x": 11,
+      "y": 20,
+      "place": "sand"
+    },
+    {
+      "id": "i077",
+      "x": 119,
+      "y": 62,
+      "place": "sand"
+    },
+    {
+      "id": "i078",
+      "x": 119,
+      "y": 63,
+      "place": "sand"
+    },
+    {
+      "id": "i079",
+      "x": 22,
+      "y": 84,
+      "place": "sand"
+    },
+    {
+      "id": "i080",
+      "x": 119,
+      "y": 48,
+      "place": "sand"
+    },
+    {
+      "id": "i081",
+      "x": 37,
+      "y": 49,
+      "place": "grass"
+    },
+    {
+      "id": "i082",
+      "x": 72,
+      "y": 66,
+      "place": "grass"
+    },
+    {
+      "id": "i083",
+      "x": 83,
+      "y": 19,
+      "place": "grass"
+    },
+    {
+      "id": "i084",
+      "x": 19,
+      "y": 27,
+      "place": "grass"
+    },
+    {
+      "id": "i085",
+      "x": 19,
+      "y": 47,
+      "place": "grass"
+    },
+    {
+      "id": "i086",
+      "x": 72,
+      "y": 67,
+      "place": "grass"
+    },
+    {
+      "id": "i087",
+      "x": 83,
+      "y": 62,
+      "place": "grass"
+    },
+    {
+      "id": "i088",
+      "x": 83,
+      "y": 18,
+      "place": "grass"
+    },
+    {
+      "id": "i089",
+      "x": 110,
+      "y": 48,
+      "place": "grass"
+    },
+    {
+      "id": "i090",
+      "x": 83,
+      "y": 63,
+      "place": "grass"
+    },
+    {
+      "id": "i091",
+      "x": 83,
+      "y": 73,
+      "place": "grass"
+    },
+    {
+      "id": "i092",
+      "x": 72,
+      "y": 75,
+      "place": "grass"
+    },
+    {
+      "id": "i093",
+      "x": 61,
+      "y": 11,
+      "place": "grass"
+    },
+    {
+      "id": "i094",
+      "x": 29,
+      "y": 72,
+      "place": "grass"
+    },
+    {
+      "id": "i095",
+      "x": 83,
+      "y": 72,
+      "place": "grass"
+    },
+    {
+      "id": "i096",
+      "x": 70,
+      "y": 9,
+      "place": "grass"
+    },
+    {
+      "id": "i097",
+      "x": 72,
+      "y": 74,
+      "place": "grass"
+    },
+    {
+      "id": "i098",
+      "x": 61,
+      "y": 10,
+      "place": "grass"
+    },
+    {
+      "id": "i099",
+      "x": 83,
+      "y": 71,
+      "place": "grass"
+    },
+    {
+      "id": "i100",
+      "x": 74,
+      "y": 68,
+      "place": "grass"
+    }
+  ]
+}

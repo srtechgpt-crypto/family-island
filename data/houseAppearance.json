@@ -1,0 +1,119 @@
+{
+  "ver": 1,
+  "roofShapes": [
+    "gable",
+    "round",
+    "hip"
+  ],
+  "roofColors": [
+    "#d9534f",
+    "#e8873a",
+    "#e9c24a",
+    "#5aa05a",
+    "#4f8fc9",
+    "#7a63b8",
+    "#8a5a3a",
+    "#5a5f6b"
+  ],
+  "wallColors": [
+    "#fbf3e3",
+    "#f6d9c4",
+    "#fff1b8",
+    "#dcefd2",
+    "#d6e8f5",
+    "#efe0f5",
+    "#d9c3a5",
+    "#c9ccd2"
+  ],
+  "doorShapes": [
+    "square",
+    "arch"
+  ],
+  "doorColors": [
+    "#8a5a3a",
+    "#b0473f",
+    "#3f7a4a",
+    "#3f6aa8",
+    "#e8b23a",
+    "#f4f1ea",
+    "#6b4fa0",
+    "#3b3a2e"
+  ],
+  "windowShapes": [
+    "square",
+    "round",
+    "cross"
+  ],
+  "mailboxes": [
+    "post",
+    "round",
+    "wall"
+  ],
+  "fences": [
+    "none",
+    "wood",
+    "stone"
+  ],
+  "defaults": {
+    "m0": {
+      "roofShape": "gable",
+      "roofColor": 6,
+      "wallColor": 0,
+      "doorShape": "square",
+      "doorColor": 0,
+      "windowShape": "square",
+      "mailbox": "post",
+      "fence": "none"
+    },
+    "m1": {
+      "roofShape": "gable",
+      "roofColor": 4,
+      "wallColor": 0,
+      "doorShape": "square",
+      "doorColor": 0,
+      "windowShape": "square",
+      "mailbox": "post",
+      "fence": "none"
+    },
+    "m2": {
+      "roofShape": "gable",
+      "roofColor": 0,
+      "wallColor": 0,
+      "doorShape": "square",
+      "doorColor": 0,
+      "windowShape": "square",
+      "mailbox": "post",
+      "fence": "none"
+    },
+    "m3": {
+      "roofShape": "gable",
+      "roofColor": 5,
+      "wallColor": 0,
+      "doorShape": "square",
+      "doorColor": 0,
+      "windowShape": "square",
+      "mailbox": "post",
+      "fence": "none"
+    },
+    "m4": {
+      "roofShape": "gable",
+      "roofColor": 1,
+      "wallColor": 0,
+      "doorShape": "square",
+      "doorColor": 0,
+      "windowShape": "square",
+      "mailbox": "post",
+      "fence": "none"
+    },
+    "m5": {
+      "roofShape": "gable",
+      "roofColor": 3,
+      "wallColor": 0,
+      "doorShape": "square",
+      "doorColor": 0,
+      "windowShape": "square",
+      "mailbox": "post",
+      "fence": "none"
+    }
+  }
+}

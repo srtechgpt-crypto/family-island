@@ -3,6 +3,8 @@ import { EMU, auth, onAuthStateChanged, signInAnonymously, signInGoogle, getRedi
 import * as F from "./services/family.js";
 import * as P from "./services/playerStore.js";
 import * as W from "./services/worldStore.js";
+import * as H from "./services/houseStore.js";
+import { db, ref, get, fpath } from "./services/fb.js";
 import { loadWorld } from "./game/world.js";
 import { Game } from "./game/game.js";
 import { UI, bindAdminExtras } from "./ui/ui.js";
@@ -22,8 +24,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage]) => ({ items, fish, furniture, recipes, rooms, appearance, forage })),
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs })),
       loadWorld(),
     ]);
   } catch (e) { $("loadMsg").textContent = "게임 파일을 못 불러왔어요. 인터넷 연결을 확인하고 다시 열어 주세요."; return; }
@@ -67,6 +69,8 @@ async function enter(mid) {
     const mine = await W.myRecentClaims();
     for (const c of mine) if (!state.player.applied[c.id] && c.qty > 0) await P.giveClaim(c);
   } catch { /* 다음에 다시 */ }
+  await H.watchHousing();   // v3: 집 자리·겉모습(공유)
+  await checkMinApp();
   history.replaceState(null, "", location.pathname);
   show("sGame");
   document.body.classList.add("playing");
@@ -80,6 +84,14 @@ async function enter(mid) {
     let last = 0; try { last = +localStorage.getItem("familyIsland.lastBackup") || 0; } catch { /* 무시 */ }
     if (Date.now() - last > 7 * 24 * 3600 * 1000) setTimeout(() => ui.toast("일주일이 지났어요. 가족 관리에서 백업을 받아 주세요", 3500), 2500);
   }
+}
+
+// 가족 섬이 더 새 버전을 요구하면 새로고침 안내(옛 앱으로 쓰지 않게)
+async function checkMinApp() {
+  try {
+    const m = (await get(ref(db, fpath(state.fid, "meta", "minApp")))).val();
+    if (m && m > APP_VERSION) setTimeout(() => ui.toast("새 버전이 나왔어요!\n게임을 껐다가 다시 열어 주세요", 6000), 1500);
+  } catch { /* 무시 */ }
 }
 
 // ---- 시작 화면 버튼 ----

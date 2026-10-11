@@ -149,7 +149,25 @@ function shelf(g, W, H) {
   g.fillStyle = "rgba(255,255,255,.3)"; rr(g, 5, 3, W - 10, 1.4, 1); g.fill();
 }
 
+// ---- 나무 조리대(v3): 나무 몸통 + 돌 화덕 + 냄비 ----
+function stove(g, W, H) {
+  shadow(g, W / 2, H - 3, W / 2 - 3, 3);
+  rr(g, 2, 4, W - 4, H - 8, 4); fillStroke(g, woodGrad(g, 0, 4, 0, H - 4, WOOD.mid, WOOD.lo));
+  rr(g, 1, 3, W - 2, 7, 3); fillStroke(g, woodGrad(g, 0, 3, 0, 10));                         // 위판
+  const big = W >= H, cx = big ? W * 0.32 : W / 2, cy = big ? H * 0.58 : H * 0.32;
+  rr(g, cx - 9, cy - 7, 18, 14, 3); fillStroke(g, "#9a9da3", "#5f6268");                       // 화덕
+  g.fillStyle = "#3b3a3a"; g.beginPath(); g.ellipse(cx, cy, 6, 4, 0, 0, 7); g.fill();
+  g.fillStyle = "#f7941d"; g.beginPath(); g.ellipse(cx, cy + 1, 3, 1.6, 0, 0, 7); g.fill();
+  const px2 = big ? W * 0.7 : W / 2, py2 = big ? H * 0.5 : H * 0.7;                          // 냄비
+  rr(g, px2 - 7, py2 - 5, 14, 9, 3); fillStroke(g, "#d9534f", "#7a2b28");
+  g.fillStyle = "#f4f1ea"; rr(g, px2 - 6, py2 - 6.5, 12, 2.5, 1); g.fill();
+  g.strokeStyle = "rgba(255,255,255,.7)"; g.lineWidth = 0.9;
+  for (const dx of [-3, 1]) { g.beginPath(); g.moveTo(px2 + dx, py2 - 8); g.quadraticCurveTo(px2 + dx + 2, py2 - 11, px2 + dx, py2 - 14); g.stroke(); }
+  g.fillStyle = "rgba(255,255,255,.3)"; rr(g, 4, 4, W - 8, 1.4, 1); g.fill();
+}
+
 const DRAW = {
+  stove_wood: (g, W, H) => stove(g, W, H),
   table_wood: (g, W, H) => table(g, W, H),
   chair_wood: (g, W, H, rot) => chair(g, rot),
   pot_flower: g => pot(g),

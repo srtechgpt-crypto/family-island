@@ -87,5 +87,13 @@ export function drawCharacter(g, look, pal, x, y, s, dir, walk, moving, emote) {
   else face(g, hx, hy, hr, dir, !!ek);
   g.restore();
   if (ek === "heart") { const rise = ep * s * .35; g.globalAlpha = 1 - Math.max(0, ep - .7) / .3; heart(g, x + s * .25, hy - hr - s * .05 - rise, s * .14); heart(g, x - s * .2, hy - hr - s * .18 - rise * 1.2, s * .1); g.globalAlpha = 1; }
+  if (ek === "yum") {   // 냠냠(v3): 말풍선
+    const bx = x + s * .32, by = hy - hr - s * .12, bob = Math.sin(et * 10) * s * .015;
+    g.globalAlpha = 1 - Math.max(0, ep - .8) / .2;
+    g.fillStyle = "#fffdf6"; g.strokeStyle = "rgba(60,40,20,.35)"; g.lineWidth = Math.max(1, s * .012);
+    g.beginPath(); g.roundRect(bx - s * .2, by - s * .1 + bob, s * .4, s * .17, s * .06); g.fill(); g.stroke();
+    g.fillStyle = "#e0624f"; g.font = `${Math.round(s * .1)}px Jua, sans-serif`; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillText("냠냠", bx, by - s * .015 + bob); g.textBaseline = "alphabetic"; g.globalAlpha = 1;
+  }
   return { headTop: hy - hr - (hs === "bun" ? hr * .4 : 0) };
 }

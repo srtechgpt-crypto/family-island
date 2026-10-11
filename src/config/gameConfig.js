@@ -1,5 +1,5 @@
 // 가족 자리·앱 버전 등 고정 설정
-export const APP_VERSION = 2;
+export const APP_VERSION = 3;
 export const FAMILY = [
   { mid: "m0", name: "할머니", color: "#c77d4a" },
   { mid: "m1", name: "아빠", color: "#3d6fb6" },
@@ -16,3 +16,10 @@ export const familyOf = mid => FAMILY.find(f => f.mid === mid);
 // 공개 코드에는 호칭만 둔다. 실제 이름은 아빠가 가족 관리에서 넣고(members/{mid}/name) 게임 안에서만 보인다.
 import { state } from "../state.js";
 export const nameOf = mid => (state.members[mid] && state.members[mid].name) || (familyOf(mid) || {}).name || "?";
+
+// 받침에 맞는 조사: josa("왕귀뚜라미", "을", "를") → "왕귀뚜라미를"
+export function josa(word, withBatchim, without) {
+  const c = String(word).charCodeAt(String(word).length - 1);
+  const has = c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0;
+  return word + (has ? withBatchim : without);
+}

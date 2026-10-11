@@ -1,26 +1,262 @@
 {
-  "apple": { "name": "사과", "kind": "material", "icon": "🍎" },
-  "orange": { "name": "오렌지", "kind": "material", "icon": "🍊" },
-  "branch": { "name": "나뭇가지", "kind": "material", "icon": "🪵" },
-  "weed": { "name": "잡초", "kind": "material", "icon": "🌿" },
-  "flower_red": { "name": "빨간 꽃", "kind": "material", "icon": "🌹" },
-  "flower_yellow": { "name": "노란 꽃", "kind": "material", "icon": "🌼" },
-  "flower_white": { "name": "하얀 꽃", "kind": "material", "icon": "🌸" },
-  "shell": { "name": "조개", "kind": "material", "icon": "🐚" },
-  "stone": { "name": "돌", "kind": "material", "icon": "🪨" },
-  "fish_mackerel": { "name": "고등어", "kind": "fish", "icon": "🐟" },
-  "fish_seabream": { "name": "도미", "kind": "fish", "icon": "🐟" },
-  "fish_puffer": { "name": "복어", "kind": "fish", "icon": "🐡" },
-  "fish_octopus": { "name": "문어", "kind": "fish", "icon": "🐙" },
-  "fish_minnow": { "name": "피라미", "kind": "fish", "icon": "🐟" },
-  "fish_crucian": { "name": "붕어", "kind": "fish", "icon": "🐟" },
-  "fish_catfish": { "name": "메기", "kind": "fish", "icon": "🐟" },
-  "fish_goldfish": { "name": "금붕어", "kind": "fish", "icon": "🐟" },
-  "fish_carp": { "name": "잉어", "kind": "fish", "icon": "🐟" },
-  "fish_medaka": { "name": "송사리", "kind": "fish", "icon": "🐟" },
-  "mushroom_red": { "name": "빨간 버섯", "kind": "material", "icon": "🍄" },
-  "mushroom_brown": { "name": "갈색 버섯", "kind": "material", "icon": "🍄‍🟫" },
-  "mushroom_white": { "name": "하얀 버섯", "kind": "material", "icon": "🍄" },
-  "herb_mint": { "name": "박하 잎", "kind": "material", "icon": "🌿" },
-  "herb_chamomile": { "name": "캐모마일", "kind": "material", "icon": "🌼" }
+  "apple": {
+    "name": "사과",
+    "kind": "material",
+    "icon": "🍎"
+  },
+  "orange": {
+    "name": "오렌지",
+    "kind": "material",
+    "icon": "🍊"
+  },
+  "branch": {
+    "name": "나뭇가지",
+    "kind": "material",
+    "icon": "🪵"
+  },
+  "weed": {
+    "name": "잡초",
+    "kind": "material",
+    "icon": "🌿"
+  },
+  "flower_red": {
+    "name": "빨간 꽃",
+    "kind": "material",
+    "icon": "🌹"
+  },
+  "flower_yellow": {
+    "name": "노란 꽃",
+    "kind": "material",
+    "icon": "🌼"
+  },
+  "flower_white": {
+    "name": "하얀 꽃",
+    "kind": "material",
+    "icon": "🌸"
+  },
+  "shell": {
+    "name": "조개",
+    "kind": "material",
+    "icon": "🐚"
+  },
+  "stone": {
+    "name": "돌",
+    "kind": "material",
+    "icon": "🪨"
+  },
+  "fish_mackerel": {
+    "name": "고등어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_seabream": {
+    "name": "도미",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_puffer": {
+    "name": "복어",
+    "kind": "fish",
+    "icon": "🐡"
+  },
+  "fish_octopus": {
+    "name": "문어",
+    "kind": "fish",
+    "icon": "🐙"
+  },
+  "fish_minnow": {
+    "name": "피라미",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_crucian": {
+    "name": "붕어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_catfish": {
+    "name": "메기",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_goldfish": {
+    "name": "금붕어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_carp": {
+    "name": "잉어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_medaka": {
+    "name": "송사리",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "mushroom_red": {
+    "name": "빨간 버섯",
+    "kind": "material",
+    "icon": "🍄"
+  },
+  "mushroom_brown": {
+    "name": "갈색 버섯",
+    "kind": "material",
+    "icon": "🍄‍🟫"
+  },
+  "mushroom_white": {
+    "name": "하얀 버섯",
+    "kind": "material",
+    "icon": "🍄"
+  },
+  "herb_mint": {
+    "name": "박하 잎",
+    "kind": "material",
+    "icon": "🌿"
+  },
+  "herb_chamomile": {
+    "name": "캐모마일",
+    "kind": "material",
+    "icon": "🌼"
+  },
+  "food_grilled_mushroom": {
+    "name": "버섯구이",
+    "kind": "food",
+    "icon": "🍄"
+  },
+  "food_grilled_fish": {
+    "name": "생선구이",
+    "kind": "food",
+    "icon": "🐟"
+  },
+  "food_fruit_juice": {
+    "name": "과일 주스",
+    "kind": "food",
+    "icon": "🧃"
+  },
+  "food_herb_tea": {
+    "name": "약초차",
+    "kind": "food",
+    "icon": "🍵"
+  },
+  "food_mushroom_soup": {
+    "name": "버섯 수프",
+    "kind": "food",
+    "icon": "🥣"
+  },
+  "food_fruit_skewer": {
+    "name": "과일 꼬치",
+    "kind": "food",
+    "icon": "🍡"
+  },
+  "food_mushroom_skewer": {
+    "name": "버섯 꼬치",
+    "kind": "food",
+    "icon": "🍢"
+  },
+  "food_fruit_tea": {
+    "name": "과일차",
+    "kind": "food",
+    "icon": "☕"
+  },
+  "food_honey_apple": {
+    "name": "꿀사과",
+    "kind": "food",
+    "icon": "🍎"
+  },
+  "food_honey_herb_tea": {
+    "name": "꿀허브차",
+    "kind": "food",
+    "icon": "🍵"
+  },
+  "food_marsh_raw": {
+    "name": "덜 익은 마시멜로",
+    "kind": "food",
+    "icon": "🍡"
+  },
+  "food_marsh_golden": {
+    "name": "노릇노릇 마시멜로",
+    "kind": "food",
+    "icon": "🍡"
+  },
+  "food_marsh_burnt": {
+    "name": "탄 마시멜로",
+    "kind": "food",
+    "icon": "🍡"
+  },
+  "tool_net": {
+    "name": "잠자리채",
+    "kind": "tool",
+    "icon": "🥅"
+  },
+  "honeycomb": {
+    "name": "벌집",
+    "kind": "material",
+    "icon": "🍯"
+  },
+  "honey": {
+    "name": "꿀",
+    "kind": "material",
+    "icon": "🍯"
+  },
+  "insect_cabbage_white": {
+    "name": "배추흰나비",
+    "kind": "insect",
+    "icon": "🦋"
+  },
+  "insect_swallowtail": {
+    "name": "호랑나비",
+    "kind": "insect",
+    "icon": "🦋"
+  },
+  "insect_yellow_butterfly": {
+    "name": "노랑나비",
+    "kind": "insect",
+    "icon": "🦋"
+  },
+  "insect_red_dragonfly": {
+    "name": "고추잠자리",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_cicada": {
+    "name": "참매미",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_ladybug": {
+    "name": "칠성무당벌레",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_stag_beetle": {
+    "name": "사슴벌레",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_firefly": {
+    "name": "애반딧불이",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_grasshopper": {
+    "name": "벼메뚜기",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_honeybee": {
+    "name": "꿀벌",
+    "kind": "insect",
+    "icon": "🐝"
+  },
+  "insect_cricket": {
+    "name": "왕귀뚜라미",
+    "kind": "insect",
+    "icon": "🪲"
+  },
+  "insect_tiger_beetle": {
+    "name": "길앞잡이",
+    "kind": "insect",
+    "icon": "🪲"
+  }
 }

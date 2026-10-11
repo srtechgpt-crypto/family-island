@@ -1,4 +1,4 @@
-export const EMOTE_KINDS = ["wave", "heart", "dance"];
+export const EMOTE_KINDS = ["wave", "heart", "dance", "yum"];
 export const EMOTE_MS = 3000;
 
 export function emoteProgress(emote, nowMs) {

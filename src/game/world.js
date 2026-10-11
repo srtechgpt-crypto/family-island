@@ -11,21 +11,29 @@ export class World {
     this.map = map;
     this.w = map.w; this.h = map.h;
     this.tiles = map.tiles;
+    this.mapHouses = map.houses;      // 지도 기본 자리(잡초 계산처럼 모든 폰이 같아야 하는 곳에 사용)
     this.houses = map.houses;
     this.objects = map.objects;
-    this.solid = new Uint8Array(this.w * this.h);
+    this.solidStatic = new Uint8Array(this.w * this.h);
     this.objAt = new Map();
     for (const o of this.objects) {
       o.zone = zoneOf(o.x, o.y);
       this.objAt.set(o.x + "," + o.y, o);
-      if (o.k === "tree" || o.k === "rock") this.solid[o.y * this.w + o.x] = 1;
+      if (o.k === "tree" || o.k === "rock") this.solidStatic[o.y * this.w + o.x] = 1;
     }
-    for (const h of this.houses) for (let y = h.y; y < h.y + h.h; y++) for (let x = h.x; x < h.x + h.w; x++) this.solid[y * this.w + x] = 1;
+    this.setHouses(map.houses);
     this.weedRound = null; this.weeds = [];
   }
   tile(x, y) { return x < 0 || y < 0 || x >= this.w || y >= this.h ? T.SEA : this.tiles[y * this.w + x]; }
   walkable(x, y) { const tx = Math.floor(x), ty = Math.floor(y); return WALK.has(this.tile(tx, ty)) && !this.solid[ty * this.w + tx]; }
   houseOf(mid) { return this.houses.find(h => h.mid === mid); }
+  // v3: 집을 옮기면 막힌 칸을 다시 계산
+  setHouses(houses) {
+    this.houses = houses;
+    this.solid = new Uint8Array(this.solidStatic);
+    for (const h of houses) for (let y = h.y; y < h.y + h.h; y++) for (let x = h.x; x < h.x + h.w; x++) this.solid[y * this.w + x] = 1;
+  }
+  inHouse(x, y) { return this.houses.some(h => x >= h.x && x < h.x + h.w && y >= h.y && y < h.y + h.h); }
 
   // 오늘의 잡초 자리(회차마다 바뀜, 가족 모두 같은 자리)
   weedsFor(round) {
@@ -37,14 +45,14 @@ export class World {
     while (out.length < WEEDS_PER_DAY && tries++ < 5000) {
       const x = Math.floor(rnd() * this.w), y = Math.floor(rnd() * this.h);
       const k = x + "," + y;
-      if (this.tile(x, y) !== T.GRASS || this.solid[y * this.w + x] || this.objAt.has(k) || used.has(k) || this.nearHouse(x, y)) continue;
+      if (this.tile(x, y) !== T.GRASS || this.solidStatic[y * this.w + x] || this.objAt.has(k) || used.has(k) || this.nearHouse(x, y)) continue;
       used.add(k);
       out.push({ id: `w${x}_${y}`, k: "weed", x, y, zone: zoneOf(x, y) });
     }
     this.weedRound = round; this.weeds = out;
     return out;
   }
-  nearHouse(x, y) { return this.houses.some(h => x >= h.x - 1 && x <= h.x + h.w && y >= h.y - 1 && y <= h.y + h.h + 2); }
+  nearHouse(x, y) { return this.mapHouses.some(h => x >= h.x - 1 && x <= h.x + h.w && y >= h.y - 1 && y <= h.y + h.h + 2); }
 }
 
 export async function loadWorld() {

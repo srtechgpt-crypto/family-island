@@ -57,6 +57,14 @@ export const FORAGE_SPR = {
 export const DROP_SPR = {
   apple: sprite(16, 16, g => { px(g, "#e3463b", 6, 7, 4, 4); px(g, "#ff8a7f", 7, 8, 1, 1); px(g, "#5a3a1e", 8, 6, 1, 1); }),
   orange: sprite(16, 16, g => { px(g, "#f39a2b", 6, 7, 4, 4); px(g, "#ffc777", 7, 8, 1, 1); px(g, "#3d7f2e", 8, 6, 1, 1); }),
+  // 벌집(v3): 육각 칸 무늬
+  honeycomb: (() => { const c = cv(32, 32), g = c.getContext("2d");
+    g.fillStyle = "rgba(0,0,0,.18)"; g.beginPath(); g.ellipse(16, 27, 10, 3, 0, 0, 7); g.fill();
+    g.fillStyle = "#e9a82c"; g.beginPath(); g.ellipse(16, 17, 11, 10, 0, 0, 7); g.fill(); g.strokeStyle = "#a8701a"; g.lineWidth = 1.2; g.stroke();
+    g.strokeStyle = "#c98a1f"; g.lineWidth = 1;
+    for (const [x, y] of [[11, 13], [17, 13], [14, 18], [20, 18], [11, 22], [17, 22]]) { g.beginPath(); for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; g.lineTo(x + Math.cos(a) * 3, y + Math.sin(a) * 3); } g.closePath(); g.stroke(); }
+    g.fillStyle = "#ffd76a"; g.beginPath(); g.ellipse(13, 12, 3, 2, -0.5, 0, 7); g.fill();
+    return c; })(),
 };
 
 // 사람: 색 + 방향, 걷는 동작 2장

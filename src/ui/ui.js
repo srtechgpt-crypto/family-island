@@ -7,6 +7,7 @@ import { onConnection } from "../services/fb.js";
 import { sendEmote } from "../services/emoteStore.js";
 import { drawCharacter } from "../game/character.js";
 import { appearanceOf, validateAppearance } from "../domain/appearance.js";
+import { installV3 } from "./ui3.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -29,6 +30,7 @@ export class UI {
       const r = await sendEmote(b.dataset.e);
       if (!r.ok && r.reason === "연결 없음") this.toast("인터넷 연결을 기다리는 중이에요");
     }));
+    this.bindV3();
     setInterval(() => this.clock(), 10000); this.clock();
     onConnection(c => { $("net").hidden = c; });
     onState(w => {
@@ -110,15 +112,19 @@ export class UI {
     const furn = state.player ? Object.values(state.player.furn).filter(f => f.state === "stored") : [];
     const fcount = {}; furn.forEach(f => fcount[f.type] = (fcount[f.type] || 0) + 1);
     $("bagGrid").innerHTML = keys.length || furn.length
-      ? keys.map(k => { const it = this.data.items[k] || { icon: "❔", name: k }; return `<div class="cell"><b>${it.icon}</b>${esc(it.name)}<small>×${inv[k]}</small></div>`; }).join("")
+      ? keys.map(k => { const it = this.data.items[k] || { icon: "❔", name: k }; return `<div class="cell"><b>${it.icon}</b>${esc(it.name)}<small>×${inv[k]}</small>${this.bagAction(k)}</div>`; }).join("")
         + Object.entries(fcount).map(([t, n]) => `<div class="cell furn"><b>${this.furnIcon(t)}</b>${esc(this.data.furniture[t].name)}<small>×${n}</small></div>`).join("")
       : `<p class="note">아직 비어 있어요. 나무를 흔들어 보세요.</p>`;
+    this.bindBagActions();
     $("pBag").hidden = false;
   }
-  furnIcon(t) { return { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚" }[t] || "📦"; }
+  furnIcon(t) { return { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚", stove_wood: "🍳" }[t] || "📦"; }
 
   // ---- 도감 ----
   openDex() {
+    const tab = this._dexTab || "fish";
+    document.querySelectorAll("#dexTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.t === tab));
+    if (tab !== "fish") { tab === "bug" ? this.dexBugs() : this.dexFood(); $("pDex").hidden = false; return; }
     const dex = state.player ? state.player.dex : {};
     const n = this.data.fish.filter(f => dex[f.id]).length;
     $("dexSub").textContent = `${n} / ${this.data.fish.length}종 잡았어요`;
@@ -134,17 +140,24 @@ export class UI {
     $("craftList").innerHTML = Object.entries(this.data.recipes).map(([id, r]) => {
       const ok = Object.entries(r.items).every(([k, n]) => (inv[k] || 0) >= n);
       const need = Object.entries(r.items).map(([k, n]) => `${esc((this.data.items[k] || {}).name || k)} ${inv[k] || 0}/${n}`).join(" · ");
-      return `<div class="recipe"><span class="ri">${this.furnIcon(r.type)}</span><div class="name">${esc(this.data.furniture[r.type].name)}<small>${need}</small></div><button class="btn${ok ? "" : " ghost"}" type="button" data-r="${id}" ${ok ? "" : "disabled"}>만들기</button></div>`;
+      const o = this.craftOut(r);
+      return `<div class="recipe"><span class="ri">${o.icon}</span><div class="name">${esc(o.name)}<small>${need}</small></div><button class="btn${ok ? "" : " ghost"}" type="button" data-r="${id}" ${ok ? "" : "disabled"}>만들기</button></div>`;
     }).join("");
     $("craftList").querySelectorAll("[data-r]").forEach(b => b.onclick = async () => {
       b.disabled = true; this.busy(true);
       const r = await P.craftFurniture(b.dataset.r, this.data.recipes).catch(() => ({ ok: false }));
       this.busy(false);
-      if (r.ok) this.toast(`${this.furnIcon(this.data.recipes[b.dataset.r].type)} ${this.data.furniture[this.data.recipes[b.dataset.r].type].name} 완성! 가방에 있어요`);
+      if (r.ok) { const o = this.craftOut(this.data.recipes[b.dataset.r]); this.toast(`${o.icon} ${o.name} 완성! 가방에 있어요`); }
       else this.toast("만들지 못했어요 (" + (r.reason || "저장 실패") + ")");
       this.openCraft();
     });
     $("pCraft").hidden = false;
+  }
+
+  // 작업대 결과물 이름·그림(가구 또는 아이템)
+  craftOut(r) {
+    if (r.outputKind === "item") { const k = Object.keys(r.out || {})[0], it = this.data.items[k] || { icon: "📦", name: k }; return { icon: it.icon, name: it.name }; }
+    return { icon: this.furnIcon(r.type), name: (this.data.furniture[r.type] || { name: r.type }).name };
   }
 
   // ---- 꾸미기 ----
@@ -206,6 +219,8 @@ export class UI {
     $("reqList").querySelectorAll("[data-no]").forEach(b => b.onclick = () => F.rejectRequest(state.fid, b.dataset.no));
   }
 }
+
+installV3(UI);
 
 // 관리자 화면의 나머지 버튼(복사·초대 바꾸기·백업·복원)
 export function bindAdminExtras(ui) {

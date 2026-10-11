@@ -115,11 +115,12 @@ export function enterPlace(place) {
 }
 export const currentPlace = () => presPlace;
 
-export function sendPos(x, y, d, force) {
+// beatMs: 멈춰 있어도 이 간격마다 갱신(캠프 근처는 10초 — 모인 사람 판정)
+export function sendPos(x, y, d, force, beatMs = 60000) {
   if (!presRef) return;
   const now = performance.now();
   if (!force && now - lastSent < 250) return;
-  if (!force && now - lastSent < 60000 && lastPos && Math.abs(lastPos.x - x) < 0.01 && Math.abs(lastPos.y - y) < 0.01 && lastPos.d === d) return;
+  if (!force && now - lastSent < beatMs && lastPos && Math.abs(lastPos.x - x) < 0.01 && Math.abs(lastPos.y - y) < 0.01 && lastPos.d === d) return;
   lastSent = now; lastPos = { x, y, d };
   set(presRef, { m: state.mid, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, d, t: serverTimestamp() }).catch(() => {});
 }

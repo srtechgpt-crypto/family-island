@@ -1,6 +1,6 @@
 // 게임 화면: 섬·집 그리기, 걷기, 행동(흔들기·줍기·낚시·문), 꾸미기
 import { T, WATER } from "./world.js";
-import { SPR, DROP_SPR, FORAGE_SPR, renderGround, houseSprite } from "./sprites.js";
+import { SPR, DROP_SPR, FORAGE_SPR, renderGround } from "./sprites.js";
 import { furnArt } from "./furnArt.js";
 import { drawCharacter } from "./character.js";
 import { renderMapBase, drawMap } from "./minimap.js";
@@ -17,6 +17,11 @@ import * as P from "../services/playerStore.js";
 import { pickFish, judge } from "../domain/fishing.js";
 import { canPlace } from "../domain/placement.js";
 import { zoneOf } from "../domain/rounds.js";
+import { treeDropSpots } from "../domain/housing.js";
+import { HouseLayer } from "./v3house.js";
+import { CampLayer } from "./v3camp.js";
+import { BugLayer } from "./v3bugs.js";
+import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
 
@@ -25,7 +30,10 @@ export class Game {
     this.cv = canvas; this.g = canvas.getContext("2d");
     this.world = world; this.data = data; this.ui = ui;
     this.ground = renderGround(world);
-    this.houseSpr = new Map(world.houses.map(h => [h.mid, houseSprite(familyOf(h.mid).color, "")]));
+    this.houseL = new HouseLayer(this);   // v3: 공유 집 위치를 먼저 반영
+    this.camp = new CampLayer(this);
+    this.bugs = new BugLayer(this);
+    this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
     this.mode = "island"; this.houseMid = null; this.room = "living"; this.housePlayer = null; this.houseUnsub = null;
@@ -66,6 +74,7 @@ export class Game {
     addEventListener("keydown", e => { this.keys[e.key] = true; if (e.key === " " || e.key === "Enter") { e.preventDefault(); this.act(); } });
     addEventListener("keyup", e => { this.keys[e.key] = false; });
     this.cv.addEventListener("pointerdown", e => {
+      SP.unlock();
       if (this.deco) { this.decoTap(e.clientX, e.clientY); return; }
       const M = this.MM;
       if (this.mode === "island" && e.clientX >= M.x && e.clientX <= M.x + M.w && e.clientY >= M.y && e.clientY <= M.y + M.h) { this.ui.openMap(); return; }
@@ -98,6 +107,16 @@ export class Game {
     }
     return set;
   }
+  furnAt(tx, ty) {
+    const p = this.housePlayer; if (!p) return null;
+    for (const f of Object.values(p.furn)) {
+      if (f.state !== "placed" || f.room !== this.room) continue;
+      const d = this.data.furniture[f.type]; if (!d) continue;
+      const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
+      if (tx >= f.x && tx < f.x + w && ty >= f.y && ty < f.y + h) return f.type;
+    }
+    return null;
+  }
   move(dx, dy) {
     const m = this.me, r = 0.28;
     const ok = (x, y) => !this.blocked(x - r, y) && !this.blocked(x + r, y) && !this.blocked(x - r, y + 0.2) && !this.blocked(x + r, y + 0.2);
@@ -109,9 +128,12 @@ export class Game {
   front() { const d = DIRS[this.me.dir]; return { x: Math.floor(this.me.x + d[0] * 0.8), y: Math.floor(this.me.y + d[1] * 0.8) }; }
   target() {
     const m = this.me, round = W.today();
+    if (this.houseL.move) return { k: "houseMove", label: this.houseL.move.res && this.houseL.move.res.ok ? "여기로 옮기기" : "여긴 안 돼요" };
+    if (this.camp.roast) return { k: "roast", label: "꺼내기!" };
     if (this.mode === "house") {
       const room = this.data.rooms[this.room], f = this.front(), tx = Math.floor(m.x), ty = Math.floor(m.y);
       if (this.room === "living" && this.houseMid === state.mid && room.blocked.some(([x, y]) => x === f.x && y === f.y)) return { k: "bench", label: "만들기" };
+      if (this.houseMid === state.mid && this.furnAt(f.x, f.y) === "stove_wood") return { k: "stove", label: "요리" };
       if (room.door.some(([x, y]) => x === tx && y === ty)) return { k: "exit", label: this.room === "living" ? "밖으로" : "거실로" };
       const link = (room.links || []).find(l => l.x === tx && l.y === ty);
       if (link) return { k: "link", to: link.to, label: this.data.rooms[link.to].name };
@@ -119,6 +141,8 @@ export class Game {
     }
     for (const h of this.world.houses) if (Math.abs(m.x - (h.door.x + 0.5)) < 0.9 && Math.abs(m.y - (h.door.y + 1)) < 1.1)
       return { k: "door", h, label: h.mid === state.mid ? "우리 집" : nameOf(h.mid) + "네" };
+    if (this.camp.near(m.x, m.y, 1.8)) return { k: "camp", label: "캠프파이어" };
+    const bug = this.bugs.target(); if (bug) return bug;
     // 가까운 것(떨어진 과일 > 꽃·조개·잡초 > 나무·돌)
     let best = null, bd = 1.35;
     const consider = (o, kind, label) => { const d = Math.hypot(o.x + 0.5 - m.x, o.y + 0.5 - m.y); if (d < bd) { bd = d; best = { k: kind, o, label }; } };
@@ -161,12 +185,17 @@ export class Game {
     if (this.fishing) return this.fishPress();
     if (this.busy) return;
     const t = this.target(); if (!t) return;
-    const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "forage"].includes(t.k);
+    if (t.k === "roast") return this.camp.pull();
+    if (t.k === "houseMove") { const r = await this.houseL.confirm(); this.ui.houseMoveDone(r); return; }
+    const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "forage", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "door") return this.enterHouse(t.h.mid);
     if (t.k === "exit") return this.room === "living" ? this.leaveHouse() : this.goRoom(this.data.rooms[this.room].back.room, this.data.rooms[this.room].back);
     if (t.k === "link") return this.goRoom(t.to);
     if (t.k === "bench") return this.ui.openCraft();
+    if (t.k === "camp") return this.ui.openCamp();
+    if (t.k === "stove") return this.ui.openCook("stove");
+    if (t.k === "bug") return this.bugs.catchIt(t.o);
     if (t.k === "fish") { this.fishing = { st: "wait", water: t.water, bx: t.fx + 0.5, by: t.fy + 0.5, until: performance.now() + 2000 + Math.random() * 4500 }; return; }
     this.busy = true;
     try {
@@ -211,20 +240,10 @@ export class Game {
     for (let y = my - 4; y <= my + 4; y++) for (let x = mx - 4; x <= mx + 4; x++) {
       const o = this.world.objAt.get(x + "," + y);
       if (!o || o.k !== "tree" || !W.isTaken(o.zone, o.id)) continue;
-      this.dropSpots(o.x, o.y, 3).forEach((s, i) => { const id = `${o.id}_f${i}`; if (!W.isTaken(o.zone, id)) out.push({ id, zone: o.zone, x: s.x, y: s.y, item: this.fruitOf(o) }); });
+      // 떨어지는 칸은 지도 기준으로 고정(집을 옮겨도 모든 폰이 같은 자리), 집에 가린 것만 숨김
+      treeDropSpots(this.world.map, o, 3).forEach((s, i) => { const id = `${o.id}_f${i}`; if (!W.isTaken(o.zone, id) && !this.world.inHouse(s.x, s.y)) out.push({ id, zone: o.zone, x: s.x, y: s.y, item: this.fruitOf(o) }); });
     }
-    return out;
-  }
-  // 나무 둘레에서 걸을 수 있고 비어 있는 칸
-  dropSpots(tx, ty, n) {
-    const cand = [[0, 1], [-1, 1], [1, 1], [-1, 0], [1, 0], [0, 2], [-1, -1], [1, -1], [0, -1]];
-    const out = [];
-    for (const [dx, dy] of cand) {
-      const x = tx + dx, y = ty + dy;
-      if (this.world.walkable(x + 0.5, y + 0.5) && !this.world.objAt.has(x + "," + y)) out.push({ x, y });
-      if (out.length >= n) break;
-    }
-    return out;
+    return out.concat(this.bugs.honeyDrops(W.today(), mx, my));
   }
   fishPress() {
     const f = this.fishing, now = performance.now();
@@ -262,7 +281,10 @@ export class Game {
   leaveHouse() {
     if (this.houseUnsub) this.houseUnsub(); this.houseUnsub = null;
     this.mode = "island"; this.deco = null; this.ui.decoClose(); this.fitTS();
-    this.me.x = this.islandPos.x; this.me.y = this.islandPos.y + 0.4; this.me.dir = 0;
+    // 그사이 집이 옮겨졌을 수 있으니 지금 집의 문 앞으로
+    const hs = this.world.houseOf(this.houseMid);
+    if (hs) { this.me.x = hs.door.x + 0.5; this.me.y = hs.door.y + 1.5; } else { this.me.x = this.islandPos.x; this.me.y = this.islandPos.y + 0.4; }
+    this.me.dir = 0;
     W.enterPlace("island"); EM.enterEmotePlace("island"); this.ui.inHouse(false, null, true);
   }
   // 꾸미기 창(index.html #pDeco: 너비 min(46vw,340px), 오른쪽 12px)이 차지하는 폭
@@ -300,17 +322,18 @@ export class Game {
     let mx = 0, my = 0;
     if (this.joy) { const d = Math.hypot(this.joy.dx, this.joy.dy); if (d > 8) { const s = Math.max(d, 45); mx = this.joy.dx / s; my = this.joy.dy / s; } }
     if (this.keys.ArrowLeft) mx = -1; if (this.keys.ArrowRight) mx = 1; if (this.keys.ArrowUp) my = -1; if (this.keys.ArrowDown) my = 1;
-    if (this.fishing || this.deco || state.kicked || this.ui.modalOpen()) mx = my = 0;
+    if (this.fishing || this.deco || state.kicked || this.ui.modalOpen() || this.camp.roast) mx = my = 0;
     if (this.fishing) {
       if (this.fishing.st === "wait" && now > this.fishing.until) { this.fishing.st = "bite"; this.fishing.biteAt = now; this.ui.bite(); }
       else if (this.fishing.st === "bite" && now - this.fishing.biteAt > (FISH_WINDOW[state.mid] || FISH_WINDOW.default) + 150) { this.fishing = null; this.ui.toast("앗, 놓쳤어요. 쏙! 할 때 눌러요"); }
     }
     this.me.moving = !!(mx || my);
     if (mx || my) {
-      const sp = 4.2 * dt; this.move(mx * sp, my * sp); this.me.walk += dt / 1.2;
+      const sp = (this.sneak ? 2.1 : 4.2) * dt; this.move(mx * sp, my * sp); this.me.walk += dt / 1.2;
       this.me.dir = Math.abs(mx) > Math.abs(my) ? (mx < 0 ? 1 : 2) : (my < 0 ? 3 : 0);
     }
-    W.sendPos(this.me.x, this.me.y, this.me.dir);
+    W.sendPos(this.me.x, this.me.y, this.me.dir, false, this.camp.heartbeatMs());
+    this.houseL.update(); this.camp.tick(); this.bugs.tick(dt);
     if (this.mode === "island") {
       const z = zoneOf(Math.floor(this.me.x), Math.floor(this.me.y));
       // 구역이 바뀌거나 오전 5시가 지나 회차가 바뀌면 다시 구독
@@ -321,7 +344,8 @@ export class Game {
       o.moving = d > 0.03;
       if (d > 6) { o.x = o.tx; o.y = o.ty; } else if (d > 0.01) { const k = Math.min(1, dt * 8); o.x += dx * k; o.y += dy * k; o.walk += dt / 1.2; }
     }
-    if (this.mode === "island") { this.drawIsland(now); this.drawMini(); } else this.drawHouse();
+    if (this.mode === "island") { this.drawIsland(now, dt); this.drawMini(); } else this.drawHouse();
+    this.camp.drawOverlay(this.g, dt);
     this.drawJoy();
     const t = this.fishing ? { label: this.fishing.st === "bite" ? "지금!" : "기다려요" } : this.target();
     this.ui.setAction(t ? t.label : null);
@@ -340,7 +364,10 @@ export class Game {
     const g = this.g, TS = this.TS, f = familyOf(mid) || FAMILY[0], name = nameOf(mid);
     const look = appearanceOf(state.members[mid] && state.members[mid].appearance, mid);
     const s = TS * 1.6;
+    const sway = this.mode === "island" ? this.camp.swayOf(mid, (x + this.camX) / TS, (y + this.camY) / TS) : 0;
+    if (sway) { g.save(); g.translate(x, y + TS * 0.25); g.rotate(sway); g.translate(-x, -(y + TS * 0.25)); }
     const { headTop } = drawCharacter(g, look, this.data.appearance, x, y + TS * 0.25, s, dir, walk, moving, this.emoteOf(mid));
+    if (sway) g.restore();
     g.font = `${Math.round(TS * 0.36)}px Jua, sans-serif`; g.textAlign = "center";
     const tw = g.measureText(name).width + 10, ty = headTop - TS * 0.12;
     g.fillStyle = "rgba(255,253,246,.92)"; g.beginPath(); g.roundRect(x - tw / 2, ty - TS * 0.42, tw, TS * 0.42, 8); g.fill();
@@ -364,21 +391,19 @@ export class Game {
     drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true);
   }
 
-  drawIsland(now) {
+  drawIsland(now, dt = 0) {
     const g = this.g, TS = this.TS, S = TS / 16, m = this.me, round = W.today();
     const camX = m.x * TS - this.W / 2, camY = m.y * TS - this.H / 2;
+    this.camX = camX; this.camY = camY;
     g.imageSmoothingEnabled = false;
     g.fillStyle = "#4aa9c9"; g.fillRect(0, 0, this.W, this.H);
     const sx = camX / S, sy = camY / S, sw = this.W / S, sh = this.H / S;
     g.drawImage(this.ground, sx, sy, sw, sh, 0, 0, this.W, this.H);
     const x0 = Math.floor(camX / TS) - 2, y0 = Math.floor(camY / TS) - 2, x1 = x0 + Math.ceil(this.W / TS) + 4, y1 = y0 + Math.ceil(this.H / TS) + 4;
     const list = [];
-    for (const h of this.world.houses) if (h.x + h.w >= x0 && h.x <= x1 && h.y + h.h >= y0 && h.y <= y1)
-      list.push({ y: h.y + h.h, f: () => {
-        g.drawImage(this.houseSpr.get(h.mid), h.x * TS - camX, h.y * TS - camY - TS * 14 / 16, h.w * TS, h.h * TS + TS * 14 / 16);
-        g.font = `${Math.round(TS * 0.55)}px Jua, sans-serif`; g.textAlign = "center"; g.fillStyle = "#fff";
-        g.fillText(nameOf(h.mid) + "네", (h.x + h.w / 2) * TS - camX, h.y * TS - camY + TS * 0.45);
-      } });
+    this.houseL.addHouses(list, g, TS, camX, camY, x0, y0, x1, y1);
+    this.camp.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, dt, now / 1000);
+    this.bugs.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
       const px = x * TS - camX, py = y * TS - camY;
@@ -390,12 +415,12 @@ export class Game {
       else if (o.k === "rock" || o.k === "stone") list.push({ y: y + 0.5, f: () => g.drawImage(SPR.rock, px, py, TS, TS) });
       else if ((o.k === "flower" || o.k === "shell") && !W.isTaken(o.zone, o.id)) list.push({ y: y + 0.3, f: () => g.drawImage(o.k === "shell" ? SPR.shell : SPR.flower[o.c] || SPR.flower.red, px, py, TS, TS) });
     }
-    for (const o of this.world.weedsFor(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id))
+    for (const o of this.world.weedsFor(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y))
       list.push({ y: o.y + 0.3, f: () => g.drawImage(SPR.weed, o.x * TS - camX, o.y * TS - camY, TS, TS) });
-    for (const o of this.forageToday(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id))
+    for (const o of this.forageToday(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y))
       list.push({ y: o.y + 0.3, f: () => g.drawImage(FORAGE_SPR[o.item] || FORAGE_SPR.mushroom_red, o.x * TS - camX, o.y * TS - camY, TS, TS) });
     for (const d of this.fruitDrops())
-      list.push({ y: d.y + 0.4, f: () => g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS) });
+      list.push({ y: d.y + 0.4, f: () => { g.imageSmoothingEnabled = d.item === "honeycomb"; g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS); g.imageSmoothingEnabled = false; } });
     for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving) });
     list.push({ y: m.y, f: () => this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving) });
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
