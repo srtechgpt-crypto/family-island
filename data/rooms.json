@@ -1,0 +1,6 @@
+{
+  "living": { "id": "living", "name": "거실", "w": 11, "h": 8, "blocked": [[1, 1]], "door": [[5, 7]], "walkway": [[5, 6], [3, 1], [7, 1]],
+              "links": [{ "x": 3, "y": 0, "to": "bed" }, { "x": 7, "y": 0, "to": "small" }] },
+  "bed":    { "id": "bed", "name": "침실", "w": 9, "h": 7, "blocked": [], "door": [[4, 6]], "walkway": [[4, 5]], "back": { "room": "living", "x": 3, "y": 1 } },
+  "small":  { "id": "small", "name": "작은방", "w": 7, "h": 6, "blocked": [], "door": [[3, 5]], "walkway": [[3, 4]], "back": { "room": "living", "x": 7, "y": 1 } }
+}

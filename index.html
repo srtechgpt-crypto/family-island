@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#2f5d3a">
+<title>우리 가족 섬</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+:root{
+  --sea:#4aa9c9; --leaf:#2f5d3a; --panel:#fffdf6; --sun:#ffd35c; --ink:#24352a; --muted:#6b7c6f; --line:#cfdcc8;
+  --f-display:"Jua","Gowun Dodum",system-ui,sans-serif; --f-body:"Gowun Dodum",system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--sea);color:var(--ink);font-family:var(--f-body);
+  -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none}
+[hidden]{display:none!important}
+#game{position:fixed;inset:0;width:100%;height:100%;display:block}
+.screen{position:fixed;inset:0;display:grid;place-items:center;padding:16px;background:linear-gradient(#7fcbe0,#4aa9c9)}
+#sGame{background:none;padding:0;display:block}
+.card{width:min(94vw,460px);max-height:92%;overflow:auto;background:var(--panel);border:4px solid var(--leaf);border-radius:22px;padding:20px;box-shadow:0 6px 0 rgba(0,0,0,.25);user-select:text}
+.card h1{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0 0 6px;color:var(--leaf)}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0 0 6px}
+.card p{margin:0 0 12px;line-height:1.55}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.btn{font-family:var(--f-display);font-size:17px;background:var(--sun);color:var(--ink);border:3px solid var(--leaf);border-radius:14px;padding:8px 14px;box-shadow:0 3px 0 rgba(0,0,0,.2);cursor:pointer}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.btn:disabled{opacity:.5}
+.btn.ghost{background:var(--panel)}
+.btn.wide{width:100%;margin-top:6px}
+input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;width:100%;background:#fff;color:var(--ink)}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.slot{border:3px solid var(--leaf);border-radius:14px;padding:10px 4px;text-align:center;font-family:var(--f-display);font-size:18px;cursor:pointer;background:#fff;color:var(--ink)}
+.slot i{display:block;width:30px;height:30px;border-radius:50%;margin:0 auto 4px}
+/* 게임 위 */
+.hud{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top,0px) + 8px) calc(12px + env(safe-area-inset-right,0px)) 0 calc(12px + env(safe-area-inset-left,0px));display:flex;gap:8px;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.chip{pointer-events:auto;background:var(--panel);border:3px solid var(--leaf);border-radius:14px;padding:4px 10px;font-family:var(--f-display);font-size:15px;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.who{display:flex;gap:4px;min-height:34px}
+.face{width:26px;height:26px;border-radius:50%;border:2px solid var(--leaf);display:grid;place-items:center;font-size:12px;font-family:var(--f-display);color:#fff}
+.menu{display:flex;gap:8px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end}
+#act{position:fixed;right:calc(20px + env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));width:100px;height:100px;border-radius:50%;font-size:20px;padding:0}
+#act.off{opacity:.45}
+#net{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 54px);transform:translateX(-50%);background:#d9574a;color:#fff;font-family:var(--f-display);padding:4px 14px;border-radius:12px}
+#busy{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:rgba(36,53,42,.75);color:#fff;padding:4px 12px;border-radius:10px;font-size:13px}
+#toast{position:fixed;left:50%;top:26%;transform:translateX(-50%);background:var(--panel);border:3px solid var(--leaf);border-radius:16px;padding:10px 18px;font-family:var(--f-display);font-size:20px;text-align:center;pointer-events:none;box-shadow:0 4px 0 rgba(0,0,0,.2);max-width:80vw;z-index:30}
+.panel{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,520px);max-height:86%;overflow:auto;background:var(--panel);border:4px solid var(--leaf);border-radius:20px;padding:16px;box-shadow:0 6px 0 rgba(0,0,0,.25);z-index:20}
+.panel h2{font-family:var(--f-display);font-weight:400;margin:0 0 4px;font-size:24px}
+.panel .sub{margin:0 0 10px;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+.cell{border:2px solid var(--line);border-radius:12px;padding:8px 4px;text-align:center;font-size:13px;background:#fff;min-width:0;font-family:var(--f-body);color:var(--ink)}
+.cell b{display:block;font-size:26px;line-height:1.2}
+.cell small{display:block;color:var(--muted)}
+.cell.sel{border-color:var(--leaf);background:#eef7e6}
+.cell.dim{opacity:.4}
+.row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.recipe,.req{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:8px;margin-bottom:8px;background:#fff;flex-wrap:wrap}
+.recipe .name,.req .name{flex:1;min-width:120px}
+.recipe small,.req small{color:var(--muted);display:block}
+.ri{font-size:28px}
+.req select{width:auto;flex:1}
+#pDeco{left:auto;right:calc(12px + env(safe-area-inset-right,0px));top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:none;width:min(46vw,340px);max-height:70%}
+#pFish{text-align:center;pointer-events:none}
+#fishIcon{font-size:56px}
+#qr{width:180px;margin:0 auto 8px}
+#qr svg{width:100%;height:auto}
+.admin-sec{border-top:2px dashed var(--line);padding-top:10px;margin-top:10px}
+#rotate{position:fixed;inset:0;background:var(--leaf);color:#fff;display:none;place-items:center;text-align:center;font-family:var(--f-display);font-size:24px;z-index:50;padding:20px}
+@media (orientation:portrait) and (max-width:900px){ body.playing #rotate{display:grid} }
+#ver{position:fixed;left:6px;bottom:4px;font-size:10px;color:rgba(255,255,255,.7)}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<section class="screen" id="sLoading"><div class="card"><h1>우리 가족 섬</h1><p id="loadMsg">섬으로 가는 배를 타는 중…</p></div></section>
+
+<section class="screen" id="sStart" hidden><div class="card">
+  <h1>우리 가족 섬</h1>
+  <p>우리 가족 여섯 명이 함께 사는 섬이에요.</p>
+  <p class="note">처음이면 <b>아빠가 구글로 로그인</b>해서 섬을 만들어요. 가족들은 아빠가 보내 준 <b>초대 QR</b>로 들어와요.</p>
+  <button class="btn wide" id="goGoogle" type="button">아빠: 구글로 로그인</button>
+</div></section>
+
+<section class="screen" id="sCreate" hidden><div class="card">
+  <h2>섬 만들기</h2>
+  <p>섬 이름을 정해요. 나중에 바꿀 수 있어요.</p>
+  <input type="text" id="islandName" maxlength="12" value="우리 가족 섬">
+  <button class="btn wide" id="createBtn" type="button">섬 만들기</button>
+  <p class="note" style="margin-top:10px">이미 섬을 만들었다면 만들지 말고, 섬 초대 주소로 다시 열어 주세요.</p>
+  <button class="btn ghost wide" id="logout" type="button">다른 계정으로</button>
+</div></section>
+
+<section class="screen" id="sNeedInvite" hidden><div class="card">
+  <h2>초대 QR이 필요해요</h2>
+  <p>아빠 폰의 <b>가족 관리 → 초대 QR</b>을 카메라로 찍어서 들어와요.</p>
+  <button class="btn ghost wide" id="goGoogle3" type="button">아빠(관리자)는 구글로 들어가기</button>
+</div></section>
+
+<section class="screen" id="sJoin" hidden><div class="card">
+  <h2>누구예요?</h2>
+  <p>내 이름을 눌러요. 아빠가 허락하면 섬에 들어가요.</p>
+  <div class="slots" id="slots"></div>
+  <button class="btn ghost wide" id="goGoogle2" type="button">아빠(관리자)는 구글로 들어가기</button>
+</div></section>
+
+<section class="screen" id="sWait" hidden><div class="card">
+  <h2><span id="waitName"></span>, 조금만 기다려요</h2>
+  <p id="waitMsg">아빠 폰에 신청이 갔어요. 아빠가 "들어오게 하기"를 누르면 바로 섬에 들어가요.</p>
+  <button class="btn ghost wide" id="waitCancel" type="button">다른 이름 고르기</button>
+</div></section>
+
+<section class="screen" id="sError" hidden><div class="card"><h2>앗!</h2><p id="errMsg"></p><button class="btn wide" id="errReload" type="button">다시 열기</button></div></section>
+
+<section class="screen" id="sGame" hidden>
+  <div class="hud" id="hud" hidden>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div class="chip" id="clock"></div>
+      <div class="chip who" id="who"></div>
+    </div>
+    <div class="menu">
+      <button class="btn" id="bBag" type="button">가방</button>
+      <button class="btn" id="bDex" type="button">도감</button>
+      <button class="btn ghost" id="bDeco" type="button" hidden>꾸미기</button>
+      <button class="btn ghost" id="bAdmin" type="button" hidden>가족 관리</button>
+    </div>
+  </div>
+  <button class="btn off" id="act" type="button" hidden>행동</button>
+  <div id="net" hidden>인터넷 연결을 기다리는 중…</div>
+  <div id="busy" hidden>저장하는 중…</div>
+</section>
+
+<div id="toast" hidden></div>
+
+<div class="panel" id="pBag" hidden><h2>가방</h2><p class="sub">모은 재료·물고기·만든 가구</p><div class="grid" id="bagGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pDex" hidden><h2>물고기 도감</h2><p class="sub" id="dexSub"></p><div class="grid" id="dexGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pCraft" hidden><h2>작업대</h2><p class="sub">재료가 모이면 가구를 만들 수 있어요.</p><div id="craftList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pDeco" hidden>
+  <h2>꾸미기</h2><p class="sub" id="decoHint"></p>
+  <div class="row" id="decoPick" hidden style="justify-content:flex-start;margin:0 0 10px">
+    <button class="btn" id="decoMove" type="button">옮기기</button><button class="btn" id="decoRot" type="button">돌리기</button><button class="btn ghost" id="decoStore" type="button">가방에 넣기</button>
+  </div>
+  <div class="grid" id="decoGrid"></div>
+  <div class="row"><button class="btn ghost" id="decoDone" type="button">꾸미기 끝</button></div>
+</div>
+<div class="panel" id="pFish" hidden><div id="fishIcon"></div><h2 id="fishName"></h2><p class="sub" id="fishInfo"></p></div>
+<div class="panel" id="pKicked" hidden><h2>다른 기기에서 들어왔어요</h2><p>같은 이름으로 다른 폰에서 섬에 들어와서, 이 폰은 멈췄어요.</p><div class="row"><button class="btn" id="kickedReload" type="button">이 폰으로 다시 들어가기</button></div></div>
+<div class="panel" id="pAdmin" hidden>
+  <h2>가족 관리</h2>
+  <p class="sub">아빠만 보이는 화면이에요.</p>
+  <div><b>들어오고 싶은 가족</b><div id="reqList" style="margin-top:6px"></div></div>
+  <div class="admin-sec"><b>가족 이름</b><p class="note">게임 안에서 보일 이름이에요(1~6글자).</p><div id="nameList"></div></div>
+  <div class="admin-sec"><b>초대 QR</b><p class="note">가족 폰 카메라로 찍으면 신청 화면이 열려요. 가족 밖으로 보내지 마세요.</p>
+    <div id="qr"></div><input type="text" id="inviteLink" readonly>
+    <div class="row"><button class="btn ghost" id="copyLink" type="button">주소 복사</button><button class="btn ghost" id="newInvite" type="button">새 초대 주소 만들기</button></div></div>
+  <div class="admin-sec"><b>백업</b><p class="note">가방·집·도감을 파일로 받아 두어요. 일주일에 한 번 추천.</p>
+    <div class="row" style="justify-content:flex-start"><button class="btn" id="backup" type="button">백업 받기</button>
+    <label class="btn ghost" for="restoreFile">백업에서 되돌리기</label><input type="file" id="restoreFile" accept=".json,application/json" hidden></div>
+    <div id="restoreAsk" hidden class="req"><div class="name">정말 <span id="restoreWhen"></span> 백업으로 되돌릴까요?<small>모두의 가방·집·도감이 그때로 돌아가요. 오늘·어제 주운 것은 다시 들어와요. 급할 때만 쓰세요.</small></div><button class="btn" id="restoreYes" type="button">되돌리기</button><button class="btn ghost" id="restoreNo" type="button">그만두기</button></div>
+  </div>
+  <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
+</div>
+
+<div id="rotate">폰을 옆으로 돌려 주세요 🔄<br><small style="font-size:15px">우리 가족 섬은 가로 화면으로 해요</small></div>
+<div id="ver"></div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

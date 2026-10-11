@@ -1,0 +1,21 @@
+{
+  "apple": { "name": "사과", "kind": "material", "icon": "🍎" },
+  "orange": { "name": "오렌지", "kind": "material", "icon": "🍊" },
+  "branch": { "name": "나뭇가지", "kind": "material", "icon": "🪵" },
+  "weed": { "name": "잡초", "kind": "material", "icon": "🌿" },
+  "flower_red": { "name": "빨간 꽃", "kind": "material", "icon": "🌹" },
+  "flower_yellow": { "name": "노란 꽃", "kind": "material", "icon": "🌼" },
+  "flower_white": { "name": "하얀 꽃", "kind": "material", "icon": "🌸" },
+  "shell": { "name": "조개", "kind": "material", "icon": "🐚" },
+  "stone": { "name": "돌", "kind": "material", "icon": "🪨" },
+  "fish_mackerel": { "name": "고등어", "kind": "fish", "icon": "🐟" },
+  "fish_seabream": { "name": "도미", "kind": "fish", "icon": "🐟" },
+  "fish_puffer": { "name": "복어", "kind": "fish", "icon": "🐡" },
+  "fish_octopus": { "name": "문어", "kind": "fish", "icon": "🐙" },
+  "fish_minnow": { "name": "피라미", "kind": "fish", "icon": "🐟" },
+  "fish_crucian": { "name": "붕어", "kind": "fish", "icon": "🐟" },
+  "fish_catfish": { "name": "메기", "kind": "fish", "icon": "🐟" },
+  "fish_goldfish": { "name": "금붕어", "kind": "fish", "icon": "🐟" },
+  "fish_carp": { "name": "잉어", "kind": "fish", "icon": "🐟" },
+  "fish_medaka": { "name": "송사리", "kind": "fish", "icon": "🐟" }
+}

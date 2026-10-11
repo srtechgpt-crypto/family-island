@@ -1,0 +1,8 @@
+{
+  "chair_wood": { "type": "chair_wood", "items": { "branch": 5 } },
+  "pot_flower": { "type": "pot_flower", "items": { "stone": 2, "weed": 2, "flower_red": 1, "flower_yellow": 1, "flower_white": 1 } },
+  "table_wood": { "type": "table_wood", "items": { "branch": 8, "stone": 2 } },
+  "bed_log": { "type": "bed_log", "items": { "branch": 12, "weed": 5 } },
+  "lamp_shell": { "type": "lamp_shell", "items": { "shell": 3, "stone": 2 } },
+  "bookshelf_wood": { "type": "bookshelf_wood", "items": { "branch": 10, "stone": 3 } }
+}

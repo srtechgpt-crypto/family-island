@@ -1,0 +1,8 @@
+{
+  "chair_wood": { "name": "나무 의자", "w": 1, "h": 1 },
+  "pot_flower": { "name": "꽃 화분", "w": 1, "h": 1 },
+  "table_wood": { "name": "나무 탁자", "w": 2, "h": 1 },
+  "bed_log": { "name": "통나무 침대", "w": 2, "h": 2 },
+  "lamp_shell": { "name": "조개 램프", "w": 1, "h": 1 },
+  "bookshelf_wood": { "name": "나무 책장", "w": 1, "h": 2 }
+}
