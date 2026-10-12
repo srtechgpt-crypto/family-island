@@ -113,7 +113,7 @@ export class UI {
     const fcount = {}; furn.forEach(f => fcount[f.type] = (fcount[f.type] || 0) + 1);
     $("bagGrid").innerHTML = keys.length || furn.length
       ? keys.map(k => { const it = this.data.items[k] || { icon: "❔", name: k }; return `<div class="cell"><b>${it.icon}</b>${esc(it.name)}<small>×${inv[k]}</small>${this.bagAction(k)}</div>`; }).join("")
-        + Object.entries(fcount).map(([t, n]) => `<div class="cell furn"><b>${this.furnIcon(t)}</b>${esc(this.data.furniture[t].name)}<small>×${n}</small></div>`).join("")
+        + Object.entries(fcount).map(([t, n]) => `<div class="cell furn"><b>${this.furnIcon(t)}</b>${esc((this.data.furniture[t] || { name: t }).name)}<small>×${n}</small></div>`).join("")
       : `<p class="note">아직 비어 있어요. 나무를 흔들어 보세요.</p>`;
     this.bindBagActions();
     $("pBag").hidden = false;
@@ -170,7 +170,7 @@ export class UI {
     const picked = g.deco.picked && state.player.furn[g.deco.picked];
     $("decoHint").textContent = g.deco.sel ? "놓을 자리를 방바닥에서 눌러요" : picked ? "고른 가구를 어떻게 할까요?" : "놓을 가구를 고르거나, 방에 있는 가구를 눌러요";
     $("decoPick").hidden = !picked;
-    $("decoGrid").innerHTML = stored.length ? stored.map(([id, f]) => `<button type="button" class="cell${g.deco.sel === id ? " sel" : ""}" data-f="${id}"><b>${this.furnIcon(f.type)}</b>${esc(this.data.furniture[f.type].name)}</button>`).join("")
+    $("decoGrid").innerHTML = stored.length ? stored.map(([id, f]) => `<button type="button" class="cell${g.deco.sel === id ? " sel" : ""}" data-f="${id}"><b>${this.furnIcon(f.type)}</b>${esc((this.data.furniture[f.type] || { name: f.type }).name)}</button>`).join("")
       : `<p class="note">가방에 놓을 가구가 없어요. 거실 작업대(망치)에서 만들어요.</p>`;
     $("decoGrid").querySelectorAll("[data-f]").forEach(b => b.onclick = () => { g.deco.picked = null; g.decoSelect(g.deco.sel === b.dataset.f ? null : b.dataset.f); this.decoRefresh(); });
     $("decoRot").onclick = async () => { const room = this.data.rooms[g.room]; this.busy(true); const r = await P.rotateFurniture(room, this.data.furniture, g.deco.picked).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("돌릴 수 없어요 (" + (r.reason || "") + ")"); this.decoRefresh(); };

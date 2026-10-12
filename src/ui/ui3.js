@@ -74,7 +74,7 @@ export function installV3(UI) {
         const date = new Date(d.day * 86400000);   // KST 일 번호 → 날짜(UTC 기준으로 그 날)
         const who = Object.keys(d.attendance || {}).sort();
         const roasts = Object.entries(d.roasts || {}).map(([m, r]) => `${esc(nameOf(m))} ${Object.values(r).map(x => ROAST_NAME[x] || x).join("·")}`).join(" / ");
-        return `<div class="mem"><b>${date.getUTCFullYear()}년 ${date.getUTCMonth() + 1}월 ${date.getUTCDate()}일</b>${who.length >= FAMILY.length ? " 🎆 모두 모였어요!" : who.length >= 3 ? " 🎆 불꽃놀이!" : ""}<div>모인 가족: ${who.map(m => esc(nameOf(m))).join(", ") || "-"}</div>${roasts ? `<div class="note">🍡 ${roasts}</div>` : ""}</div>`;
+        return `<div class="mem"><b>${date.getUTCFullYear()}년 ${date.getUTCMonth() + 1}월 ${date.getUTCDate()}일</b>${who.length >= FAMILY.length ? " 🌟 모두 모였어요!" : ""}${d.fireworks ? " 🎆 불꽃놀이!" : ""}<div>모인 가족: ${who.map(m => esc(nameOf(m))).join(", ") || "-"}</div>${roasts ? `<div class="note">🍡 ${roasts}</div>` : ""}</div>`;
       }).join("") : `<p class="note">아직 기록이 없어요. 저녁에 캠프파이어에 모여 봐요!</p>`;
     } catch { $("memList").innerHTML = `<p class="note">불러오지 못했어요. 연결을 확인해 주세요.</p>`; }
   };

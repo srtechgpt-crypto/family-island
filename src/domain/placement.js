@@ -46,7 +46,8 @@ function footprint(room, info, x, y, width, height) {
   return { ok: true, cells };
 }
 
-function connected(room, info, occupied) {
+// 문에서 4방향으로 걸어 닿는 빈칸 모음
+function reachable(room, info, occupied) {
   const free = new Set();
   for (let y = 1; y < room.h; y++) {
     for (let x = 1; x < room.w - 1; x++) {
@@ -64,7 +65,7 @@ function connected(room, info, occupied) {
       if (free.has(cell) && !seen.has(cell)) { seen.add(cell); queue.push([nx, ny]); }
     }
   }
-  return seen.size === free.size;
+  return seen;
 }
 
 export function canPlace(room, furnDefs, player, furnId, x, y, rot) {
@@ -92,8 +93,12 @@ export function canPlace(room, furnDefs, player, furnId, x, y, rot) {
     for (const cell of existing.cells) occupied.add(cell);
   }
   if (candidate.cells.some(cell => occupied.has(cell))) return fail("다른 가구와 겹침");
+  // 이미 고립된 빈칸(예: 탁자가 2칸→1칸으로 줄어 생긴 칸)은 탓하지 않고, 원래 닿던 칸을 새로 막을 때만 거절한다.
+  const before = reachable(room, info, occupied);
   for (const cell of candidate.cells) occupied.add(cell);
-  if (!connected(room, info, occupied)) return fail("길 막힘");
+  const after = reachable(room, info, occupied);
+  const placed = new Set(candidate.cells);
+  for (const cell of before) if (!placed.has(cell) && !after.has(cell)) return fail("길 막힘");
   return { ok: true, reason: null };
 }
 
