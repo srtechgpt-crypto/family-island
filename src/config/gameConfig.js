@@ -1,5 +1,5 @@
 // 가족 자리·앱 버전 등 고정 설정
-export const APP_VERSION = 4;
+export const APP_VERSION = 5;
 export const FAMILY = [
   { mid: "m0", name: "할머니", color: "#c77d4a" },
   { mid: "m1", name: "아빠", color: "#3d6fb6" },

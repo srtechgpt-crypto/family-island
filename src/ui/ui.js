@@ -5,6 +5,11 @@ import * as P from "../services/playerStore.js";
 import * as F from "../services/family.js";
 import { onConnection } from "../services/fb.js";
 import { sendEmote } from "../services/emoteStore.js";
+import { EMOTE_GROUPS, FACE_KINDS } from "../domain/emotes.js";
+// 감정 표현 이름표: kind → [그림, 이름]
+const EMO_LABEL = { heart: ["💗", "하트"], laugh: ["😆", "웃음"], surprise: ["😲", "깜짝"], sad: ["😢", "슬픔"], angry: ["😠", "뿔남"], sleepy: ["💤", "졸려"], curious: ["❓", "궁금"], idea: ["💡", "생각났다"], thanks: ["🙏", "고마워"],
+  wave: ["👋", "손 흔들기"], clap: ["👏", "박수"], bow: ["🙇", "꾸벅 인사"], jump: ["🦘", "점프"], spin: ["🌀", "빙글 돌기"], sit: ["🪑", "앉기"], thumbs_up: ["👍", "엄지척"], peace: ["✌️", "브이"],
+  dance: ["💃", "신나는 춤"], robot: ["🤖", "로봇 춤"], ballet: ["🩰", "발레"], bunny: ["🐰", "토끼 깡충"], freestyle: ["🕺", "막춤"] };
 import { drawCharacter } from "../game/character.js";
 import { appearanceOf, validateAppearance } from "../domain/appearance.js";
 import { installV3 } from "./ui3.js";
@@ -25,11 +30,12 @@ export class UI {
     $("bCloset").onclick = () => this.openCloset(false);
     $("closetCancel").onclick = () => { if (!this._closetFirst) $("pCloset").hidden = true; else this.saveCloset(); };
     $("closetSave").onclick = () => this.saveCloset();
-    document.querySelectorAll("#emotes .emo").forEach(b => b.addEventListener("pointerdown", async e => {
-      e.preventDefault();
-      const r = await sendEmote(b.dataset.e);
-      if (!r.ok && r.reason === "연결 없음") this.toast("인터넷 연결을 기다리는 중이에요");
-    }));
+    // 감정 표현: 👋·💗는 바로, 😊는 표정/동작/춤 고르기 창
+    document.querySelectorAll("#emotes .emo[data-e]").forEach(b => b.addEventListener("pointerdown", e => { e.preventDefault(); this.emote(b.dataset.e); }));
+    $("emoMore").addEventListener("pointerdown", e => { e.preventDefault(); if ($("pEmo").hidden) { this.closeAll(); this.emoTab(this._emoTab || "face"); $("pEmo").hidden = false; } else $("pEmo").hidden = true; });
+    $("emoClose").onclick = () => { $("pEmo").hidden = true; };
+    $("emoTabs").querySelectorAll("button").forEach(b => b.onclick = () => this.emoTab(b.dataset.g));
+    $("emoGrid").addEventListener("click", e => { const b = e.target.closest("button[data-e]"); if (!b) return; $("pEmo").hidden = true; this.emote(b.dataset.e); });
     this.bindV3();
     setInterval(() => this.clock(), 10000); this.clock();
     onConnection(c => { $("net").hidden = c; });
@@ -40,6 +46,19 @@ export class UI {
     });
   }
   attach(game) { this.game = game; $("hud").hidden = false; $("act").hidden = false; $("emotes").hidden = false; $("bAdmin").hidden = !state.isAdmin; this.who(); }
+  emoTab(gid) {
+    this._emoTab = gid;
+    $("emoTabs").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.g === gid ? "true" : "false"));
+    $("emoGrid").innerHTML = EMOTE_GROUPS[gid].map(k => `<button type="button" data-e="${k}"><b>${EMO_LABEL[k][0]}</b>${EMO_LABEL[k][1]}</button>`).join("");
+  }
+  async emote(kind) {
+    const g = this.game; if (!g) return;
+    if (g.lakeL && g.lakeL.boating && !FACE_KINDS.includes(kind)) { this.toast("배 위에서는 표정만 돼요. 내려서 해 봐요"); return; }
+    const r = await sendEmote(kind);
+    if (r.ok) { g.myEmoteMoved = false; return; }
+    if (r.reason === "연결 없음") this.toast("인터넷 연결을 기다리는 중이에요");
+    else if (r.reason === "busy" || r.reason === "잠깐만") this.toast("잠깐만요, 하나씩 해요");
+  }
   modalOpen() { return [...document.querySelectorAll(".panel")].some(p => !p.hidden && p.id !== "pDeco"); }
   closeAll() { document.querySelectorAll(".panel").forEach(p => p.hidden = true); }
 

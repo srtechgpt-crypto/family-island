@@ -6,7 +6,7 @@ import { drawCharacter } from "./character.js";
 import { renderMapBase, drawMap } from "./minimap.js";
 import * as EM from "../services/emoteStore.js";
 import { appearanceOf } from "../domain/appearance.js";
-import { emoteProgress } from "../domain/emotes.js";
+import { emoteActive } from "../domain/emotes.js";
 import { mapMarkers } from "../domain/mapMarkers.js";
 import { gatherSupply, fruitTreesFor } from "../domain/gather.js";
 import { state, onState } from "../state.js";
@@ -393,20 +393,25 @@ export class Game {
   othersHereList() { return [...W.othersHere().values()]; }
 
   // 감정: 내 것은 내 세션 기록, 다른 가족은 그 사람의 현재 세션 기록만
-  emoteOf(mid) {
+  // w = 그 사람의 위치 {x, y, boat}: 표현을 시작한 뒤 0.3칸 넘게 움직였으면 앉기·동작·춤은 끝(표정은 계속), 배 위면 표정만
+  emoteOf(mid, w) {
     const cur = mid === state.mid ? state.ses : state.members[mid] && state.members[mid].ses;
     const e = cur && EM.emotesHere()[cur];
     if (!e || e.m !== mid) return null;
-    const p = emoteProgress(e, serverNow());
-    return p === null ? null : { kind: e.kind, p };
+    if (!this.emoStart) this.emoStart = new Map();
+    let st = this.emoStart.get(e.id);
+    if (!st && w) { st = { x: w.x, y: w.y }; this.emoStart.set(e.id, st); if (this.emoStart.size > 40) this.emoStart.delete(this.emoStart.keys().next().value); }
+    const moved = !!(st && w && Math.hypot(w.x - st.x, w.y - st.y) > 0.3);
+    const a = emoteActive(e, serverNow(), { movedSince: moved, boat: !!(w && w.boat) });
+    return a ? { kind: a.kind, p: a.p, t: a.t / 1000 } : null;
   }
-  drawPerson(mid, x, y, dir, walk, moving) {
+  drawPerson(mid, x, y, dir, walk, moving, w) {
     const g = this.g, TS = this.TS, f = familyOf(mid) || FAMILY[0], name = nameOf(mid);
     const look = appearanceOf(state.members[mid] && state.members[mid].appearance, mid);
     const s = TS * 1.6;
     const sway = this.mode === "island" ? this.camp.swayOf(mid, (x + this.camX) / TS, (y + this.camY) / TS) : 0;
     if (sway) { g.save(); g.translate(x, y + TS * 0.25); g.rotate(sway); g.translate(-x, -(y + TS * 0.25)); }
-    const { headTop } = drawCharacter(g, look, this.data.appearance, x, y + TS * 0.25, s, dir, walk, moving, this.emoteOf(mid));
+    const { headTop } = drawCharacter(g, look, this.data.appearance, x, y + TS * 0.25, s, dir, walk, moving, this.emoteOf(mid, w));
     if (sway) g.restore();
     g.font = `${Math.round(TS * 0.36)}px Jua, sans-serif`; g.textAlign = "center";
     const tw = g.measureText(name).width + 10, ty = headTop - TS * 0.12;
@@ -471,8 +476,8 @@ export class Game {
     for (const d of this.fruitDrops())
       list.push({ y: d.y + 0.4, f: () => { g.imageSmoothingEnabled = d.item === "honeycomb"; g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS); g.imageSmoothingEnabled = false; } });
     const t = now / 1000;
-    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => { if (o.mode === "boat") this.lakeL.drawBoatShape(g, o.x * TS - camX, o.y * TS - camY, TS, o.d || 0, t); this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving && o.mode !== "boat"); } });
-    list.push({ y: m.y, f: () => { if (this.lakeL.boating) this.lakeL.drawBoatShape(g, m.x * TS - camX, m.y * TS - camY, TS, m.dir, t); this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving && !this.lakeL.boating); } });
+    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => { if (o.mode === "boat") this.lakeL.drawBoatShape(g, o.x * TS - camX, o.y * TS - camY, TS, o.d || 0, t); this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving && o.mode !== "boat", { x: o.tx, y: o.ty, boat: o.mode === "boat" }); } });
+    list.push({ y: m.y, f: () => { if (this.lakeL.boating) this.lakeL.drawBoatShape(g, m.x * TS - camX, m.y * TS - camY, TS, m.dir, t); this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving && !this.lakeL.boating, { x: m.x, y: m.y, boat: this.lakeL.boating }); } });
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     if (this.fishing) {
       const bx = this.fishing.bx * TS - camX, by = this.fishing.by * TS - camY, bite = this.fishing.st === "bite";
@@ -519,8 +524,8 @@ export class Game {
         if (this.deco && this.deco.picked === id) { g.strokeStyle = "#ffd35c"; g.lineWidth = 3; g.strokeRect(ox + f.x * TS, oy + f.y * TS, w * TS, h * TS); }
       } });
     }
-    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, ox + o.x * TS, oy + o.y * TS, o.d || 0, o.walk, o.moving) });
-    list.push({ y: this.me.y, f: () => this.drawPerson(state.mid, ox + this.me.x * TS, oy + this.me.y * TS, this.me.dir, this.me.walk, this.me.moving) });
+    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, ox + o.x * TS, oy + o.y * TS, o.d || 0, o.walk, o.moving, { x: o.tx, y: o.ty, boat: false }) });
+    list.push({ y: this.me.y, f: () => this.drawPerson(state.mid, ox + this.me.x * TS, oy + this.me.y * TS, this.me.dir, this.me.walk, this.me.moving, { x: this.me.x, y: this.me.y, boat: false }) });
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     g.font = `${Math.round(TS * 0.45)}px Jua, sans-serif`; g.textAlign = "center"; g.fillStyle = "#fffdf6";
     const owner = nameOf(this.houseMid);

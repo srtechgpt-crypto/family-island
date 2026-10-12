@@ -47,7 +47,14 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 #emotes{position:fixed;right:calc(128px + env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;gap:6px;pointer-events:auto}
 .emo{width:44px;height:44px;border-radius:50%;border:3px solid var(--leaf);background:var(--panel);font-size:22px;padding:0;box-shadow:0 3px 0 rgba(0,0,0,.18);cursor:pointer}
 .emo:active{transform:translateY(2px)}
-#sGame #emotes{pointer-events:auto}
+#pEmo{left:auto;top:auto;transform:none;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));width:min(360px,calc(100vw - 24px));max-height:min(230px,calc(100vh - 100px));padding:8px 10px;display:flex;flex-direction:column}
+#pEmo[hidden]{display:none}
+.emoHead{display:flex;align-items:center;justify-content:space-between}.emoHead .tabs{margin:0 0 6px}
+.emoX{border:0;background:none;font-size:20px;cursor:pointer;color:var(--ink);min-width:44px;min-height:36px}
+.emoGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;overflow:auto}
+.emoGrid button{font-family:var(--f-display);font-size:14px;min-height:44px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;padding:2px 4px}
+.emoGrid button b{font-size:20px;font-weight:normal}
+#sGame #emotes,#sGame #pEmo{pointer-events:auto}
 #pMap{width:min(96vw,900px);height:min(94vh,620px);display:flex;flex-direction:column;padding:10px}
 #pMap h2{font-size:18px}
 #bigMap{flex:1;width:100%;min-height:0;border-radius:12px;display:block}
@@ -173,7 +180,8 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   </div>
   <button class="btn off" id="act" type="button" hidden>행동</button>
   <button class="btn" id="cookBtn" type="button" hidden>🍳 요리하기</button>
-  <div id="emotes" hidden><button class="emo" type="button" data-e="wave" aria-label="손 흔들기">👋</button><button class="emo" type="button" data-e="heart" aria-label="하트">💗</button><button class="emo" type="button" data-e="dance" aria-label="춤">💃</button></div>
+  <div id="emotes" hidden><button class="emo" type="button" data-e="wave" aria-label="손 흔들기">👋</button><button class="emo" type="button" data-e="heart" aria-label="하트">💗</button><button class="emo" type="button" id="emoMore" aria-label="감정 표현 더 보기">😊</button></div>
+<div class="panel" id="pEmo" hidden><div class="emoHead"><div class="tabs" id="emoTabs"><button type="button" data-g="face" aria-pressed="true">표정</button><button type="button" data-g="action" aria-pressed="false">동작</button><button type="button" data-g="dance" aria-pressed="false">춤</button></div><button type="button" class="emoX" id="emoClose" aria-label="닫기">✕</button></div><div class="emoGrid" id="emoGrid"></div></div>
   <div id="moveBar" hidden><span>걸어가서 집 지을 곳에 서요 (내가 선 곳이 문 앞)</span><b id="moveWhy"></b><button class="btn ghost" id="moveCancel" type="button">그만두기</button></div>
   <div id="net" hidden>인터넷 연결을 기다리는 중…</div>
   <div id="busy" hidden>저장하는 중…</div>
