@@ -395,6 +395,7 @@ export class Game {
   // 감정: 내 것은 내 세션 기록, 다른 가족은 그 사람의 현재 세션 기록만
   // w = 그 사람의 위치 {x, y, boat}: 표현을 시작한 뒤 0.3칸 넘게 움직였으면 앉기·동작·춤은 끝(표정은 계속), 배 위면 표정만
   emoteOf(mid, w) {
+    if (mid === state.mid && this.fishing) return { kind: "fishing", p: 0, t: performance.now() / 1000, dir: this.me.dir, bite: this.fishing.st === "bite" };
     const cur = mid === state.mid ? state.ses : state.members[mid] && state.members[mid].ses;
     const e = cur && EM.emotesHere()[cur];
     if (!e || e.m !== mid) return null;
@@ -482,8 +483,19 @@ export class Game {
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     if (this.fishing) {
       const bx = this.fishing.bx * TS - camX, by = this.fishing.by * TS - camY, bite = this.fishing.st === "bite";
-      g.strokeStyle = "rgba(60,40,20,.7)"; g.lineWidth = 1.5; g.beginPath(); g.moveTo(m.x * TS - camX, m.y * TS - camY - TS * 0.5); g.lineTo(bx, by); g.stroke();
+      // 낚싯대: 손 → 대 끝(물 쪽으로 들어 올림), 물면 대가 휘고 줄이 팽팽
+      const s = TS * 1.6, fx = m.x * TS - camX, fy = m.y * TS - camY + TS * 0.25, d = m.dir;
+      const hx = fx + (d === 2 ? s * .27 : d === 1 ? -s * .27 : d === 3 ? s * .22 : 0), hy = fy - s * (d === 0 ? .26 : .34);
+      const vx = bx - hx, vy = by - hy, L = Math.hypot(vx, vy) || 1, wob = Math.sin(now / 420) * TS * 0.04;
+      const tx = hx + vx / L * TS * 1.05, ty = hy + vy / L * TS * 0.55 - TS * (bite ? 0.25 : 0.7) + wob;
+      g.lineCap = "round";
+      g.strokeStyle = "#6e4325"; g.lineWidth = Math.max(2, TS * 0.07); g.beginPath(); g.moveTo(hx, hy);
+      g.quadraticCurveTo(hx + (tx - hx) * 0.6, hy + (ty - hy) * 0.6 - TS * (bite ? 0.35 : 0.08), tx, ty); g.stroke();
+      g.strokeStyle = "#c58b55"; g.lineWidth = Math.max(1, TS * 0.03); g.beginPath(); g.moveTo(hx, hy); g.lineTo(hx + (tx - hx) * 0.25, hy + (ty - hy) * 0.25); g.stroke();   // 손잡이
       const dip = bite ? TS * 0.15 : Math.sin(now / 300) * 2;
+      g.strokeStyle = "rgba(240,240,240,.85)"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(tx, ty);
+      if (bite) g.lineTo(bx, by + dip); else g.quadraticCurveTo((tx + bx) / 2, Math.max(ty, by) + TS * 0.25, bx, by + dip);
+      g.stroke();
       g.fillStyle = "#e8493c"; g.beginPath(); g.arc(bx, by + dip, TS * 0.12, 0, 7); g.fill();
       g.fillStyle = "#fff"; g.beginPath(); g.arc(bx, by + dip - TS * 0.06, TS * 0.07, Math.PI, 0); g.fill();
       if (bite) { g.font = `${Math.round(TS * 0.7)}px Jua, sans-serif`; g.textAlign = "center"; g.lineWidth = 5; g.strokeStyle = "#24352a"; g.strokeText("쏙! 지금!", bx, by - TS * 0.5); g.fillStyle = "#fff"; g.fillText("쏙! 지금!", bx, by - TS * 0.5); }

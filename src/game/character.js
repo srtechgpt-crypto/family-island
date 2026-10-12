@@ -131,7 +131,7 @@ const FACE = { heart: "happy", laugh: "laugh", surprise: "surprise", sad: "sad",
   dance: "laugh", robot: "robot", ballet: "happy", bunny: "laugh", freestyle: "laugh", yum: "happy" };
 
 // 몸 자세: 팔 각도(오른팔 armR은 음수일수록 위로, 왼팔 armL은 양수일수록 위로), 들림·기울기·방향 등
-function pose(ek, t, s, moving, walk) {
+function pose(ek, t, s, moving, walk, ex = {}) {
   const swing = moving ? Math.sin(walk * 8) * .3 : 0;
   const P = { armR: .25 + swing, armL: -.25 - swing, bob: moving ? Math.abs(Math.sin(walk * 8)) * s * .04 : 0, lift: 0, sway: 0, leg: moving ? Math.sin(walk * 8) * s * .06 : 0,
     dir: null, sit: false, headDrop: 0, hand: null, jitter: 0, legUp: 0 };
@@ -156,6 +156,14 @@ function pose(ek, t, s, moving, walk) {
     case "robot": { const k = Math.floor(t / .35) % 4, A = [[-1.57, 0], [0, 1.57], [-1.57, 1.57], [0, 0]][k]; P.armR = A[0]; P.armL = A[1]; P.bob = (k % 2) * s * .02; P.dir = [0, 2, 0, 1][Math.floor(t / 1.4) % 4]; break; }
     case "ballet": P.armR = -2.75; P.armL = 2.75; P.dir = [0, 2, 3, 1][Math.floor(t / .6) % 4]; P.legUp = (S(t * 2.2) + 1) / 2 * s * .06; P.sway = S(t * 1.5) * .05; P.lift = s * .02; break;
     case "bunny": { const c = t % .55; P.armR = .9; P.armL = -.9; P.lift = S(c / .55 * Math.PI) * s * .12; P.hand = "ears"; break; }
+    case "fishing": {   // 낚시(내 화면): 두 손으로 대를 물 쪽으로, 물면 확 당김
+      const b = ex.bite ? 1 : 0, wob = S(t * 2.5) * .05;
+      if (ex.dir === 2) { P.armR = -1.25 - b * .8 + wob; P.armL = -.55 - b * .5; }
+      else if (ex.dir === 1) { P.armR = .55 + b * .5; P.armL = 1.25 + b * .8 - wob; }
+      else { P.armR = .75 - b * 2.3 + wob; P.armL = -.75 + b * 2.3 - wob; }
+      if (b) { P.lift = Math.abs(S(t * 18)) * s * .03; P.sway = (ex.dir === 1 ? .12 : ex.dir === 2 ? -.12 : 0); }
+      break;
+    }
     case "freestyle": P.armR = -1.2 + S(t * 7) * 1.4; P.armL = 1.2 + S(t * 5.3 + 1) * 1.4; P.sway = S(t * 4.5) * .25; P.bob = Math.abs(S(t * 7)) * s * .07; P.leg = S(t * 9) * s * .05; break;
   }
   return P;
@@ -166,9 +174,9 @@ function pose(ek, t, s, moving, walk) {
 export function drawCharacter(g, look, pal, x, y, s, dir, walk, moving, emote) {
   const c = colors(look, pal), skirt = look.bottomType === "skirt", hs = look.hairStyle;
   const ek = emote && emote.kind, ep = emote ? emote.p : 0, et = emote ? (Number.isFinite(emote.t) ? emote.t : ep * (DUR[ek] || 3)) : 0;
-  const P = pose(ek, et, s, moving, walk);
+  const P = pose(ek, et, s, moving, walk, emote || {});
   if (P.dir !== null) dir = P.dir;
-  const faceMode = ek ? FACE[ek] || "happy" : "normal";
+  const faceMode = ek === "fishing" ? (emote.bite ? "surprise" : "normal") : ek ? FACE[ek] || "happy" : "normal";
   E(g, x, y, s * .22 * (1 - Math.min(.4, P.lift / s)), s * .05, "rgba(0,0,0,.16)");   // 그림자(뛰면 작아짐)
   g.save(); g.translate(P.jitter, -P.lift); g.translate(x, y); g.rotate(P.sway); g.translate(-x, -y);
   const sitDrop = P.sit ? s * .1 : 0;
@@ -218,6 +226,6 @@ export function drawCharacter(g, look, pal, x, y, s, dir, walk, moving, emote) {
   for (const [sx, a] of arms) if (Math.abs(a) > 1.0) arm(sx, a);
   g.restore();
   const top = hy - hr - P.lift;
-  if (ek) overhead(g, ek, x, top, s, ep, et);
+  if (ek && ek !== "fishing") overhead(g, ek, x, top, s, ep, et);
   return { headTop: top - (hs === "bun" ? hr * .4 : 0) };
 }
