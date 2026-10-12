@@ -92,11 +92,13 @@ export class BugLayer {
   }
 
   // ---- 벌집: 오늘 고른 3그루를 흔들면 과일과 함께 떨어짐(가족 공유, 먼저 줍는 사람) ----
+  // 오늘 벌집이 달린 나무인지(흔들 때 하루 단위 '흔들었음' 표시를 남길지 정함)
+  isHoneyTree(id, round) { this.honeyDrops(round, -999, -999); return this.honey.some(h => h.tree.id === id); }
   honeyDrops(round, mx, my) {
     if (round !== this.honeyRound) {
       this.honeyRound = round;
       const ids = new Set(honeyTrees(this.trees.map(t => t.id), round, 3));
-      this.honey = this.trees.filter(t => ids.has(t.id)).map(t => ({ tree: t, spot: honeySpot(this.game.world.map, t) })).filter(h => h.spot);
+      this.honey = this.trees.filter(t => ids.has(t.id)).map(t => ({ tree: t, spot: honeySpot(this.game.world.map, t, this.game.fixed) })).filter(h => h.spot);
     }
     const out = [];
     for (const h of this.honey) {

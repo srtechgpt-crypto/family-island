@@ -1,5 +1,5 @@
 // 내 데이터(players/{mid}): 구독 + 트랜잭션. 계산은 domain 함수가 맡는다.
-import { db, ref, onValue, runTransaction, fpath, rid } from "./fb.js";
+import { db, ref, onValue, runTransaction, fpath, rid, serverNow } from "./fb.js";
 import { migrate } from "../domain/migrate.js";
 import { applyClaim } from "../domain/rewards.js";
 import { craft } from "../domain/crafting.js";
@@ -54,7 +54,7 @@ async function tx(fn) {
   return result;
 }
 
-export const giveClaim = claim => tx(p => applyClaim(p, claim, state.mid));
+export const giveClaim = claim => tx(p => applyClaim(p, claim, state.mid, Math.max(serverNow(), claim.at || 0)));
 
 export function craftFurniture(recipeId, recipes) {
   const fid = "f_" + rid(10), req = "c_" + rid(10);

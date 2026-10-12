@@ -76,5 +76,64 @@
       "weed": 4,
       "flower_white": 1
     }
+  },
+  "sofa_wood": {
+    "type": "sofa_wood",
+    "items": {
+      "branch": 12,
+      "weed": 6
+    }
+  },
+  "dining_table": {
+    "type": "dining_table",
+    "items": {
+      "branch": 14,
+      "stone": 4
+    }
+  },
+  "fireplace_stone": {
+    "type": "fireplace_stone",
+    "items": {
+      "stone": 12,
+      "branch": 4
+    }
+  },
+  "cabinet_low": {
+    "type": "cabinet_low",
+    "items": {
+      "branch": 8,
+      "stone": 2
+    }
+  },
+  "rocking_chair": {
+    "type": "rocking_chair",
+    "items": {
+      "branch": 7,
+      "weed": 3
+    }
+  },
+  "fish_tank": {
+    "type": "fish_tank",
+    "items": {
+      "stone": 6,
+      "shell": 4
+    }
+  },
+  "tree_pot": {
+    "type": "tree_pot",
+    "items": {
+      "branch": 5,
+      "stone": 3,
+      "weed": 5,
+      "flower_white": 2
+    }
+  },
+  "piano_wood": {
+    "type": "piano_wood",
+    "items": {
+      "branch": 16,
+      "stone": 4,
+      "shell": 3
+    }
   }
 }

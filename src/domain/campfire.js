@@ -4,7 +4,7 @@ export const KST_OFFSET_MS = 32400000;
 const DAY_MS = 86400000;
 export const kstDay = ms => Math.floor((ms + KST_OFFSET_MS) / DAY_MS);
 export const campHour = ms => ((ms + KST_OFFSET_MS) % DAY_MS + DAY_MS) % DAY_MS / 3600000;
-export const isCampOpen = ms => Number.isFinite(ms) && campHour(ms) >= 19 && campHour(ms) < 22;
+export const isCampOpen = ms => Number.isFinite(ms); // v4: 시간 제한 없음. 앱은 campState 사용.
 export const campEndsAt = day => day * DAY_MS - KST_OFFSET_MS + 22 * 3600000;
 export const fireScale = n => 0.65 + (Math.max(1, Math.min(6, n)) - 1) * 0.14;
 export const ROAST_MS = 6000;
@@ -36,3 +36,19 @@ export function applyRoast(player, day, result, reqId) {
 }
 // 불꽃놀이: 불 옆에 이만큼 모이면(대표님 결정 2026-10-12: 3명 이상)
 export const FIREWORKS_MIN = 3;
+
+export function campState({ presence, members, now, camp, myMid }) {
+  if (!Number.isSafeInteger(now) || now < 0 || !Number.isFinite(camp?.x) || !Number.isFinite(camp?.y)
+    || !Number.isFinite(camp?.radius) || camp.radius < 0 || !/^m[0-5]$/.test(myMid)
+    || !members || typeof members !== 'object' || Array.isArray(members)
+    || (presence != null && (typeof presence !== 'object' || Array.isArray(presence)))) throw new TypeError('잘못된 캠프 상태');
+  const here = familyAtFire(presence, members, camp, camp.radius, now)
+    .filter(mid => presence[members[mid].ses].t > now - 30000);
+  const open = here.length >= 2;
+  return { here, open, evening: open && here.includes(myMid), fireworksOk: here.length >= FIREWORKS_MIN };
+}
+
+export function roastDay(startMs) {
+  if (!Number.isSafeInteger(startMs) || startMs < 0) throw new TypeError('잘못된 굽기 시작 시각');
+  return kstDay(startMs);
+}

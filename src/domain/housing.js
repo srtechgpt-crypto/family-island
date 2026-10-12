@@ -16,9 +16,19 @@ export function housesFrom(mapHouses, housingVal) {
   });
 }
 
-export function treeDropSpots(map, tree, n = 3) {
+export function treeDropSpots(map, tree, n = 3, { forage, insects, fields, docks = map.docks } = {}) {
+  if (!Array.isArray(map?.objects) || !Number.isSafeInteger(tree?.x) || !Number.isSafeInteger(tree?.y) || !Number.isSafeInteger(n) || n < 0) throw new TypeError('잘못된 낙하 칸 요청');
   const cand = [[0, 1], [-1, 1], [1, 1], [-1, 0], [1, 0], [0, 2], [-1, -1], [1, -1], [0, -1]];
+  // v4의 밀집 숲에서도 네 번째 벌집 칸을 찾는다. 기존 우선순위는 보존한다.
+  if (map.ver === 4) for (let radius = 2; radius <= 4; radius++) {
+    for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) === radius && !cand.some(([a, b]) => a === dx && b === dy)) cand.push([dx, dy]);
+    }
+  }
   const occupied = new Set(map.objects.map(o => key(o.x, o.y))), out = [];
+  for (const def of [forage, insects]) for (const p of def?.candidates ?? []) occupied.add(key(p.x, p.y));
+  for (const f of (Array.isArray(fields) ? fields : fields?.fields) ?? []) for (const p of f.cells) occupied.add(key(p.x, p.y));
+  for (const p of docks ?? []) occupied.add(key(p.x, p.y));
   for (const [dx, dy] of cand) {
     if (out.length >= n) break;
     const x = tree.x + dx, y = tree.y + dy;
@@ -42,7 +52,7 @@ export function reachedFrom(map, houses = []) {
   return seen;
 }
 
-export function buildPlacementStatic(map, { forage, insects, campfire } = {}) {
+export function buildPlacementStatic(map, { forage, insects, campfire, fields, lake, docks = map.docks ?? lake?.docks, ranch = map.ranch } = {}) {
   const objects = new Set(map.objects.map(o => key(o.x, o.y)));
   const solidObjects = new Set(map.objects.filter(o => ['tree', 'rock'].includes(o.k)).map(o => key(o.x, o.y)));
   const blocked = new Set(), protectedCells = new Set();
@@ -60,10 +70,16 @@ export function buildPlacementStatic(map, { forage, insects, campfire } = {}) {
   if (campfire?.plaza) eachCell(campfire.plaza, (x, y) => protectedCells.add(key(x, y)), 1);
   for (const tree of map.objects.filter(o => o.k === 'tree')) {
     // Also protect the fourth (honey) drop. First three remain fruit positions.
-    for (const p of treeDropSpots(map, tree, 4)) protectedCells.add(key(p.x, p.y));
+    for (const p of treeDropSpots(map, tree, 4, { forage, insects, fields, docks })) protectedCells.add(key(p.x, p.y));
   }
   for (const def of [forage, insects]) for (const p of def?.candidates ?? []) protectedCells.add(key(p.x, p.y));
-  return { map, objects, blocked, protectedCells, campfire };
+  const reserve = p => { protectedCells.add(key(p.x, p.y)); blocked.add(key(p.x, p.y)); };
+  if (ranch) eachCell(ranch, (x, y) => reserve({ x, y }));
+  for (const d of docks ?? []) { reserve(d); if (d.boat) reserve(d.boat); }
+  for (const f of (Array.isArray(fields) ? fields : fields?.fields) ?? []) for (const p of f.cells) reserve(p);
+  // 타일 5는 기본 blocked이며 호수 보호도 포함한다. 다른 연못도 집 배치 금지.
+  for (let y = 0; y < map.h; y++) for (let x = 0; x < map.w; x++) if (mapTile(map, x, y) === 5) protectedCells.add(key(x, y));
+  return { map, objects, blocked, protectedCells, campfire, fields, lake, docks, ranch };
 }
 
 export const PLACE_REASON_TEXT = {
@@ -89,6 +105,7 @@ export function validateHousePlacement(stat, houses, movingMid, pos) {
   });
   eachCell(r, (x, y) => {
     if (rectHas(r, x, y)) return;
+    if (protectedCells.has(key(x, y)) && !atOriginal) add('protected');
     // Existing map decoration (three flowers and t188) is grandfathered only
     // at the owner's exact default position. Door clearance is never exempt.
     if ((!atOriginal && objects.has(key(x, y))) || (![1, 2].includes(mapTile(map, x, y)) && !legacyPath(x, y))) add('perimeter');
@@ -104,6 +121,29 @@ export function validateHousePlacement(stat, houses, movingMid, pos) {
     if (next.some(h => !seen.has(key(h.x + 2, h.y + 5))) || (stat.campfire && !seen.has(key(stat.campfire.x, stat.campfire.y)))) add('route');
   }
   return { ok: reasons.size === 0, reasons: [...reasons] };
+}
+
+export function resolveHouses(stat, mapHouses, housingVal) {
+  if (!stat?.map || !Array.isArray(mapHouses) || mapHouses.length !== 6
+    || new Set(mapHouses.map(h => h.mid)).size !== 6
+    || !mapHouses.every(h => /^m[0-5]$/.test(h.mid) && Number.isSafeInteger(h.x) && Number.isSafeInteger(h.y))
+    || (housingVal != null && (typeof housingVal !== 'object' || Array.isArray(housingVal)))) throw new TypeError('잘못된 집 목록');
+  const defaults = [...mapHouses].sort((a, b) => a.mid < b.mid ? -1 : 1).map(h => ({ mid: h.mid, x: h.x, y: h.y, w: HOUSE_W, h: HOUSE_H, door: doorOf(h) }));
+  const resolved = [];
+  for (let i = 0; i < defaults.length; i++) {
+    const base = defaults[i], saved = housingVal?.houses?.[base.mid]?.pos;
+    // 앞 mid가 먼저 확정된다. 뒤 집의 미사용 기본 자리가 유효한 이동을 막지 않는다.
+    const others = resolved.filter(h => h.source !== null);
+    const reasons = saved == null ? [] : validateHousePlacement(stat, others, base.mid, saved).reasons;
+    if (saved != null && reasons.length === 0) {
+      resolved.push({ ...base, x: saved.x, y: saved.y, door: doorOf(saved), source: 'saved', reasons: [] });
+      continue;
+    }
+    const fallback = validateHousePlacement(stat, others, base.mid, base);
+    resolved.push(fallback.ok ? { ...base, source: 'default', reasons }
+      : { mid: base.mid, x: null, y: null, w: HOUSE_W, h: HOUSE_H, door: null, source: null, reasons: [...new Set([...reasons, ...fallback.reasons])] });
+  }
+  return resolved;
 }
 
 export function planHouseMove(housingVal, mid, pos, reqId) {

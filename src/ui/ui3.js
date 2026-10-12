@@ -53,8 +53,8 @@ export function installV3(UI) {
   // ---- 캠프파이어 ----
   proto.openCamp = function () { this.renderCamp(); $("pCamp").hidden = false; };
   proto.renderCamp = function () {
-    const c = this.game.camp, open = c.open(), lit = c.lit(), fam = c.atFire();
-    $("campStat").textContent = !open ? "불이 꺼져 있어요. 매일 저녁 7시~10시에 모여요 🌙"
+    const c = this.game.camp, open = c.eveningOn(), lit = c.lit(), fam = c.atFire();
+    $("campStat").textContent = !open ? "가족 2명 이상이 캠프 자리에 모이면 언제든 캠프파이어를 해요 🌙"
       : lit ? `불이 활활! 지금 ${fam.length}명 모였어요 ${fam.map(m => nameOf(m)).join("·")}` : "아직 불이 없어요. 나뭇가지로 불을 붙여요";
     $("campSub").textContent = lit ? `오늘 마시멜로 ${c.roastsLeft()}번 남음 · 3명 이상 모이면 불꽃놀이!` : "";
     $("campLight").hidden = !open || lit;
@@ -201,7 +201,7 @@ export function installV3(UI) {
     const need = list => Object.entries(list).map(([k, n]) => `${esc(name(k))} ${n}개 <span class="src">(${esc(help.sources[k] || "")}${have(k) ? ` · 가진 것 ${have(k)}` : ""})</span>`).join("<br>");
     let html = "";
     if (tab === "cook") {
-      html = `<p class="sub">요리는 <b>불 붙은 캠프파이어</b>(저녁 7~10시) 앞이나 <b>집 조리대</b> 앞에서 '🍳 요리하기'를 눌러 만들어요. 조리대는 작업대에서 만들어요.</p>`
+      html = `<p class="sub">요리는 <b>불 붙은 캠프파이어</b>(가족 2명 이상 모였을 때) 앞이나 <b>집 조리대</b> 앞에서 '🍳 요리하기'를 눌러 만들어요. 조리대는 작업대에서 만들어요.</p>`
         + Object.values(this.data.cooking.recipes).map(r => { const o = items[r.out] || { icon: "🍽️", name: r.out };
           return `<div class="help-item"><b>${o.icon} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
     } else if (tab === "craft") {

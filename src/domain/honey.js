@@ -6,7 +6,7 @@ export function honeyTrees(trees, round, count = 3) {
     .sort((a, b) => a.hash - b.hash || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
     .slice(0, Math.max(0, count)).map(t => t.id);
 }
-export function honeySpot(map, tree) {
-  const spots = treeDropSpots(map, tree, 4);
+export function honeySpot(map, tree, fixed = {}) {
+  const spots = treeDropSpots(map, tree, 4, fixed);
   return spots.at(-1) ?? null;
 }

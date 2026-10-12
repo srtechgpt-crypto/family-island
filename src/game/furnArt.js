@@ -184,7 +184,126 @@ function wardrobe(g, W, H) {
   g.fillStyle = "rgba(255,255,255,.3)"; rr(g, 4, 1.5, W - 8, 1.2, 1); g.fill();
 }
 
+// ---- v4 가구 ----
+// 가로로 그린 그림을 세로 칸(W<H)이면 90도 돌려 담는다
+function landscape(g, W, H, fn) {
+  if (W >= H) return fn(g, W, H);
+  g.save(); g.translate(W, 0); g.rotate(Math.PI / 2); fn(g, H, W); g.restore();
+}
+
+// 소파: 등받이 + 팔걸이 + 방석 두 개 + 쿠션
+function sofa(g, W, H) {
+  shadow(g, W / 2, H - 3, W / 2 - 3, 3);
+  const C = { hi: "#8fc1e3", mid: "#5d9cc9", lo: "#3f7aa5", line: "#2b5577" };
+  rr(g, 3, 3, W - 6, 13, [6, 6, 2, 2]); fillStroke(g, woodGrad(g, 0, 3, 0, 16, C.hi, C.mid), C.line);       // 등받이
+  for (const x of [2, W - 10]) { rr(g, x, 9, 8, H - 13, 4); fillStroke(g, woodGrad(g, x, 0, x + 8, 0, C.mid, C.lo), C.line); } // 팔걸이
+  const sw = (W - 20) / 2;
+  for (let i = 0; i < 2; i++) { rr(g, 10 + i * sw, 13, sw - 1, H - 19, 3); fillStroke(g, woodGrad(g, 0, 13, 0, H - 6, C.hi, C.mid), C.line, 1); } // 방석
+  g.fillStyle = WOOD.dk; for (const x of [6, W - 9]) { rr(g, x, H - 7, 3, 4, 1); g.fill(); }
+  g.save(); g.translate(17, 12); g.rotate(-0.25); rr(g, -5, -5, 10, 10, 3); fillStroke(g, "#ffd35c", "#c99a2a", 0.9); g.restore(); // 쿠션
+  g.save(); g.translate(W - 17, 12); g.rotate(0.25); rr(g, -5, -5, 10, 10, 3); fillStroke(g, "#ff9fb1", "#c9687c", 0.9); g.restore();
+  g.fillStyle = "rgba(255,255,255,.35)"; rr(g, 8, 4.5, W - 16, 1.6, 1); g.fill();
+}
+
+// 식탁: 긴 위판 + 접시 둘 + 가운데 과일 바구니
+function diningTable(g, W, H) {
+  table.call(null, g, W, H);
+  const cy = H / 2 - 3;
+  for (const cx of [W * 0.2, W * 0.8]) {
+    g.fillStyle = "#fffaf2"; g.beginPath(); g.ellipse(cx, cy, 5.5, 4, 0, 0, 7); g.fill(); g.strokeStyle = "#cdbfa6"; g.lineWidth = 0.8; g.stroke();
+    g.fillStyle = "#e9e1d2"; g.beginPath(); g.ellipse(cx, cy, 3, 2, 0, 0, 7); g.fill();
+  }
+}
+
+// 벽난로: 돌 몸통 + 아치 + 불 + 위 선반
+function fireplace(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 2, 2.5);
+  rr(g, 2, 3, W - 4, H - 6, 3); fillStroke(g, "#b9b4ab", "#6d6862");
+  g.strokeStyle = "rgba(90,85,80,.45)"; g.lineWidth = 0.8;                                   // 돌 줄눈
+  for (let y = 9; y < H - 4; y += 6) for (let x = 4 + ((y / 6) % 2) * 5; x < W - 6; x += 10) { rr(g, x, y, 9, 5, 1.5); g.stroke(); }
+  rr(g, 0.5, 2, W - 1, 5, 2); fillStroke(g, woodGrad(g, 0, 2, 0, 7), WOOD.line);           // 선반
+  const ax = W / 2, aw = Math.min(22, W * 0.4);
+  g.beginPath(); g.moveTo(ax - aw / 2, H - 4); g.lineTo(ax - aw / 2, 15); g.arc(ax, 15, aw / 2, Math.PI, 0); g.lineTo(ax + aw / 2, H - 4); g.closePath();
+  fillStroke(g, "#2f2622", "#4a3d36");
+  const fire = g.createRadialGradient(ax, H - 8, 1, ax, H - 9, 9); fire.addColorStop(0, "#fff3b0"); fire.addColorStop(0.5, "#ffb52e"); fire.addColorStop(1, "rgba(240,90,30,0)");
+  g.fillStyle = fire; g.beginPath(); g.ellipse(ax, H - 10, 7, 8, 0, 0, 7); g.fill();
+  g.fillStyle = WOOD.lo; rr(g, ax - 7, H - 6, 14, 2.5, 1); g.fill();
+  g.fillStyle = "#7fb7d8"; rr(g, W * 0.18, -1, 4, 4, 1); g.fill(); g.fillStyle = "#ffd35c"; g.beginPath(); g.arc(W * 0.8, 1, 2, 0, 7); g.fill(); // 선반 위 장식
+}
+
+// 낮은 수납장: 서랍 셋 + 손잡이 + 위 화분
+function cabinet(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 2, 2.5);
+  rr(g, 2, 6, W - 4, H - 10, 3); fillStroke(g, woodGrad(g, 0, 6, 0, H - 4, WOOD.mid, WOOD.lo));
+  rr(g, 1, 4, W - 2, 5, 2); fillStroke(g, woodGrad(g, 0, 4, 0, 9));
+  const n = 3, dw = (W - 10) / n;
+  for (let i = 0; i < n; i++) {
+    const x = 5 + i * dw; rr(g, x, 11, dw - 2, H - 18, 2); fillStroke(g, woodGrad(g, x, 0, x + dw, 0, WOOD.hi, WOOD.mid), WOOD.line, 0.8);
+    g.fillStyle = "#f2cf5b"; g.beginPath(); g.arc(x + dw / 2 - 1, 11 + (H - 18) / 2, 1.5, 0, 7); g.fill();
+  }
+  g.fillStyle = "#5fb35a"; g.beginPath(); g.arc(W - 9, 1, 3.5, 0, 7); g.fill(); g.fillStyle = "#d9774a"; rr(g, W - 12, 1, 6, 4, 1); g.fill();
+}
+
+// 흔들의자: 곡선 다리 + 등받이 + 방석
+function rocking(g, rot) {
+  shadow(g, 16, 29, 11, 2.5);
+  g.save(); if (rot === 1 || rot === 2) { g.translate(32, 0); g.scale(-1, 1); }
+  g.strokeStyle = WOOD.dk; g.lineWidth = 2.4; g.beginPath(); g.moveTo(3, 25); g.quadraticCurveTo(16, 31, 29, 25); g.stroke();
+  g.fillStyle = WOOD.dk; for (const x of [8, 22]) { rr(g, x, 19, 2.5, 8, 1); g.fill(); }
+  rr(g, 6, 2, 20, 15, [6, 6, 2, 2]); fillStroke(g, woodGrad(g, 0, 2, 0, 17, WOOD.mid, WOOD.lo));
+  g.fillStyle = "rgba(60,35,18,.4)"; for (const x of [11, 15.5, 20]) { rr(g, x, 5, 1.6, 10, 1); g.fill(); }
+  rr(g, 5, 14, 22, 8, 3); fillStroke(g, woodGrad(g, 0, 14, 0, 22));
+  g.fillStyle = "#b48ad6"; rr(g, 8, 15, 16, 5, 2.5); g.fill();
+  g.restore();
+}
+
+// 어항: 받침 + 둥근 유리 + 물 + 물고기 둘 + 물풀
+function fishTank(g) {
+  shadow(g, 16, 29, 9, 2.5);
+  rr(g, 8, 24, 16, 5, 2); fillStroke(g, woodGrad(g, 0, 24, 0, 29));
+  g.beginPath(); g.ellipse(16, 15, 11, 10, 0, 0, 7); fillStroke(g, "rgba(200,235,255,.55)", "#7fb7d8", 1.2);
+  g.save(); g.beginPath(); g.ellipse(16, 15, 10, 9, 0, 0, 7); g.clip();
+  g.fillStyle = "rgba(90,170,220,.75)"; g.fillRect(4, 10, 24, 16);
+  g.fillStyle = "#e9d8a6"; g.fillRect(4, 21, 24, 4);
+  g.strokeStyle = "#3f8a3a"; g.lineWidth = 1.3; for (const x of [10, 22]) { g.beginPath(); g.moveTo(x, 22); g.quadraticCurveTo(x - 2, 17, x + 1, 13); g.stroke(); }
+  const fish = (x, y, c, f) => { g.fillStyle = c; g.beginPath(); g.ellipse(x, y, 3, 2, 0, 0, 7); g.fill(); g.beginPath(); g.moveTo(x - 3 * f, y); g.lineTo(x - 5.5 * f, y - 2); g.lineTo(x - 5.5 * f, y + 2); g.fill(); };
+  fish(14, 15, "#f7941d", 1); fish(19, 19, "#ff7d95", -1);
+  g.restore();
+  g.fillStyle = "rgba(255,255,255,.6)"; g.beginPath(); g.ellipse(11, 9, 3, 1.4, -0.5, 0, 7); g.fill();
+}
+
+// 큰 화분 나무: 둥근 잎 덩어리 + 줄기 + 큰 화분
+function treePot(g) {
+  shadow(g, 16, 29, 9, 2.5);
+  g.fillStyle = "#7a4a28"; rr(g, 14.5, 12, 3, 10, 1); g.fill();
+  for (const [x, y, r, c] of [[16, 9, 8, "#4f9d4a"], [10, 12, 5.5, "#5fb35a"], [22, 12, 5.5, "#5fb35a"], [16, 5, 5, "#6fc46a"]]) { g.fillStyle = c; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill(); }
+  g.fillStyle = "rgba(255,255,255,.25)"; g.beginPath(); g.arc(13, 6, 2.5, 0, 7); g.fill();
+  g.beginPath(); g.moveTo(9, 20); g.lineTo(23, 20); g.lineTo(21, 29); g.lineTo(11, 29); g.closePath(); fillStroke(g, woodGrad(g, 9, 0, 23, 0, "#f2f0ea", "#c9c4b8"), "#8a857a");
+  g.strokeStyle = "#7fb7d8"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(10, 23.5); g.lineTo(22, 23.5); g.stroke();
+}
+
+// 피아노: 검은 몸통 + 건반 + 악보대
+function piano(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 2, 2.5);
+  rr(g, 2, 2, W - 4, H - 6, 3); fillStroke(g, woodGrad(g, 0, 2, 0, H - 4, "#4a3b45", "#241c22"), "#120d10");
+  g.fillStyle = "rgba(255,255,255,.25)"; rr(g, 5, 3.5, W - 10, 1.4, 1); g.fill();
+  rr(g, W / 2 - 7, 5, 14, 7, 1); fillStroke(g, "#fffaf2", "#bfb3a0", 0.7);                    // 악보
+  g.strokeStyle = "#555"; g.lineWidth = 0.5; for (let i = 0; i < 3; i++) { g.beginPath(); g.moveTo(W / 2 - 5, 7 + i * 2); g.lineTo(W / 2 + 5, 7 + i * 2); g.stroke(); }
+  const ky = H - 15, kh = 8, n = Math.floor((W - 8) / 4);
+  g.fillStyle = "#fffdf8"; g.fillRect(4, ky, n * 4, kh);
+  g.strokeStyle = "#9a9088"; g.lineWidth = 0.5; for (let i = 0; i <= n; i++) { g.beginPath(); g.moveTo(4 + i * 4, ky); g.lineTo(4 + i * 4, ky + kh); g.stroke(); }
+  g.fillStyle = "#1b1418"; for (let i = 0; i < n; i++) if ([0, 1, 3, 4, 5].includes(i % 7)) g.fillRect(4 + i * 4 + 2.6, ky, 2.4, kh * 0.6);
+}
+
 const DRAW = {
+  sofa_wood: (g, W, H) => landscape(g, W, H, sofa),
+  dining_table: (g, W, H) => diningTable(g, W, H),
+  fireplace_stone: (g, W, H) => landscape(g, W, H, fireplace),
+  cabinet_low: (g, W, H) => landscape(g, W, H, cabinet),
+  rocking_chair: (g, W, H, rot) => rocking(g, rot),
+  fish_tank: g => fishTank(g),
+  tree_pot: g => treePot(g),
+  piano_wood: (g, W, H) => landscape(g, W, H, piano),
   wardrobe_wood: (g, W, H) => wardrobe(g, W, H),
   stove_wood: (g, W, H) => stove(g, W, H),
   table_wood: (g, W, H) => table(g, W, H),

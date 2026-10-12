@@ -38,5 +38,45 @@
     "name": "나무 옷장",
     "w": 2,
     "h": 1
+  },
+  "sofa_wood": {
+    "name": "소파",
+    "w": 2,
+    "h": 1
+  },
+  "dining_table": {
+    "name": "식탁",
+    "w": 2,
+    "h": 1
+  },
+  "fireplace_stone": {
+    "name": "벽난로",
+    "w": 2,
+    "h": 1
+  },
+  "cabinet_low": {
+    "name": "낮은 수납장",
+    "w": 2,
+    "h": 1
+  },
+  "rocking_chair": {
+    "name": "흔들의자",
+    "w": 1,
+    "h": 1
+  },
+  "fish_tank": {
+    "name": "어항",
+    "w": 1,
+    "h": 1
+  },
+  "tree_pot": {
+    "name": "큰 화분 나무",
+    "w": 1,
+    "h": 1
+  },
+  "piano_wood": {
+    "name": "피아노",
+    "w": 2,
+    "h": 1
   }
 }

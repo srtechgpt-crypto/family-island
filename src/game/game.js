@@ -8,7 +8,7 @@ import * as EM from "../services/emoteStore.js";
 import { appearanceOf } from "../domain/appearance.js";
 import { emoteProgress } from "../domain/emotes.js";
 import { mapMarkers } from "../domain/mapMarkers.js";
-import { pickForage } from "../domain/forage.js";
+import { gatherSupply, fruitTreesFor } from "../domain/gather.js";
 import { state, onState } from "../state.js";
 import { FAMILY, familyOf, nameOf, FISH_WINDOW } from "../config/gameConfig.js";
 import { isConnected, serverNow } from "../services/fb.js";
@@ -21,6 +21,7 @@ import { treeDropSpots } from "../domain/housing.js";
 import { HouseLayer } from "./v3house.js";
 import { CampLayer } from "./v3camp.js";
 import { BugLayer } from "./v3bugs.js";
+import { LakeLayer } from "./v4lake.js";
 import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
@@ -33,6 +34,7 @@ export class Game {
     this.houseL = new HouseLayer(this);   // v3: 공유 집 위치를 먼저 반영
     this.camp = new CampLayer(this);
     this.bugs = new BugLayer(this);
+    this.lakeL = new LakeLayer(this);     // v4: 밭·목장·나루터·뱃놀이·캠프 저녁 하늘
     this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
@@ -40,8 +42,9 @@ export class Game {
     this.keys = {}; this.joy = null; this.fishing = null; this.busy = false; this.deco = null;
     this.lastZone = null;
     this.mapBase = renderMapBase(world);
-    this.forageOK = !!(data.forage && data.forage.ver === 1);   // 버섯 후보 목록 버전이 앱과 맞을 때만
-    this.forageRound = null; this.forageList = [];
+    // v4: 30분마다 다시 나는 채집물(밭·버섯·약초·꽃·잡초)과 열매 나무 — 지도 고정 데이터로 모든 폰이 같게
+    this.fixed = { forage: data.forage, insects: data.insects, fields: data.gatheringFields.fields, docks: world.map.docks };
+    this.supplyKey = null; this.supplyList = []; this.fruitSet = new Set();
     this.MM = { x: 12, y: 58, w: 150, h: 112 };   // 미니맵 자리(화면 왼쪽 위, 시계 아래)
     this.resize(); addEventListener("resize", () => this.resize());
     this.bindInput();
@@ -126,7 +129,7 @@ export class Game {
       for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (this.furnAt(mx + dx, my + dy) === "stove_wood") return "stove";
       return null;
     }
-    return this.camp && this.camp.lit() && this.camp.near(this.me.x, this.me.y, 2.4) ? "camp" : null;
+    return this.camp && this.camp.canUse() && this.camp.near(this.me.x, this.me.y, 2.4) ? "camp" : null;
   }
   move(dx, dy) {
     const m = this.me, r = 0.28;
@@ -141,6 +144,7 @@ export class Game {
     const m = this.me, round = W.today();
     if (this.houseL.move) return { k: "houseMove", label: this.houseL.move.res && this.houseL.move.res.ok ? "여기로 옮기기" : "여긴 안 돼요" };
     if (this.camp.roast) return { k: "roast", label: "꺼내기!" };
+    if (this.mode === "island") { const lt = this.lakeL.target(); if (lt || this.lakeL.boating) return lt; }
     if (this.mode === "house") {
       const room = this.data.rooms[this.room], f = this.front(), tx = Math.floor(m.x), ty = Math.floor(m.y);
       if (this.room === "living" && this.houseMid === state.mid && room.blocked.some(([x, y]) => x === f.x && y === f.y)) return { k: "bench", label: "만들기" };
@@ -160,12 +164,10 @@ export class Game {
     const consider = (o, kind, label) => { const d = Math.hypot(o.x + 0.5 - m.x, o.y + 0.5 - m.y); if (d < bd) { bd = d; best = { k: kind, o, label }; } };
     for (const d of this.fruitDrops()) consider(d, "drop", "줍기");
     if (!best) {
-      for (const o of this.nearObjects()) {
-        if (o.k === "flower" || o.k === "shell") { if (!W.isTaken(o.zone, o.id)) consider(o, "pick", "줍기"); }
-        else if (o.k === "weed") { if (!W.isTaken(o.zone, o.id)) consider(o, "pick", "뽑기"); }
-      }
-      for (const o of this.world.weedsFor(round)) if (Math.abs(o.x - m.x) < 2 && Math.abs(o.y - m.y) < 2 && !W.isTaken(o.zone, o.id)) consider(o, "pick", "뽑기");
-      for (const o of this.forageToday(round)) if (Math.abs(o.x - m.x) < 2 && Math.abs(o.y - m.y) < 2 && !W.isTaken(o.zone, o.id)) consider({ ...o, round }, "forage", o.item.startsWith("herb") ? "뜯기" : "캐기");
+      for (const o of this.nearObjects()) if (o.k === "shell" && !W.isTaken(o.zone, o.id)) consider(o, "pick", "줍기");
+      const key = this.supplyKey;
+      for (const o of this.supply()) if (Math.abs(o.x - m.x) < 2 && Math.abs(o.y - m.y) < 2 && !W.isGTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y))
+        consider({ ...o, key }, "gather", o.item === "weed" ? "뽑기" : o.item.startsWith("herb") ? "뜯기" : o.item.startsWith("mushroom") ? "캐기" : "줍기");
     }
     if (!best) for (const o of this.nearObjects()) {
       if (o.k === "tree") consider(o, "tree", "흔들기");
@@ -176,13 +178,15 @@ export class Game {
     if (WATER[t]) return { k: "fish", water: WATER[t], fx: f.x, fy: f.y, label: "낚시" };
     return null;
   }
-  forageToday(round) {
-    if (!this.forageOK) return [];
-    if (round !== this.forageRound) {
-      this.forageRound = round;
-      this.forageList = pickForage(this.data.forage.candidates, round, 24).map(c => ({ ...c, k: "forage", zone: zoneOf(c.x, c.y) }));
+  // 이번 30분 회차의 채집물 목록(회차가 바뀌면 다시 계산)
+  supply() {
+    const key = W.gnow();
+    if (key !== this.supplyKey) {
+      this.supplyKey = key;
+      this.supplyList = gatherSupply(this.world.map, this.data.gatheringFields, { ...this.data.forage, gathering: this.data.gathering }, key);
+      this.fruitSet = new Set(fruitTreesFor(this.world.map, key, this.data.gathering));
     }
-    return this.forageList;
+    return this.supplyList;
   }
   nearZones() { const zx = Math.floor(this.me.x / 16), zy = Math.floor(this.me.y / 16), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(`z${zx + dx}_${zy + dy}`); return out; }
   nearObjects() {
@@ -199,7 +203,9 @@ export class Game {
     const t = this.target(); if (!t) return;
     if (t.k === "roast") return this.camp.pull();
     if (t.k === "houseMove") { const r = await this.houseL.confirm(); this.ui.houseMoveDone(r); return; }
-    const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "forage", "camp", "bug"].includes(t.k);
+    if (t.k === "boatOn") return this.lakeL.board(t.dock);
+    if (t.k === "boatOff") return this.lakeL.leave(t.dock);
+    const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "door") return this.enterHouse(t.h.mid);
     if (t.k === "exit") return this.room === "living" ? this.leaveHouse() : this.goRoom(this.data.rooms[this.room].back.room, this.data.rooms[this.room].back);
@@ -214,16 +220,9 @@ export class Game {
     try {
       if (t.k === "tree") await this.shakeTree(t.o);
       else if (t.k === "rock") await this.gain(t.o.zone, `${t.o.id}_s_${state.mid}`, "stone", 1, "오늘은 이 돌에서 더 안 나와요");
-      else if (t.k === "drop") await this.gain(t.o.zone, t.o.id, t.o.item, 1);
-      else if (t.k === "forage") {
-        // 고른 순간의 회차와 오늘 목록이 같을 때만(오전 5시를 넘겼으면 다시 보기)
-        if (W.today() !== t.o.round || !this.forageToday(W.today()).some(f => f.id === t.o.id)) this.ui.toast("새 날이 밝았어요! 숲을 다시 둘러봐요");
-        else await this.gain(t.o.zone, t.o.id, t.o.item, 1);
-      }
-      else if (t.k === "pick") {
-        const item = t.o.k === "flower" ? "flower_" + (t.o.c || "red") : t.o.k === "shell" ? "shell" : "weed";
-        await this.gain(t.o.zone, t.o.id, item, 1);
-      }
+      else if (t.k === "drop") { if (t.o.honey) await this.gain(t.o.zone, t.o.id, t.o.item, 1); else await this.gainG(t.o, t.o.item, 1); }
+      else if (t.k === "gather") await this.gainG(t.o, t.o.item, 1);
+      else if (t.k === "pick") await this.gain(t.o.zone, t.o.id, "shell", 1);
     } finally { this.busy = false; }
   }
   async gain(zone, pid, item, qty, takenMsg) {
@@ -236,27 +235,46 @@ export class Game {
     if (qty > 0) { const it = this.data.items[item]; this.ui.toast(`${it.icon} ${it.name}${qty > 1 ? " ×" + qty : ""} 가방에 넣었어요`); }
     return true;
   }
+  // v4 30분 채집: 고른 순간의 회차 키 그대로(경계를 넘었으면 "새로 났어요" 안내만, 자동 재시도 없음)
+  async gainG(o, item, qty) {
+    if (o.key !== W.gnow()) { this.ui.toast("🌱 새로 났어요! 다시 둘러봐요"); return false; }
+    this.ui.busy(true);
+    const r = await W.claimGather(o, item, qty).catch(() => ({ ok: false, reason: "실패" }));
+    if (!r.ok) { this.ui.busy(false); this.ui.toast(r.reason === "먼저" ? "앗, 가족이 먼저 가져갔어요" : r.reason === "새회차" ? "🌱 새로 났어요! 다시 둘러봐요" : "지금은 가져갈 수 없어요"); return false; }
+    const g = await P.giveClaim(r.claim).catch(() => ({ ok: false }));
+    this.ui.busy(false);
+    if (!g.ok) { this.ui.toast("저장이 잠시 안 됐어요. 다시 들어오면 받아요"); return false; }
+    W.dropMine(r.claim.id);
+    if (qty > 0) { const it = this.data.items[item]; this.ui.toast(`${it.icon} ${it.name} 가방에 넣었어요`); }
+    return true;
+  }
   async shakeTree(o) {
     o.shake = 14;
     // 나뭇가지: 사람마다 나무마다 하루 1번
     const gotBranch = await this.gain(o.zone, `${o.id}_b_${state.mid}`, "branch", 1, "");
-    // 과일: 가족 공유, 나무마다 하루 1번 → 바닥에 3개 떨어짐
-    const fruit = (parseInt(o.id.slice(1), 10) || 0) % 3 === 0 ? "orange" : "apple";
-    const r = await W.claim(o.zone, o.id, fruit, 0).catch(() => ({ ok: false }));
-    if (r.ok) this.ui.toast(`${this.data.items[fruit].icon} 열매가 떨어졌어요!`);
-    else if (!gotBranch) this.ui.toast("오늘은 이 나무에서 더 안 떨어져요");
+    // 과일(v4): 30분마다 열매가 열린 나무 3그루, 흔들면 바닥에 1개 → 가족 누구나 줍기
+    this.supply();
+    const fruit = this.fruitOf(o), key = this.supplyKey;
+    let r = { ok: false };
+    if (this.fruitSet.has(o.id) && !W.isGTaken(o.zone, o.id)) r = await W.claimGather({ key, zone: o.zone, id: o.id }, fruit, 0).catch(() => ({ ok: false }));
+    // 벌집(하루 주기): 오늘 벌집 나무면 하루 단위 '흔들었음' 표시(가족 공유) → 벌집이 떨어짐
+    let honey = { ok: false };
+    if (this.bugs.isHoneyTree(o.id, W.today()) && !W.isTaken(o.zone, o.id)) honey = await W.claim(o.zone, o.id, "honeycomb", 0).catch(() => ({ ok: false }));
+    if (r.ok) { W.dropMine(r.claim.id); this.ui.toast(`${this.data.items[fruit].icon} 열매가 떨어졌어요!`); }
+    else if (honey.ok) this.ui.toast("🍯 벌집이 떨어졌어요!");
+    else if (!gotBranch) this.ui.toast("지금은 이 나무에서 더 안 떨어져요");
   }
   fruitOf(o) { return (parseInt(o.id.slice(1), 10) || 0) % 3 === 0 ? "orange" : "apple"; }
-  // 오늘 흔들린 나무 둘레의 열매(주운 것 빼고). ID는 나무ID_f0~2, 기록은 나무의 구역에.
+  // 이번 30분 회차에 흔들린 나무 둘레의 열매(주운 것 빼고). ID는 나무ID_f0, 기록은 나무의 구역에.
   fruitDrops() {
-    const out = [], mx = Math.floor(this.me.x), my = Math.floor(this.me.y);
+    const out = [], mx = Math.floor(this.me.x), my = Math.floor(this.me.y), key = (this.supply(), this.supplyKey), n = this.data.gathering.fruitPerTree || 1;
     for (let y = my - 4; y <= my + 4; y++) for (let x = mx - 4; x <= mx + 4; x++) {
       const o = this.world.objAt.get(x + "," + y);
-      if (!o || o.k !== "tree" || !W.isTaken(o.zone, o.id)) continue;
-      // 떨어지는 칸은 지도 기준으로 고정(집을 옮겨도 모든 폰이 같은 자리), 집에 가린 것만 숨김
-      treeDropSpots(this.world.map, o, 3).forEach((s, i) => { const id = `${o.id}_f${i}`; if (!W.isTaken(o.zone, id) && !this.world.inHouse(s.x, s.y)) out.push({ id, zone: o.zone, x: s.x, y: s.y, item: this.fruitOf(o) }); });
+      if (!o || o.k !== "tree" || !this.fruitSet.has(o.id) || !W.isGTaken(o.zone, o.id)) continue;
+      // 떨어지는 칸은 지도 고정 데이터로(집을 옮겨도 모든 폰이 같은 자리), 집에 가린 것만 숨김
+      treeDropSpots(this.world.map, o, n, this.fixed).forEach((s, i) => { const id = `${o.id}_f${i}`; if (!W.isGTaken(o.zone, id) && !this.world.inHouse(s.x, s.y)) out.push({ id, key, zone: o.zone, x: s.x, y: s.y, item: this.fruitOf(o) }); });
     }
-    return out.concat(this.bugs.honeyDrops(W.today(), mx, my));
+    return out.concat(this.bugs.honeyDrops(W.today(), mx, my).map(h => ({ ...h, honey: true })));
   }
   fishPress() {
     const f = this.fishing, now = performance.now();
@@ -342,15 +360,18 @@ export class Game {
     }
     this.me.moving = !!(mx || my);
     if (mx || my) {
-      const sp = (this.sneak ? 2.1 : 4.2) * dt; this.move(mx * sp, my * sp); this.me.walk += dt / 1.2;
+      if (this.lakeL.boating) this.lakeL.move(mx, my, dt);
+      else { const sp = (this.sneak ? 2.1 : 4.2) * dt; this.move(mx * sp, my * sp); this.me.walk += dt / 1.2; }
       this.me.dir = Math.abs(mx) > Math.abs(my) ? (mx < 0 ? 1 : 2) : (my < 0 ? 3 : 0);
     }
-    W.sendPos(this.me.x, this.me.y, this.me.dir, false, this.camp.heartbeatMs());
+    // 연결이 끊겼다 다시 붙으면 배에서 내려 나루터에서 다시 시작(물 위 좌표가 남지 않게)
+    const conn = isConnected(); if (conn && this.wasConn === false) { this.lakeL.reset(); this.sendPosNow().catch(() => {}); } this.wasConn = conn;
+    W.sendPos(this.me.x, this.me.y, this.me.dir, false, this.camp.heartbeatMs(), this.posMode())?.catch(() => {});
     this.houseL.update(); this.camp.tick(); this.bugs.tick(dt);
     if (this.mode === "island") {
       const z = zoneOf(Math.floor(this.me.x), Math.floor(this.me.y));
       // 구역이 바뀌거나 오전 5시가 지나 회차가 바뀌면 다시 구독
-      if (z !== this.lastZone || (now - (this.lastRoundCheck || 0) > 5000 && (this.lastRoundCheck = now) && W.today() !== W.watchedRound())) { this.lastZone = z; W.watchAround(Math.floor(this.me.x), Math.floor(this.me.y)); }
+      if (z !== this.lastZone || (now - (this.lastRoundCheck || 0) > 5000 && (this.lastRoundCheck = now) && (W.today() !== W.watchedRound() || W.gnow() !== W.watchedGKey()))) { this.lastZone = z; W.watchAround(Math.floor(this.me.x), Math.floor(this.me.y)); }
     }
     for (const o of W.othersHere().values()) {
       const dx = o.tx - o.x, dy = o.ty - o.y, d = Math.hypot(dx, dy);
@@ -366,6 +387,10 @@ export class Game {
     this.ui.setCook(this.camp.roast || this.fishing || this.deco || (t && t.k === "stove") ? null : this.cookSpot());
     requestAnimationFrame(t2 => this.loop(t2));
   }
+
+  posMode() { return this.lakeL && this.lakeL.boating ? "boat" : "walk"; }
+  sendPosNow() { return W.sendPos(this.me.x, this.me.y, this.me.dir, true, this.camp.heartbeatMs(), this.posMode()) || Promise.resolve(); }
+  othersHereList() { return [...W.othersHere().values()]; }
 
   // 감정: 내 것은 내 세션 기록, 다른 가족은 그 사람의 현재 세션 기록만
   emoteOf(mid) {
@@ -396,6 +421,14 @@ export class Game {
     const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
     drawMap(g, this.mapBase, this.world, M.x, M.y, M.w, M.h, marks, { x: this.me.x, y: this.me.y }, state.mid, m => familyOf(m).color, nameOf, false, { camp: this.data.campfire });
   }
+  // 큰 지도 글자: 도움말 글자(data/help.json mapLabels) — v3 때 '숲' 글자 중 v4 호수에 잠긴 것만 뺌
+  mapLabels() {
+    if (this._labels) return this._labels;
+    const water = (x, y) => !!WATER[this.world.tile(Math.round(x), Math.round(y))];
+    // 지도가 작아 글자가 겹치면 뒤에 놓인 것이 빠지므로 v4 장소(호수·목장·밭)를 먼저, 나루터 글자는 뺌(그림으로 보임)
+    const first = l => /호수|목장/.test(l.text) ? 0 : /밭/.test(l.text) ? 1 : 2;
+    return (this._labels = (this.data.help.mapLabels || []).filter(l => !(l.text.includes("숲") && water(l.x, l.y)) && !l.text.includes("나루터")).sort((a, b) => first(a) - first(b)));
+  }
   drawBigMap(cv) {
     const g = cv.getContext("2d"), dpr = Math.min(2, devicePixelRatio || 1), w = cv.clientWidth, h = cv.clientHeight;
     cv.width = w * dpr; cv.height = h * dpr; g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -403,7 +436,7 @@ export class Game {
     const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
     let me = { x: this.me.x, y: this.me.y };
     if (this.mode === "house") { const hs = this.world.houseOf(this.houseMid); me = { x: hs.door.x + 0.5, y: hs.door.y + 0.5 }; }
-    drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true, { camp: this.data.campfire, labels: this.data.help.mapLabels });
+    drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true, { camp: this.data.campfire, labels: this.mapLabels() });
   }
 
   drawIsland(now, dt = 0) {
@@ -419,25 +452,27 @@ export class Game {
     this.houseL.addHouses(list, g, TS, camX, camY, x0, y0, x1, y1);
     this.camp.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, dt, now / 1000);
     this.bugs.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
+    this.lakeL.addGround(list, g, TS, camX, camY, x0, y0, x1, y1);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
       const px = x * TS - camX, py = y * TS - camY;
       if (o.k === "tree") list.push({ y: y + 0.95, f: () => {
         const s = o.shake ? Math.sin(o.shake-- * 1.4) * TS * 0.06 : 0;
         g.drawImage(SPR.tree, px + s, py - TS * 0.5, TS, TS * 1.5);
-        if (!W.isTaken(o.zone, o.id)) g.drawImage((parseInt(o.id.slice(1), 10) || 0) % 3 === 0 ? SPR.fruitOrange : SPR.fruitApple, px + s, py - TS * 0.5, TS, TS * 1.5);
+        if (this.fruitSet.has(o.id) && !W.isGTaken(o.zone, o.id)) g.drawImage((parseInt(o.id.slice(1), 10) || 0) % 3 === 0 ? SPR.fruitOrange : SPR.fruitApple, px + s, py - TS * 0.5, TS, TS * 1.5);
       } });
       else if (o.k === "rock" || o.k === "stone") list.push({ y: y + 0.5, f: () => g.drawImage(SPR.rock, px, py, TS, TS) });
-      else if ((o.k === "flower" || o.k === "shell") && !W.isTaken(o.zone, o.id)) list.push({ y: y + 0.3, f: () => g.drawImage(o.k === "shell" ? SPR.shell : SPR.flower[o.c] || SPR.flower.red, px, py, TS, TS) });
+      else if (o.k === "shell" && !W.isTaken(o.zone, o.id)) list.push({ y: y + 0.3, f: () => g.drawImage(SPR.shell, px, py, TS, TS) });
     }
-    for (const o of this.world.weedsFor(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y))
-      list.push({ y: o.y + 0.3, f: () => g.drawImage(SPR.weed, o.x * TS - camX, o.y * TS - camY, TS, TS) });
-    for (const o of this.forageToday(round)) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y))
-      list.push({ y: o.y + 0.3, f: () => g.drawImage(FORAGE_SPR[o.item] || FORAGE_SPR.mushroom_red, o.x * TS - camX, o.y * TS - camY, TS, TS) });
+    for (const o of this.supply()) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isGTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y)) {
+      const img = o.item === "weed" ? SPR.weed : o.item.startsWith("flower_") ? (SPR.flower[o.item.slice(7)] || SPR.flower.red) : (FORAGE_SPR[o.item] || FORAGE_SPR.mushroom_red);
+      list.push({ y: o.y + 0.3, f: () => g.drawImage(img, o.x * TS - camX, o.y * TS - camY, TS, TS) });
+    }
     for (const d of this.fruitDrops())
       list.push({ y: d.y + 0.4, f: () => { g.imageSmoothingEnabled = d.item === "honeycomb"; g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS); g.imageSmoothingEnabled = false; } });
-    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving) });
-    list.push({ y: m.y, f: () => this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving) });
+    const t = now / 1000;
+    for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => { if (o.mode === "boat") this.lakeL.drawBoatShape(g, o.x * TS - camX, o.y * TS - camY, TS, o.d || 0, t); this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving && o.mode !== "boat"); } });
+    list.push({ y: m.y, f: () => { if (this.lakeL.boating) this.lakeL.drawBoatShape(g, m.x * TS - camX, m.y * TS - camY, TS, m.dir, t); this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving && !this.lakeL.boating); } });
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     if (this.fishing) {
       const bx = this.fishing.bx * TS - camX, by = this.fishing.by * TS - camY, bite = this.fishing.st === "bite";
@@ -450,6 +485,8 @@ export class Game {
     const hr = new Date().getHours() + new Date().getMinutes() / 60;
     const dark = hr < 5 || hr >= 20 ? 0.25 : hr < 6.5 || hr >= 18.5 ? 0.12 : 0;
     if (dark) { g.fillStyle = `rgba(20,30,70,${dark})`; g.fillRect(0, 0, this.W, this.H); }
+    // v4: 캠프에 가족 2명 이상 + 나도 그 안이면 시간과 상관없이 저녁 하늘
+    this.lakeL.drawEvening(g, this.W, this.H, this.camp.eveningOn(), dt, now / 1000);
   }
 
   drawHouse() {

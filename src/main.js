@@ -4,7 +4,8 @@ import * as F from "./services/family.js";
 import * as P from "./services/playerStore.js";
 import * as W from "./services/worldStore.js";
 import * as H from "./services/houseStore.js";
-import { db, ref, get, fpath } from "./services/fb.js";
+import { db, ref, get, set, onValue, fpath, serverNow } from "./services/fb.js";
+import { recoverPlan } from "./domain/gather.js";
 import { loadWorld } from "./game/world.js";
 import { Game } from "./game/game.js";
 import { UI, bindAdminExtras } from "./ui/ui.js";
@@ -24,8 +25,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help })),
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields })),
       loadWorld(),
     ]);
   } catch (e) { $("loadMsg").textContent = "게임 파일을 못 불러왔어요. 인터넷 연결을 확인하고 다시 열어 주세요."; return; }
@@ -69,6 +70,20 @@ async function enter(mid) {
     const mine = await W.myRecentClaims();
     for (const c of mine) if (!state.player.applied[c.id] && c.qty > 0) await P.giveClaim(c);
   } catch { /* 다음에 다시 */ }
+  // v4: 30분 채집 중 꺼졌던 것 — 내 복구 목록(gatherMine)만 읽음
+  try {
+    const mineG = await W.myGatherMine();
+    const nowMs = Math.max(serverNow(), ...Object.values(mineG).filter(Number.isSafeInteger));
+    const plan = recoverPlan(mineG, state.player.applied, nowMs);
+    for (const id of plan.drop) await W.dropMine(id);
+    for (const id of plan.grant) {
+      const c = await W.readGather(id);
+      if (!c) continue;                                   // 공유 기록이 아직 없으면 다음에 다시
+      if (c.by !== state.mid) { await W.dropMine(id); continue; }
+      const g = c.qty > 0 ? await P.giveClaim(c) : { ok: true };
+      if (g.ok) await W.dropMine(id);
+    }
+  } catch { /* 다음에 다시 */ }
   await H.watchHousing();   // v3: 집 자리·겉모습(공유)
   await checkMinApp();
   history.replaceState(null, "", location.pathname);
@@ -87,11 +102,14 @@ async function enter(mid) {
 }
 
 // 가족 섬이 더 새 버전을 요구하면 새로고침 안내(옛 앱으로 쓰지 않게)
+// (게임 중에 바뀌어도) 조작을 멈추고 다시 열기 안내
 async function checkMinApp() {
-  try {
-    const m = (await get(ref(db, fpath(state.fid, "meta", "minApp")))).val();
-    if (m && m > APP_VERSION) setTimeout(() => ui.toast("새 버전이 나왔어요!\n게임을 껐다가 다시 열어 주세요", 6000), 1500);
-  } catch { /* 무시 */ }
+  onValue(ref(db, fpath(state.fid, "meta", "minApp")), s => {
+    const m = s.val();
+    // 관리자(아빠)가 새 버전으로 들어오면 가족 최소 버전을 올림 → 아직 옛 앱인 폰은 다시 열기 안내(서버도 옛 앱 쓰기를 막음)
+    if (state.isAdmin && (m || 1) < APP_VERSION) set(ref(db, fpath(state.fid, "meta", "minApp")), APP_VERSION).catch(() => {});
+    if (m && m > APP_VERSION && !state.oldApp) { state.oldApp = true; state.kicked = true; ui.closeAll(); $("pOldApp").hidden = false; }
+  }, () => {});
 }
 
 // ---- 시작 화면 버튼 ----
@@ -119,6 +137,7 @@ $("slots").querySelectorAll(".slot").forEach(b => b.onclick = async () => {
 });
 $("waitCancel").onclick = async () => { await F.cancelRequest(state.fid).catch(() => {}); show("sJoin"); };
 $("kickedReload").onclick = () => location.reload();
+$("oldAppReload").onclick = () => location.reload();
 $("errReload").onclick = () => location.reload();
 $("logout").onclick = () => signOut(auth).then(() => location.reload());
 $("ver").textContent = "v" + APP_VERSION;

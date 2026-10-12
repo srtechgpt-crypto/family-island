@@ -1,5 +1,5 @@
 // 오프라인 캐시: 앱 파일·그림·라이브러리. 게임 기록은 Firebase(인터넷)에서.
-const VERSION = "fi-32beef61c5";
+const VERSION = "fi-80fcb12f63";
 const CORE = [
   "./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
   "src/main.js", "src/state.js", "src/config/gameConfig.js", "src/config/firebaseConfig.js",
@@ -8,6 +8,7 @@ const CORE = [
   "src/domain/inventory.js", "src/domain/rewards.js", "src/domain/crafting.js", "src/domain/placement.js",
   "src/domain/rounds.js", "src/domain/fishing.js", "src/domain/migrate.js", "src/domain/appearance.js", "src/domain/emotes.js", "src/domain/mapMarkers.js", "src/domain/forage.js",
   "data/items.json", "data/fish.json", "data/furniture.json", "data/recipes.json", "data/rooms.json", "data/island.json", "data/appearance.json", "data/forage.json",
+  "data/lake.json", "data/gathering.json", "data/gathering.fields.json", "src/game/v4lake.js", "src/domain/gather.js", "src/domain/boating.js",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js",
   "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js",

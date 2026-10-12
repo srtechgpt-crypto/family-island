@@ -1,6 +1,6 @@
 // v3 집: 공유 위치(housing) 반영, 겉모습 그림, 집 옮기기(걸어가서 그 자리에 놓기)
 import { houseCanvas, HOUSE_PAD } from "./houseArt.js";
-import { housesFrom, buildPlacementStatic, validateHousePlacement, PLACE_REASON_TEXT } from "../domain/housing.js";
+import { resolveHouses, buildPlacementStatic, validateHousePlacement, PLACE_REASON_TEXT } from "../domain/housing.js";
 import { exteriorOf } from "../domain/houseAppearance.js";
 import { state, onState } from "../state.js";
 import { nameOf } from "../config/gameConfig.js";
@@ -11,7 +11,8 @@ export class HouseLayer {
     this.game = game;
     const d = game.data;
     this.def = d.houseAppearance;
-    this.stat = buildPlacementStatic(game.world.map, { forage: d.forage, insects: d.insects, campfire: d.campfire });
+    // v4: 밭·호수·나루터·목장도 집을 놓을 수 없는 자리
+    this.stat = buildPlacementStatic(game.world.map, { forage: d.forage, insects: d.insects, campfire: d.campfire, fields: d.gatheringFields.fields, lake: d.lake, docks: game.world.map.docks, ranch: game.world.map.ranch });
     this.move = null;      // { pos, key, res }
     this.sync();
     onState(w => { if (w === "housing" || w === "members") this.sync(); });
@@ -20,7 +21,11 @@ export class HouseLayer {
   // 공유 위치 → 지도·충돌 갱신. 내 캐릭터가 새 집 속에 갇히면 그 집 문 앞으로
   sync() {
     const g = this.game, w = g.world;
-    const houses = housesFrom(w.mapHouses, state.housing || {});
+    // 6채를 한 번에 확정(m0부터). 저장 자리가 v4 지도에서 무효면 기본 자리로 '읽기만' 함(저장값은 그대로)
+    const all = resolveHouses(this.stat, w.mapHouses, state.housing || {});
+    const houses = all.filter(h => h.source !== null);
+    const mine = all.find(h => h.mid === state.mid);
+    if (mine && mine.source !== "saved" && mine.reasons.length && !this.warned) { this.warned = true; setTimeout(() => g.ui.toast("섬이 바뀌어서 집을 원래 자리에 두었어요.\n'집 옮기기'로 다시 고를 수 있어요", 5000), 2500); }
     w.setHouses(houses);
     if (g.mode === "island" && !w.walkable(g.me.x, g.me.y)) {
       const h = houses.find(h => g.me.x >= h.x && g.me.x < h.x + h.w && g.me.y >= h.y && g.me.y < h.y + h.h);
@@ -80,7 +85,7 @@ export class HouseLayer {
     const m = this.move; if (!m || !m.res || !m.res.ok) return { ok: false, reason: this.reasonText() || "여기엔 지을 수 없어요" };
     const pos = { ...m.pos };
     const r = await H.moveHouse(pos, latest => {
-      const houses = housesFrom(this.game.world.mapHouses, latest);
+      const houses = resolveHouses(this.stat, this.game.world.mapHouses, latest).filter(h => h.source !== null);
       const v = validateHousePlacement(this.stat, houses, state.mid, pos);
       return v.ok ? { ok: true } : { ok: false, reason: (v.reasons || []).map(c => PLACE_REASON_TEXT[c] || c)[0] || "다른 가족이 먼저 이 근처를 골랐어요" };
     }).catch(() => ({ ok: false, reason: "저장하지 못했어요" }));

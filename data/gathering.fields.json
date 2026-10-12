@@ -1,0 +1,179 @@
+{
+ "ver": 4,
+ "fields": [
+  {
+   "id": "weeds",
+   "name": "잡초밭",
+   "rect": {
+    "x": 12,
+    "y": 50,
+    "w": 6,
+    "h": 5
+   },
+   "cells": [
+    {
+     "id": "v4_weeds_01",
+     "x": 12,
+     "y": 50,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_02",
+     "x": 14,
+     "y": 50,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_03",
+     "x": 13,
+     "y": 51,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_04",
+     "x": 17,
+     "y": 51,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_05",
+     "x": 14,
+     "y": 52,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_06",
+     "x": 16,
+     "y": 52,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_07",
+     "x": 17,
+     "y": 53,
+     "item": "weed"
+    },
+    {
+     "id": "v4_weeds_08",
+     "x": 14,
+     "y": 54,
+     "item": "weed"
+    }
+   ]
+  },
+  {
+   "id": "mushrooms",
+   "name": "버섯밭",
+   "rect": {
+    "x": 46,
+    "y": 18,
+    "w": 8,
+    "h": 4
+   },
+   "cells": [
+    {
+     "id": "v4_mushrooms_01",
+     "x": 46,
+     "y": 18,
+     "item": "mushroom_red"
+    },
+    {
+     "id": "v4_mushrooms_02",
+     "x": 52,
+     "y": 18,
+     "item": "mushroom_brown"
+    },
+    {
+     "id": "v4_mushrooms_03",
+     "x": 46,
+     "y": 20,
+     "item": "mushroom_white"
+    },
+    {
+     "id": "v4_mushrooms_04",
+     "x": 52,
+     "y": 20,
+     "item": "mushroom_red"
+    }
+   ]
+  },
+  {
+   "id": "herbs",
+   "name": "약초밭",
+   "rect": {
+    "x": 94,
+    "y": 24,
+    "w": 5,
+    "h": 5
+   },
+   "cells": [
+    {
+     "id": "v4_herbs_01",
+     "x": 94,
+     "y": 24,
+     "item": "herb_mint"
+    },
+    {
+     "id": "v4_herbs_02",
+     "x": 97,
+     "y": 25,
+     "item": "herb_chamomile"
+    },
+    {
+     "id": "v4_herbs_03",
+     "x": 95,
+     "y": 27,
+     "item": "herb_mint"
+    }
+   ]
+  },
+  {
+   "id": "flowers",
+   "name": "꽃밭",
+   "rect": {
+    "x": 82,
+    "y": 60,
+    "w": 5,
+    "h": 6
+   },
+   "cells": [
+    {
+     "id": "v4_flowers_01",
+     "x": 82,
+     "y": 60,
+     "item": "flower_red"
+    },
+    {
+     "id": "v4_flowers_02",
+     "x": 86,
+     "y": 60,
+     "item": "flower_yellow"
+    },
+    {
+     "id": "v4_flowers_03",
+     "x": 82,
+     "y": 62,
+     "item": "flower_white"
+    },
+    {
+     "id": "v4_flowers_04",
+     "x": 86,
+     "y": 62,
+     "item": "flower_red"
+    },
+    {
+     "id": "v4_flowers_05",
+     "x": 82,
+     "y": 64,
+     "item": "flower_yellow"
+    },
+    {
+     "id": "v4_flowers_06",
+     "x": 86,
+     "y": 64,
+     "item": "flower_white"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,8 @@
+{
+  "ver": 4,
+  "generalForage": 6,
+  "weeds": 10,
+  "fruitTrees": 3,
+  "fruitPerTree": 1,
+  "daily": ["shell", "stone", "branch", "honeycomb"]
+}
