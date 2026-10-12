@@ -24,7 +24,11 @@ export async function sendEmote(kind) {
   if (performance.now() - last < 800) return { ok: false, reason: "잠깐만" };
   last = performance.now();
   sending = true;
-  try { await set(myRef, { m: state.mid, kind, id: rid(8), at: serverTimestamp() }); return { ok: true }; }
+  // 보내는 중 연결이 끊기면 set이 다시 연결될 때까지 안 끝나므로, 3초 뒤엔 잠금만 푼다
+  try {
+    const ok = await Promise.race([set(myRef, { m: state.mid, kind, id: rid(8), at: serverTimestamp() }).then(() => true), new Promise(r => setTimeout(() => r(false), 3000))]);
+    return ok ? { ok: true } : { ok: false, reason: "보내지 못함" };
+  }
   catch { return { ok: false, reason: "보내지 못함" }; }
   finally { sending = false; }
 }

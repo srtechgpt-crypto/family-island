@@ -600,6 +600,114 @@
      "item": "flower_white"
     }
    ]
+  },
+  {
+   "id": "stones",
+   "name": "돌밭",
+   "rect": {
+    "x": 24,
+    "y": 13,
+    "w": 10,
+    "h": 6
+   },
+   "cells": [
+    {
+     "id": "v4_stones_01",
+     "x": 25,
+     "y": 13,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_02",
+     "x": 27,
+     "y": 13,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_03",
+     "x": 31,
+     "y": 13,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_04",
+     "x": 24,
+     "y": 14,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_05",
+     "x": 28,
+     "y": 14,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_06",
+     "x": 32,
+     "y": 14,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_07",
+     "x": 27,
+     "y": 15,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_08",
+     "x": 31,
+     "y": 15,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_09",
+     "x": 24,
+     "y": 16,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_10",
+     "x": 26,
+     "y": 16,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_11",
+     "x": 30,
+     "y": 16,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_12",
+     "x": 25,
+     "y": 17,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_13",
+     "x": 29,
+     "y": 17,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_14",
+     "x": 33,
+     "y": 17,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_15",
+     "x": 26,
+     "y": 18,
+     "item": "stone"
+    },
+    {
+     "id": "v4_stones_16",
+     "x": 30,
+     "y": 18,
+     "item": "stone"
+    }
+   ]
   }
  ]
 }

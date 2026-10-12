@@ -6,7 +6,7 @@ export function migrate(data, fromVersion = 0) {
   if (fromVersion > CURRENT_VERSION) return { ok: false, reason: "새 버전 앱 필요" };
   if (!record(data)) return { ok: false, reason: "잘못된 데이터" };
   const next = { ...data };
-  for (const field of ["inv", "furn", "dex", "applied", "done", "cookDex", "insectDex", "insectVisit", "camp", "roast"]) {
+  for (const field of ["inv", "furn", "dex", "applied", "done", "cookDex", "insectDex", "insectVisit", "camp", "roast", "farmPend"]) {
     if (next[field] === undefined) next[field] = {};
     if (!record(next[field])) return { ok: false, reason: "잘못된 데이터" };
     next[field] = { ...next[field] };

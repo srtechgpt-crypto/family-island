@@ -135,5 +135,44 @@
       "stone": 4,
       "shell": 3
     }
+  },
+  "seed_carrot": {
+    "outputKind": "item",
+    "out": {
+      "seed_carrot": 1
+    },
+    "items": {
+      "weed": 3
+    }
+  },
+  "seed_potato": {
+    "outputKind": "item",
+    "out": {
+      "seed_potato": 1
+    },
+    "items": {
+      "weed": 3,
+      "stone": 1
+    }
+  },
+  "seed_tomato": {
+    "outputKind": "item",
+    "out": {
+      "seed_tomato": 1
+    },
+    "items": {
+      "weed": 3,
+      "flower_red": 1
+    }
+  },
+  "seed_pumpkin": {
+    "outputKind": "item",
+    "out": {
+      "seed_pumpkin": 1
+    },
+    "items": {
+      "weed": 3,
+      "flower_yellow": 1
+    }
   }
 }

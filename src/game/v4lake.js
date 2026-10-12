@@ -2,7 +2,7 @@
 import { state } from "../state.js";
 import { boatMove, canBoard, disembarkSpot } from "../domain/boating.js";
 
-const SOIL = { weeds: "#7fae4f", mushrooms: "#6b5a3e", herbs: "#5e9e74", flowers: "#a7c46a" };
+const SOIL = { weeds: "#7fae4f", mushrooms: "#6b5a3e", herbs: "#5e9e74", flowers: "#a7c46a", stones: "#a39a8a" };
 
 export class LakeLayer {
   constructor(game) {
@@ -76,7 +76,7 @@ export class LakeLayer {
     g.fillStyle = "#8a5f3a";
     for (let i = 0; i <= r.w; i += 2) for (const yy of [y + TS * 0.05, y + h - TS * 0.55]) g.fillRect(x + i * TS - TS * 0.08 + TS * 0.3 * (i === 0 ? 1 : i === r.w ? -1 : 0), yy, TS * 0.16, TS * 0.5);
     for (let j = 0; j <= r.h; j += 2) for (const xx of [x + TS * 0.22, x + w - TS * 0.38]) g.fillRect(xx, y + j * TS - TS * 0.25 + TS * 0.3 * (j === 0 ? 1 : j === r.h ? -1 : 0), TS * 0.16, TS * 0.5);
-    this.sign(g, x + w / 2, y + h / 2, "목장 (준비 중)", TS * 1.2);
+    this.sign(g, x + (96.5 - r.x) * TS, y + h - TS * 0.7, "🐔 목장", TS * 1.1);
     g.restore();
   }
   sign(g, cx, cy, text, TS) {

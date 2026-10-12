@@ -258,5 +258,80 @@
     "name": "길앞잡이",
     "kind": "insect",
     "icon": "🪲"
+  },
+  "seed_carrot": {
+    "name": "당근 씨앗",
+    "kind": "seed",
+    "icon": "🌱"
+  },
+  "seed_potato": {
+    "name": "감자 씨앗",
+    "kind": "seed",
+    "icon": "🌱"
+  },
+  "seed_tomato": {
+    "name": "토마토 씨앗",
+    "kind": "seed",
+    "icon": "🌱"
+  },
+  "seed_pumpkin": {
+    "name": "호박 씨앗",
+    "kind": "seed",
+    "icon": "🌱"
+  },
+  "carrot": {
+    "name": "당근",
+    "kind": "material",
+    "icon": "🥕"
+  },
+  "potato": {
+    "name": "감자",
+    "kind": "material",
+    "icon": "🥔"
+  },
+  "tomato": {
+    "name": "토마토",
+    "kind": "material",
+    "icon": "🍅"
+  },
+  "pumpkin": {
+    "name": "호박",
+    "kind": "material",
+    "icon": "🎃"
+  },
+  "egg": {
+    "name": "달걀",
+    "kind": "material",
+    "icon": "🥚"
+  },
+  "food_fried_egg": {
+    "name": "달걀프라이",
+    "kind": "food",
+    "icon": "🍳"
+  },
+  "food_omelet": {
+    "name": "채소 오믈렛",
+    "kind": "food",
+    "icon": "🍳"
+  },
+  "food_veg_soup": {
+    "name": "채소 수프",
+    "kind": "food",
+    "icon": "🥣"
+  },
+  "food_baked_potato": {
+    "name": "감자구이",
+    "kind": "food",
+    "icon": "🥔"
+  },
+  "food_pumpkin_porridge": {
+    "name": "호박죽",
+    "kind": "food",
+    "icon": "🎃"
+  },
+  "food_carrot_cake": {
+    "name": "당근 케이크",
+    "kind": "food",
+    "icon": "🍰"
   }
 }

@@ -25,8 +25,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields })),
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm })),
       loadWorld(),
     ]);
   } catch (e) { $("loadMsg").textContent = "게임 파일을 못 불러왔어요. 인터넷 연결을 확인하고 다시 열어 주세요."; return; }
@@ -62,7 +62,12 @@ async function enter(mid) {
   entered = true;
   state.mid = mid;
   state.isAdmin = await F.amAdmin(state.fid);
+  try {   // 세션을 바꾸기 전에 버전부터: 옛 앱이 다른 기기를 밀어내거나 쓰지 않게(v7 ⑦ 지적)
+    const m = (await get(ref(db, fpath(state.fid, "meta", "minApp")))).val();
+    if (m && m > APP_VERSION) { state.oldApp = true; state.kicked = true; show("sGame"); $("pOldApp").hidden = false; return; }
+  } catch { /* 못 읽으면 아래 실시간 검사가 막음 */ }
   await F.startSession(state.fid, mid);
+  await checkMinApp();   // 옛 앱이면 복구·쓰기 전에 먼저 멈춤(v7 ⑤ 지적)
   await P.startPlayer();
   await P.ensurePlayer();
   // 줍던 중 꺼졌던 것 다시 받기
@@ -85,7 +90,6 @@ async function enter(mid) {
     }
   } catch { /* 다음에 다시 */ }
   await H.watchHousing();   // v3: 집 자리·겉모습(공유)
-  await checkMinApp();
   history.replaceState(null, "", location.pathname);
   show("sGame");
   document.body.classList.add("playing");

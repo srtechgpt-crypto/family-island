@@ -185,10 +185,16 @@ function wardrobe(g, W, H) {
 }
 
 // ---- v4 가구 ----
-// 가로로 그린 그림을 세로 칸(W<H)이면 90도 돌려 담는다
-function landscape(g, W, H, fn) {
-  if (W >= H) return fn(g, W, H);
-  g.save(); g.translate(W, 0); g.rotate(Math.PI / 2); fn(g, H, W); g.restore();
+// 등받이(벽 쪽)가 위인 그림을 rot만큼 시계 방향으로 돌려 담는다: 0 위 / 1 오른쪽 / 2 아래 / 3 왼쪽 벽
+// W,H는 돌린 뒤 칸 크기 — 홀수 rot이면 원래 그림은 H×W로 그린다
+function turn(g, W, H, rot, fn) {
+  const r = rot & 3;
+  if (r === 0) return fn(g, W, H);
+  g.save();
+  if (r === 1) { g.translate(W, 0); g.rotate(Math.PI / 2); fn(g, H, W); }
+  else if (r === 2) { g.translate(W, H); g.rotate(Math.PI); fn(g, W, H); }
+  else { g.translate(0, H); g.rotate(-Math.PI / 2); fn(g, H, W); }
+  g.restore();
 }
 
 // 소파: 등받이 + 팔걸이 + 방석 두 개 + 쿠션
@@ -244,16 +250,31 @@ function cabinet(g, W, H) {
   g.fillStyle = "#5fb35a"; g.beginPath(); g.arc(W - 9, 1, 3.5, 0, 7); g.fill(); g.fillStyle = "#d9774a"; rr(g, W - 12, 1, 6, 4, 1); g.fill();
 }
 
-// 흔들의자: 곡선 다리 + 등받이 + 방석
+// 흔들의자: 곡선 다리 + 등받이 + 방석 — rot 0 등받이 위 / 1 오른쪽 / 2 아래 / 3 왼쪽(옆모습은 의자와 같은 방식)
 function rocking(g, rot) {
   shadow(g, 16, 29, 11, 2.5);
-  g.save(); if (rot === 1 || rot === 2) { g.translate(32, 0); g.scale(-1, 1); }
-  g.strokeStyle = WOOD.dk; g.lineWidth = 2.4; g.beginPath(); g.moveTo(3, 25); g.quadraticCurveTo(16, 31, 29, 25); g.stroke();
-  g.fillStyle = WOOD.dk; for (const x of [8, 22]) { rr(g, x, 19, 2.5, 8, 1); g.fill(); }
-  rr(g, 6, 2, 20, 15, [6, 6, 2, 2]); fillStroke(g, woodGrad(g, 0, 2, 0, 17, WOOD.mid, WOOD.lo));
-  g.fillStyle = "rgba(60,35,18,.4)"; for (const x of [11, 15.5, 20]) { rr(g, x, 5, 1.6, 10, 1); g.fill(); }
-  rr(g, 5, 14, 22, 8, 3); fillStroke(g, woodGrad(g, 0, 14, 0, 22));
-  g.fillStyle = "#b48ad6"; rr(g, 8, 15, 16, 5, 2.5); g.fill();
+  const back = (x, y, w, h) => {
+    rr(g, x, y, w, h, [6, 6, 2, 2]); fillStroke(g, woodGrad(g, 0, y, 0, y + h, WOOD.mid, WOOD.lo));
+    g.fillStyle = "rgba(60,35,18,.4)"; for (const k of [0.25, 0.5, 0.75]) { rr(g, x + w * k - 0.8, y + 3, 1.6, h - 5, 1); g.fill(); }
+  };
+  const seat = (x, y, w, h) => { rr(g, x, y, w, h, 3); fillStroke(g, woodGrad(g, 0, y, 0, y + h)); g.fillStyle = "#b48ad6"; rr(g, x + 3, y + 1, w - 6, h - 3, 2.5); g.fill(); };
+  if (rot === 0 || rot === 2) {
+    g.strokeStyle = WOOD.dk; g.lineWidth = 2.4; g.beginPath(); g.moveTo(3, 25); g.quadraticCurveTo(16, 31, 29, 25); g.stroke();
+    g.fillStyle = WOOD.dk; for (const x of [8, 22]) { rr(g, x, 19, 2.5, 8, 1); g.fill(); }
+    if (rot === 0) { back(6, 2, 20, 15); seat(5, 14, 22, 8); }
+    else { seat(5, 8, 22, 9); back(6, 14, 20, 12); }
+    return;
+  }
+  g.save(); if (rot === 3) { g.translate(32, 0); g.scale(-1, 1); }
+  // 옆모습: 바닥의 흔들 곡선 + 다리 + 방석 + 오른쪽에 높은 등받이(살짝 뒤로 기움)
+  g.strokeStyle = WOOD.dk; g.lineWidth = 2.4; g.beginPath(); g.moveTo(2, 24); g.quadraticCurveTo(14, 31, 28, 26); g.stroke();
+  g.fillStyle = WOOD.dk; for (const x of [7, 19]) { rr(g, x, 18, 2.5, 8, 1); g.fill(); }
+  seat(4, 13, 19, 7);
+  g.save(); g.translate(24, 2); g.rotate(0.12);
+  rr(g, -3, 0, 6, 20, 2.5); fillStroke(g, woodGrad(g, -3, 0, 3, 0, WOOD.mid, WOOD.lo));
+  g.fillStyle = "rgba(255,255,255,.3)"; rr(g, -1.8, 2, 1.4, 15, 1); g.fill();
+  g.restore();
+  g.fillStyle = WOOD.mid; rr(g, 3, 10, 2.5, 6, 1); g.fill();   // 팔걸이 앞 기둥
   g.restore();
 }
 
@@ -296,22 +317,22 @@ function piano(g, W, H) {
 }
 
 const DRAW = {
-  sofa_wood: (g, W, H) => landscape(g, W, H, sofa),
+  sofa_wood: (g, W, H, rot) => turn(g, W, H, rot, sofa),
   dining_table: (g, W, H) => diningTable(g, W, H),
-  fireplace_stone: (g, W, H) => landscape(g, W, H, fireplace),
-  cabinet_low: (g, W, H) => landscape(g, W, H, cabinet),
+  fireplace_stone: (g, W, H, rot) => turn(g, W, H, rot, fireplace),
+  cabinet_low: (g, W, H, rot) => turn(g, W, H, rot, cabinet),
   rocking_chair: (g, W, H, rot) => rocking(g, rot),
   fish_tank: g => fishTank(g),
   tree_pot: g => treePot(g),
-  piano_wood: (g, W, H) => landscape(g, W, H, piano),
-  wardrobe_wood: (g, W, H) => wardrobe(g, W, H),
-  stove_wood: (g, W, H) => stove(g, W, H),
+  piano_wood: (g, W, H, rot) => turn(g, W, H, rot, piano),
+  wardrobe_wood: (g, W, H, rot) => turn(g, W, H, rot, wardrobe),
+  stove_wood: (g, W, H, rot) => turn(g, W, H, rot, stove),
   table_wood: (g, W, H) => table(g, W, H),
   chair_wood: (g, W, H, rot) => chair(g, rot),
   pot_flower: g => pot(g),
   lamp_shell: g => lamp(g),
   bed_log: (g, W, H, rot) => { bed.rot = rot; bed(g, Math.min(W, H)); },
-  bookshelf_wood: (g, W, H) => shelf(g, W, H),
+  bookshelf_wood: (g, W, H, rot) => turn(g, W, H, rot, shelf),
 };
 
 // w,h = 돌린 뒤 칸 수

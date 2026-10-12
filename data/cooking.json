@@ -70,6 +70,48 @@
         "herb_chamomile": 1,
         "honey": 1
       }
+    },
+    "fried_egg": {
+      "out": "food_fried_egg",
+      "items": {
+        "egg": 1
+      }
+    },
+    "omelet": {
+      "out": "food_omelet",
+      "items": {
+        "egg": 1,
+        "tomato": 1
+      }
+    },
+    "veg_soup": {
+      "out": "food_veg_soup",
+      "items": {
+        "carrot": 1,
+        "potato": 1,
+        "tomato": 1
+      }
+    },
+    "baked_potato": {
+      "out": "food_baked_potato",
+      "items": {
+        "potato": 2
+      }
+    },
+    "pumpkin_porridge": {
+      "out": "food_pumpkin_porridge",
+      "items": {
+        "pumpkin": 1,
+        "honey": 1
+      }
+    },
+    "carrot_cake": {
+      "out": "food_carrot_cake",
+      "items": {
+        "carrot": 2,
+        "egg": 1,
+        "honey": 1
+      }
     }
   }
 }

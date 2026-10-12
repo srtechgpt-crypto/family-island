@@ -48,6 +48,7 @@ for (const [k, col] of Object.entries({ red: "#ff6f8e", yellow: "#ffd35c", white
 // 버섯·약초(v2)
 const mush = (cap, dot) => sprite(16, 16, g => { px(g, "#f3ead8", 7, 9, 3, 5); px(g, cap, 4, 5, 9, 4); px(g, cap, 5, 4, 7, 1); if (dot) { px(g, dot, 6, 6, 1, 1); px(g, dot, 10, 5, 1, 1); px(g, dot, 9, 7, 1, 1); } px(g, "rgba(0,0,0,.15)", 5, 14, 7, 1); });
 export const FORAGE_SPR = {
+  stone: sprite(16, 16, g => { px(g, "rgba(0,0,0,.18)", 3, 13, 11, 1); px(g, "#8d8f94", 3, 9, 6, 4); px(g, "#b9bcc2", 4, 9, 3, 1); px(g, "#7a7c82", 9, 10, 5, 3); px(g, "#a5a8ae", 10, 10, 2, 1); px(g, "#9a9da3", 6, 6, 4, 3); px(g, "#c9ccd1", 7, 6, 2, 1); }),   // 돌밭 돌멩이
   mushroom_red: mush("#e3463b", "#fff"),
   mushroom_brown: mush("#9a6a42", "#c79a6e"),
   mushroom_white: mush("#f4f1ea", "#d9d2c4"),

@@ -22,6 +22,7 @@ import { HouseLayer } from "./v3house.js";
 import { CampLayer } from "./v3camp.js";
 import { BugLayer } from "./v3bugs.js";
 import { LakeLayer } from "./v4lake.js";
+import { RanchLayer } from "./ranch.js";
 import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
@@ -35,6 +36,7 @@ export class Game {
     this.camp = new CampLayer(this);
     this.bugs = new BugLayer(this);
     this.lakeL = new LakeLayer(this);     // v4: 밭·목장·나루터·뱃놀이·캠프 저녁 하늘
+    this.ranch = new RanchLayer(this);    // v7: 텃밭·닭·애완동물
     this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
@@ -153,12 +155,13 @@ export class Game {
       if (room.door.some(([x, y]) => x === tx && y === ty)) return { k: "exit", label: this.room === "living" ? "밖으로" : "거실로" };
       const link = (room.links || []).find(l => l.x === tx && l.y === ty);
       if (link) return { k: "link", to: link.to, label: this.data.rooms[link.to].name };
-      return null;
+      return this.ranch.petTarget();
     }
     for (const h of this.world.houses) if (Math.abs(m.x - (h.door.x + 0.5)) < 0.9 && Math.abs(m.y - (h.door.y + 1)) < 1.1)
       return { k: "door", h, label: h.mid === state.mid ? "우리 집" : nameOf(h.mid) + "네" };
     if (this.camp.near(m.x, m.y, 1.8)) return { k: "camp", label: "캠프파이어" };
     const bug = this.bugs.target(); if (bug) return bug;
+    const rt = this.ranch.target(); if (rt) return rt;
     // 가까운 것(떨어진 과일 > 꽃·조개·잡초 > 나무·돌)
     let best = null, bd = 1.35;
     const consider = (o, kind, label) => { const d = Math.hypot(o.x + 0.5 - m.x, o.y + 0.5 - m.y); if (d < bd) { bd = d; best = { k: kind, o, label }; } };
@@ -176,7 +179,7 @@ export class Game {
     if (best) return best;
     const f = this.front(), t = this.world.tile(f.x, f.y);
     if (WATER[t]) return { k: "fish", water: WATER[t], fx: f.x, fy: f.y, label: "낚시" };
-    return null;
+    return this.ranch.petTarget();   // 애완동물 쓰다듬기는 가장 마지막
   }
   // 이번 30분 회차의 채집물 목록(회차가 바뀌면 다시 계산)
   supply() {
@@ -186,7 +189,9 @@ export class Game {
       this.supplyList = gatherSupply(this.world.map, this.data.gatheringFields, { ...this.data.forage, gathering: this.data.gathering }, key);
       this.fruitSet = new Set(fruitTreesFor(this.world.map, key, this.data.gathering));
     }
-    return this.supplyList;
+    // v7: 오늘 모이를 줬으면 둥지 달걀(목장 근처에서만 계산)
+    const eggs = this.ranch ? this.ranch.eggs() : [];
+    return eggs.length ? this.supplyList.concat(eggs) : this.supplyList;
   }
   nearZones() { const zx = Math.floor(this.me.x / 16), zy = Math.floor(this.me.y / 16), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(`z${zx + dx}_${zy + dy}`); return out; }
   nearObjects() {
@@ -205,6 +210,7 @@ export class Game {
     if (t.k === "houseMove") { const r = await this.houseL.confirm(); this.ui.houseMoveDone(r); return; }
     if (t.k === "boatOn") return this.lakeL.board(t.dock);
     if (t.k === "boatOff") return this.lakeL.leave(t.dock);
+    if (t.k.startsWith("r_")) return this.ranch.act(t);
     const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "door") return this.enterHouse(t.h.mid);
@@ -368,6 +374,8 @@ export class Game {
     const conn = isConnected(); if (conn && this.wasConn === false) { this.lakeL.reset(); this.sendPosNow().catch(() => {}); } this.wasConn = conn;
     W.sendPos(this.me.x, this.me.y, this.me.dir, false, this.camp.heartbeatMs(), this.posMode())?.catch(() => {});
     this.houseL.update(); this.camp.tick(); this.bugs.tick(dt);
+    this.ranch.tick(dt, [{ mid: state.mid, x: this.me.x, y: this.me.y, dir: this.me.dir, boat: this.lakeL.boating },
+      ...[...W.othersHere().values()].map(o => ({ mid: o.m, x: o.x, y: o.y, dir: typeof o.d === "number" ? o.d : 0, boat: o.mode === "boat" }))]);
     if (this.mode === "island") {
       const z = zoneOf(Math.floor(this.me.x), Math.floor(this.me.y));
       // 구역이 바뀌거나 오전 5시가 지나 회차가 바뀌면 다시 구독
@@ -402,8 +410,9 @@ export class Game {
     if (!this.emoStart) this.emoStart = new Map();
     let st = this.emoStart.get(e.id);
     if (!st && w) { st = { x: w.x, y: w.y }; this.emoStart.set(e.id, st); if (this.emoStart.size > 40) this.emoStart.delete(this.emoStart.keys().next().value); }
-    const moved = !!(st && w && Math.hypot(w.x - st.x, w.y - st.y) > 0.3);
-    const a = emoteActive(e, serverNow(), { movedSince: moved, boat: !!(w && w.boat) });
+    // 한 번 0.3칸 넘게 움직였거나 배에 탔으면 끝난 것으로 기억(제자리로 돌아오거나 내려도 다시 시작하지 않음)
+    if (st && w && !st.done && (w.boat || Math.hypot(w.x - st.x, w.y - st.y) > 0.3)) st.done = true;
+    const a = emoteActive(e, serverNow(), { movedSince: !!(st && st.done), boat: !!(w && w.boat) });
     return a ? { kind: a.kind, p: a.p, t: a.t / 1000 } : null;
   }
   drawPerson(mid, x, y, dir, walk, moving, w) {
@@ -459,6 +468,8 @@ export class Game {
     this.camp.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, dt, now / 1000);
     this.bugs.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
     this.lakeL.addGround(list, g, TS, camX, camY, x0, y0, x1, y1);
+    this.ranch.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
+    this.ranch.addPets(list, g, TS, -camX, -camY, now / 1000);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
       const px = x * TS - camX, py = y * TS - camY;
@@ -472,6 +483,7 @@ export class Game {
       else if (o.k === "shell" && !W.isTaken(o.zone, o.id)) list.push({ y: y + 0.3, f: () => g.drawImage(SPR.shell, px, py, TS, TS) });
     }
     for (const o of this.supply()) if (o.x >= x0 && o.x <= x1 && o.y >= y0 && o.y <= y1 && !W.isGTaken(o.zone, o.id) && !this.world.inHouse(o.x, o.y)) {
+      if (o.item === "egg") { list.push({ y: o.y + 0.35, f: () => this.ranch.drawEggItem(g, o.x * TS - camX, o.y * TS - camY, TS) }); continue; }
       const img = o.item === "weed" ? SPR.weed : o.item.startsWith("flower_") ? (SPR.flower[o.item.slice(7)] || SPR.flower.red) : (FORAGE_SPR[o.item] || FORAGE_SPR.mushroom_red);
       list.push({ y: o.y + 0.3, f: () => g.drawImage(img, o.x * TS - camX, o.y * TS - camY, TS, TS) });
     }
@@ -539,6 +551,7 @@ export class Game {
     }
     for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, ox + o.x * TS, oy + o.y * TS, o.d || 0, o.walk, o.moving, { x: o.tx, y: o.ty, boat: false }) });
     list.push({ y: this.me.y, f: () => this.drawPerson(state.mid, ox + this.me.x * TS, oy + this.me.y * TS, this.me.dir, this.me.walk, this.me.moving, { x: this.me.x, y: this.me.y, boat: false }) });
+    this.ranch.addPets(list, g, TS, ox, oy, performance.now() / 1000);
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     g.font = `${Math.round(TS * 0.45)}px Jua, sans-serif`; g.textAlign = "center"; g.fillStyle = "#fffdf6";
     const owner = nameOf(this.houseMid);

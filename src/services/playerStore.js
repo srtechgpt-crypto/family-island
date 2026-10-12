@@ -54,6 +54,9 @@ async function tx(fn) {
   return result;
 }
 
+// 목장(farmStore)이 쓰는 개인 트랜잭션
+export const farmTx = fn => tx(fn);
+
 export const giveClaim = claim => tx(p => applyClaim(p, claim, state.mid, Math.max(serverNow(), claim.at || 0)));
 
 export function craftFurniture(recipeId, recipes) {
