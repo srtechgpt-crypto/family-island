@@ -1,5 +1,5 @@
 // data/gathering.json과 같은 기본 수량표(브라우저에서 JSON import를 쓰지 않으려고 코드에 둠 — 시험이 두 값이 같은지 확인)
-export const DEFAULT_GATHERING = Object.freeze({ ver: 4, generalForage: 6, weeds: 10, fruitTrees: 3, fruitPerTree: 1, daily: Object.freeze(['shell', 'stone', 'branch', 'honeycomb']) });
+export const DEFAULT_GATHERING = Object.freeze({ ver: 4, generalForage: 6, weeds: 10, fruitTrees: 150, fruitPerTree: 2, daily: Object.freeze(['shell', 'stone', 'branch', 'honeycomb']) });
 const gathering = DEFAULT_GATHERING;
 import { pickForage } from './forage.js';
 import { zoneOf } from './rounds.js';

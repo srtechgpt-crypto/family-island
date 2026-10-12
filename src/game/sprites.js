@@ -54,6 +54,8 @@ export const FORAGE_SPR = {
   herb_mint: sprite(16, 16, g => { px(g, "#3d8a3a", 7, 8, 1, 6); for (const [x, y] of [[4, 6], [9, 5], [5, 9], [9, 9]]) { px(g, "#5fc46a", x, y, 3, 2); px(g, "#86d98e", x, y, 1, 1); } }),
   herb_chamomile: sprite(16, 16, g => { px(g, "#3d8a3a", 7, 8, 1, 6); px(g, "#3d8a3a", 10, 9, 1, 5); for (const [cx, cy] of [[7, 6], [10, 8]]) { px(g, "#fff", cx - 1, cy, 3, 1); px(g, "#fff", cx, cy - 1, 1, 3); px(g, "#ffd35c", cx, cy, 1, 1); } }),
 };
+// 나뭇가지(나무 밑동, 오늘 내가 아직 안 받은 나무에만)
+export const TWIG_SPR = sprite(16, 16, g => { px(g, "rgba(0,0,0,.18)", 2, 13, 12, 1); px(g, "#6e4325", 2, 10, 12, 2); px(g, "#b07a46", 3, 10, 6, 1); px(g, "#6e4325", 5, 7, 2, 3); px(g, "#6e4325", 10, 6, 2, 4); px(g, "#5fb35a", 11, 4, 3, 2); px(g, "#5fb35a", 4, 5, 2, 2); px(g, "#7fd07a", 12, 4, 1, 1); });
 export const DROP_SPR = {
   apple: sprite(16, 16, g => { px(g, "#e3463b", 6, 7, 4, 4); px(g, "#ff8a7f", 7, 8, 1, 1); px(g, "#5a3a1e", 8, 6, 1, 1); }),
   orange: sprite(16, 16, g => { px(g, "#f39a2b", 6, 7, 4, 4); px(g, "#ffc777", 7, 8, 1, 1); px(g, "#3d7f2e", 8, 6, 1, 1); }),

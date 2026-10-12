@@ -1,6 +1,6 @@
 // 게임 화면: 섬·집 그리기, 걷기, 행동(흔들기·줍기·낚시·문), 꾸미기
 import { T, WATER } from "./world.js";
-import { SPR, DROP_SPR, FORAGE_SPR, renderGround } from "./sprites.js";
+import { SPR, DROP_SPR, FORAGE_SPR, TWIG_SPR, renderGround } from "./sprites.js";
 import { furnArt } from "./furnArt.js";
 import { drawCharacter } from "./character.js";
 import { renderMapBase, drawMap } from "./minimap.js";
@@ -170,7 +170,7 @@ export class Game {
         consider({ ...o, key }, "gather", o.item === "weed" ? "뽑기" : o.item.startsWith("herb") ? "뜯기" : o.item.startsWith("mushroom") ? "캐기" : "줍기");
     }
     if (!best) for (const o of this.nearObjects()) {
-      if (o.k === "tree") consider(o, "tree", "흔들기");
+      if (o.k === "tree") consider(o, "tree", W.isTaken(o.zone, `${o.id}_b_${state.mid}`) ? "흔들기" : "흔들기 🌿");
       else if (o.k === "rock" || o.k === "stone") consider(o, "rock", "두드리기");
     }
     if (best) return best;
@@ -464,6 +464,7 @@ export class Game {
       if (o.k === "tree") list.push({ y: y + 0.95, f: () => {
         const s = o.shake ? Math.sin(o.shake-- * 1.4) * TS * 0.06 : 0;
         g.drawImage(SPR.tree, px + s, py - TS * 0.5, TS, TS * 1.5);
+        if (!W.isTaken(o.zone, `${o.id}_b_${state.mid}`)) g.drawImage(TWIG_SPR, px + TS * 0.45, py + TS * 0.35, TS * 0.8, TS * 0.8);   // 오늘 받을 나뭇가지
         if (this.fruitSet.has(o.id) && !W.isGTaken(o.zone, o.id)) g.drawImage((parseInt(o.id.slice(1), 10) || 0) % 3 === 0 ? SPR.fruitOrange : SPR.fruitApple, px + s, py - TS * 0.5, TS, TS * 1.5);
       } });
       else if (o.k === "rock" || o.k === "stone") list.push({ y: y + 0.5, f: () => g.drawImage(SPR.rock, px, py, TS, TS) });

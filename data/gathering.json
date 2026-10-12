@@ -2,7 +2,7 @@
   "ver": 4,
   "generalForage": 6,
   "weeds": 10,
-  "fruitTrees": 3,
-  "fruitPerTree": 1,
+  "fruitTrees": 150,
+  "fruitPerTree": 2,
   "daily": ["shell", "stone", "branch", "honeycomb"]
 }
