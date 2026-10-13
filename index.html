@@ -60,6 +60,13 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 #bigMap{flex:1;width:100%;min-height:0;border-radius:12px;display:block}
 #pCloset{width:min(94vw,640px)}
 .closet{display:flex;gap:14px;flex-wrap:wrap}
+.sewneed{display:flex;gap:8px;flex-wrap:wrap;font-size:15px}.sewneed span{background:#fff;border:2px solid var(--line);border-radius:10px;padding:2px 8px}.sewneed span.lack{border-color:#e8574f;color:#b33a32}
+.sewrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sewrow .btn{padding:6px 14px}
+.sewhint{margin:0;font-size:14px;color:#7a4f2b;min-height:1.2em}
+.req{display:flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 10px;margin:6px 0}.req .ri{font-size:24px}.req .txt{flex:1;font-size:15px}.req .txt small{display:block;color:#7a6a58;font-size:13px}.req.done{opacity:.7;background:#f3f0e6}
+.inbox{background:#fff6d8;border:2px solid #f0c95a;border-radius:12px;padding:6px 10px;margin:4px 0;font-size:15px}
+.askrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}.askrow select{font-family:var(--f-display);font-size:16px;padding:4px 6px;border-radius:10px;border:2px solid var(--line);max-width:60vw}
+.qty{display:flex;align-items:center;gap:6px}.qty b{min-width:1.4em;text-align:center;font-size:18px}.qty .btn{padding:2px 12px}
 #closetPrev{width:150px;height:190px;background:#8cc76a;border-radius:14px;flex:none}
 .copts{flex:1;min-width:240px;display:flex;flex-direction:column;gap:8px}
 .copts .lab{font-size:14px;font-weight:bold}
@@ -230,14 +237,33 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 <div class="panel" id="pMap" hidden><h2>섬 지도</h2><canvas id="bigMap"></canvas><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pCloset" hidden>
   <h2 id="closetTitle">옷장</h2><p class="sub" id="closetSub">머리와 옷을 골라요. 다른 가족 폰에도 똑같이 보여요.</p>
+  <div class="tabs" id="closetTabs"><button type="button" data-t="look" aria-pressed="true">👗 모습 고르기</button><button type="button" data-t="sew" aria-pressed="false">✂️ 옷 만들기</button></div>
   <div class="closet"><canvas id="closetPrev" width="300" height="380"></canvas>
-    <div class="copts">
+    <div class="copts" id="sewBox" hidden>
+      <div><span class="lab">무늬</span><div class="chips" id="sPat"></div></div>
+      <div><span class="lab">물감 색</span><div class="sw" id="sDye"></div></div>
+      <div class="sewrow"><div class="sewneed" id="sNeed"></div><button class="btn" type="button" id="sewGo">✂️ 만들기</button></div>
+      <p class="sewhint" id="sHint"></p>
+    </div>
+    <div class="copts" id="lookBox">
+      <div id="cOutWrap"><span class="lab">내가 만든 옷</span><div class="chips" id="cOut"></div></div>
       <div><span class="lab">머리 모양</span><div class="chips" id="cHair"></div></div>
       <div><span class="lab">머리색</span><div class="sw" id="cHairC"></div></div>
       <div><span class="lab">윗옷</span><div class="sw" id="cTop"></div></div>
       <div><span class="lab">아래옷</span><div class="chips" id="cKind"></div><div class="sw" id="cBot" style="margin-top:6px"></div></div>
     </div></div>
   <div class="row"><button class="btn ghost" type="button" id="closetCancel">그만두기</button><button class="btn" type="button" id="closetSave">저장</button></div>
+</div>
+<div class="panel" id="pBoard" hidden>
+  <h2>📋 오늘의 부탁</h2><p class="sub" id="boardSub"></p>
+  <div id="boardIn"></div>
+  <div id="boardList"></div>
+  <div class="admin-sec" id="boardPost"><b>부탁 올리기</b>
+    <div class="askrow"><select id="askItem" aria-label="부탁할 물건"></select>
+      <div class="qty"><button type="button" class="btn ghost" id="askMinus" aria-label="하나 빼기">−</button><b id="askQty">1</b><button type="button" class="btn ghost" id="askPlus" aria-label="하나 더">+</button></div></div>
+    <p class="note" id="askPreview"></p>
+    <div class="row" style="justify-content:flex-start"><button class="btn" type="button" id="askGo">부탁 올리기</button></div></div>
+  <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
 </div>
 <div class="panel" id="pPlant" hidden><h2>🌱 씨앗 심기</h2><p class="sub" id="plantSub"></p><div class="grid" id="plantGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pPet" hidden><h2>🐾 동물 친구 집</h2><p class="sub" id="petSub"></p><div id="petKinds"></div><label class="lab" for="petName">이름(8글자까지)</label><input type="text" id="petName" maxlength="8" autocomplete="off"><div class="row"><button class="btn ghost" type="button" data-close>그만두기</button><button class="btn" type="button" id="petSave">함께하기</button></div></div>

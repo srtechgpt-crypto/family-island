@@ -19,5 +19,11 @@
   "trough": { "x": 95, "y": 66 },
   "seedbox": { "x": 97, "y": 71 },
   "petHouse": { "x": 105, "y": 69, "w": 2, "h": 2 },
-  "pets": ["dog", "cat", "rabbit"]
+  "pets": ["dog", "cat", "rabbit"],
+  "sheepPen": { "x": 99, "y": 67, "w": 6, "h": 5 },
+  "sheep": ["sheep_1", "sheep_2"],
+  "woolQty": 2,
+  "dyes": [{ "id": "red", "name": "빨강", "color": "#e8574f" }, { "id": "yellow", "name": "노랑", "color": "#f5c84a" }, { "id": "white", "name": "하양", "color": "#f7f4ec" },
+           { "id": "green", "name": "초록", "color": "#6cbf5a" }, { "id": "orange", "name": "주황", "color": "#f2924a" }, { "id": "pink", "name": "분홍", "color": "#f49ac1" }],
+  "patterns": [{ "id": "plain", "name": "민무늬" }, { "id": "stripe", "name": "줄무늬" }, { "id": "dot", "name": "물방울" }]
 }

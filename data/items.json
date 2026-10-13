@@ -333,5 +333,165 @@
     "name": "당근 케이크",
     "kind": "food",
     "icon": "🍰"
+  },
+  "wool": {
+    "name": "양털",
+    "kind": "material",
+    "icon": "🐑"
+  },
+  "thread": {
+    "name": "실",
+    "kind": "material",
+    "icon": "🧵"
+  },
+  "cloth": {
+    "name": "옷감",
+    "kind": "material",
+    "icon": "🧶"
+  },
+  "paint_red": {
+    "name": "빨강 물감",
+    "kind": "paint",
+    "icon": "🔴"
+  },
+  "paint_yellow": {
+    "name": "노랑 물감",
+    "kind": "paint",
+    "icon": "🟡"
+  },
+  "paint_white": {
+    "name": "하양 물감",
+    "kind": "paint",
+    "icon": "⚪"
+  },
+  "paint_green": {
+    "name": "초록 물감",
+    "kind": "paint",
+    "icon": "🟢"
+  },
+  "paint_orange": {
+    "name": "주황 물감",
+    "kind": "paint",
+    "icon": "🟠"
+  },
+  "paint_pink": {
+    "name": "분홍 물감",
+    "kind": "paint",
+    "icon": "🩷"
+  },
+  "outfit_plain_red": {
+    "name": "빨강 민무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_plain_yellow": {
+    "name": "노랑 민무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_plain_white": {
+    "name": "하양 민무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_plain_green": {
+    "name": "초록 민무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_plain_orange": {
+    "name": "주황 민무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_plain_pink": {
+    "name": "분홍 민무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_stripe_red": {
+    "name": "빨강 줄무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_stripe_yellow": {
+    "name": "노랑 줄무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_stripe_white": {
+    "name": "하양 줄무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_stripe_green": {
+    "name": "초록 줄무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_stripe_orange": {
+    "name": "주황 줄무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_stripe_pink": {
+    "name": "분홍 줄무늬 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_dot_red": {
+    "name": "빨강 물방울 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_dot_yellow": {
+    "name": "노랑 물방울 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_dot_white": {
+    "name": "하양 물방울 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_dot_green": {
+    "name": "초록 물방울 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_dot_orange": {
+    "name": "주황 물방울 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "outfit_dot_pink": {
+    "name": "분홍 물방울 윗옷",
+    "kind": "outfit",
+    "icon": "👕"
+  },
+  "fish_smelt": {
+    "name": "빙어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_mandarin": {
+    "name": "쏘가리",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_trout": {
+    "name": "무지개송어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_eel": {
+    "name": "뱀장어",
+    "kind": "fish",
+    "icon": "🐟"
+  },
+  "fish_goldcarp": {
+    "name": "황금잉어",
+    "kind": "fish",
+    "icon": "✨"
   }
 }

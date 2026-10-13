@@ -25,8 +25,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm })),
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board })),
       loadWorld(),
     ]);
   } catch (e) { $("loadMsg").textContent = "게임 파일을 못 불러왔어요. 인터넷 연결을 확인하고 다시 열어 주세요."; return; }

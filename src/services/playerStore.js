@@ -10,6 +10,7 @@ import { cook, eat } from "../domain/cooking.js";
 import { applyRoast } from "../domain/campfire.js";
 import { applyCatch, markFled, releaseInsect } from "../domain/insects.js";
 import { removeItems } from "../domain/inventory.js";
+import { sewOutfit } from "../domain/outfits.js";
 import { state, emit } from "../state.js";
 
 export const norm = raw => {
@@ -116,3 +117,7 @@ export function payIgnition(day) {
     return { ok: true, player: { ...p, inv: r.inv, done: { ...p.done, [req]: true }, rev: p.rev + 1 } };
   });
 }
+
+// ---- 버전 8 ----
+// 옷 만들기: 옷감 1 + 물감 1 → 무늬 윗옷
+export function sew(pattern, dye) { const req = "w_" + rid(10); return tx(p => sewOutfit(p, pattern, dye, req)); }

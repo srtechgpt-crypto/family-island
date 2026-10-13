@@ -1,5 +1,5 @@
 // 가족 자리·앱 버전 등 고정 설정
-export const APP_VERSION = 7;   // 6: 밭 칸 위치·열매 수 / 7: 목장(텃밭·닭·애완동물)·돌밭
+export const APP_VERSION = 8;   // 6: 밭 칸 위치·열매 수 / 7: 목장(텃밭·닭·애완동물)·돌밭 / 8: 만든 옷(appearance.outfit)·부탁 게시판(helped·reqMine)
 export const FAMILY = [
   { mid: "m0", name: "할머니", color: "#c77d4a" },
   { mid: "m1", name: "아빠", color: "#3d6fb6" },

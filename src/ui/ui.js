@@ -14,6 +14,7 @@ import { drawCharacter } from "../game/character.js";
 import { appearanceOf, validateAppearance } from "../domain/appearance.js";
 import { installV3 } from "./ui3.js";
 import { installV5 } from "./ui5.js";
+import { installV8 } from "./ui8.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -37,7 +38,7 @@ export class UI {
     $("emoClose").onclick = () => { $("pEmo").hidden = true; };
     $("emoTabs").querySelectorAll("button").forEach(b => b.onclick = () => this.emoTab(b.dataset.g));
     $("emoGrid").addEventListener("click", e => { const b = e.target.closest("button[data-e]"); if (!b) return; $("pEmo").hidden = true; this.emote(b.dataset.e); });
-    this.bindV3(); this.bindV5();
+    this.bindV3(); this.bindV5(); this.bindV8();
     setInterval(() => this.clock(), 10000); this.clock();
     onConnection(c => { $("net").hidden = c; });
     onState(w => {
@@ -150,7 +151,7 @@ export class UI {
     $("dexSub").textContent = `${n} / ${this.data.fish.length}종 잡았어요`;
     $("dexGrid").innerHTML = this.data.fish.map(f => dex[f.id]
       ? `<div class="cell"><b>${f.icon}</b>${esc(f.name)}<small>최대 ${dex[f.id].biggest}cm</small></div>`
-      : `<div class="cell dim"><b>❔</b>???<small>${{ sea: "바다", river: "강", pond: "연못" }[f.water]}</small></div>`).join("");
+      : `<div class="cell dim"><b>❔</b>???<small>${{ sea: "바다", river: "강", pond: "연못", lake: "호수(배 위)" }[f.water]}</small></div>`).join("");
     $("pDex").hidden = false;
   }
 
@@ -242,6 +243,7 @@ export class UI {
 
 installV3(UI);
 installV5(UI);
+installV8(UI);
 
 // 관리자 화면의 나머지 버튼(복사·초대 바꾸기·백업·복원)
 export function bindAdminExtras(ui) {

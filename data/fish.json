@@ -8,5 +8,10 @@
   { "id": "fish_catfish", "name": "메기", "water": "river", "weight": 1, "min": 30, "max": 80, "icon": "🐟" },
   { "id": "fish_goldfish", "name": "금붕어", "water": "pond", "weight": 2, "min": 5, "max": 20, "icon": "🐟" },
   { "id": "fish_carp", "name": "잉어", "water": "pond", "weight": 2, "min": 20, "max": 70, "icon": "🐟" },
-  { "id": "fish_medaka", "name": "송사리", "water": "pond", "weight": 5, "min": 2, "max": 5, "icon": "🐟" }
+  { "id": "fish_medaka", "name": "송사리", "water": "pond", "weight": 5, "min": 2, "max": 5, "icon": "🐟" },
+  { "id": "fish_smelt", "name": "빙어", "water": "lake", "weight": 5, "min": 6, "max": 15, "icon": "🐟" },
+  { "id": "fish_mandarin", "name": "쏘가리", "water": "lake", "weight": 3, "min": 20, "max": 50, "icon": "🐟" },
+  { "id": "fish_trout", "name": "무지개송어", "water": "lake", "weight": 3, "min": 25, "max": 60, "icon": "🐟" },
+  { "id": "fish_eel", "name": "뱀장어", "water": "lake", "weight": 2, "min": 40, "max": 90, "icon": "🐟" },
+  { "id": "fish_goldcarp", "name": "황금잉어", "water": "lake", "weight": 0.5, "min": 30, "max": 80, "icon": "✨" }
 ]

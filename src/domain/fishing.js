@@ -1,4 +1,4 @@
-const waters = new Set(["sea", "river", "pond"]);
+const waters = new Set(["sea", "river", "pond", "lake"]);   // lake: v8 배 위 낚시(호수 가운데)
 const record = value => value !== null && typeof value === "object" && !Array.isArray(value);
 const count = value => Number.isSafeInteger(value) && value >= 0;
 const time = value => Number.isSafeInteger(value);

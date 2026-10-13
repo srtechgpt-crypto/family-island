@@ -1,0 +1,13 @@
+{
+  "ver": 1,
+  "x": 61,
+  "y": 52,
+  "perPerson": 3,
+  "maxQty": 5,
+  "kinds": [
+    "material",
+    "seed",
+    "fish",
+    "food"
+  ]
+}

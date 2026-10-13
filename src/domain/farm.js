@@ -91,3 +91,11 @@ export function eggSupply(farm, fed) {
 export const feedZone = farm => zoneOf(farm.trough.x, farm.trough.y);
 export const seedboxZone = farm => zoneOf(farm.seedbox.x, farm.seedbox.y);
 export const fedToday = (isTaken, farm) => MIDS.some(m => isTaken(feedZone(farm), 'feed_' + m));
+
+// 버전 8 양: 사람마다 양마다 하루 1번 털 깎기(하루 claims, 키 shear_{1|2}_{mid}, 양털 woolQty개)
+export const shearZone = farm => zoneOf(farm.sheepPen.x + 2, farm.sheepPen.y + 2);
+export function shearId(farm, sheepId, mid) {
+  const i = (farm.sheep || []).indexOf(sheepId);
+  if (i < 0 || !MIDS.includes(mid)) throw new TypeError('잘못된 양');
+  return `shear_${i + 1}_${mid}`;
+}

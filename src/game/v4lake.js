@@ -23,6 +23,7 @@ export class LakeLayer {
     const d = this.dockNear();
     if (!this.boating && d) return { k: "boatOn", dock: d, label: "배 타기" };
     if (this.boating && d) return { k: "boatOff", dock: d, label: "내리기" };
+    if (this.boating) return this.fishSpot();
     return null;
   }
   board(dock) {
@@ -40,8 +41,15 @@ export class LakeLayer {
     this.boating = false;
     this.game.sendPosNow().catch(() => {});
   }
+  // v8 배 위 낚시: 찌 자리 = 배 앞 1.5칸, 그 칸이 호수 물이어야 함(아니면 흐린 버튼 + 방향 안내)
+  fishSpot() {
+    const m = this.game.me, D = [[0, 1], [-1, 0], [1, 0], [0, -1]][m.dir] || [0, 1];
+    const fx = Math.floor(m.x + D[0] * 1.5), fy = Math.floor(m.y + D[1] * 1.5);
+    const water = (x, y) => { try { boatMove(this.map, this.lake, { x: x + 0.5, y: y + 0.5 }, 0, 0, 0, 0); return true; } catch { return false; } };
+    return water(fx, fy) ? { k: "fish", water: "lake", fx, fy, label: "낚시 🎣" } : { k: "fishAim", label: "낚시 (방향 돌리기)" };
+  }
   // 연결이 끊겼다 다시 붙으면 육지(나루터)에서 다시 시작
-  reset() { if (this.boating) { this.boating = false; const d = this.docks[0]; if (d) { this.game.me.x = d.x + 0.5; this.game.me.y = d.y + 0.5; } } }
+  reset() { this.game.fishing = null; if (this.boating) { this.boating = false; const d = this.docks[0]; if (d) { this.game.me.x = d.x + 0.5; this.game.me.y = d.y + 0.5; } } }
   move(mx, my, dt) {
     const m = this.game.me;
     const p = boatMove(this.map, this.lake, { x: m.x, y: m.y }, mx, my, dt, 3.4);

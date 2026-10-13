@@ -6,10 +6,14 @@ const R = (g, x, y, w, h, r, c) => { g.fillStyle = c; g.beginPath(); g.roundRect
 const SKIN = "#f8dcc4", SHOE = "#7a4a32", INK = "#2b1d16", MOUTH = "#7a3b2e";
 const DUR = { dance: 5, robot: 5, ballet: 5, bunny: 5, freestyle: 5, sit: 30 };   // 초(나머지 3초) — domain/emotes.js와 같은 값
 
+// v8 내가 만든 윗옷: outfit_{무늬}_{색} → 물감 색 + 무늬
+const OUTFIT = /^outfit_(plain|stripe|dot)_(red|yellow|white|green|orange|pink)$/;
 function colors(look, pal) {
+  const m = typeof look.outfit === "string" && OUTFIT.exec(look.outfit), dye = m && pal.dyes && pal.dyes[m[2]];
   return {
     hair: pal.hairColors[look.hairColor] || pal.hairColors[1],
-    top: pal.clothColors[look.topColor] || pal.clothColors[6],
+    top: dye || pal.clothColors[look.topColor] || pal.clothColors[6],
+    pat: dye ? m[1] : null, patInk: m && m[2] === "white" ? "#9cc9e8" : "rgba(255,255,255,.85)",
     bot: pal.clothColors[look.bottomColor] || pal.clothColors[10],
   };
 }
@@ -65,6 +69,14 @@ function face(g, hx, hy, hr, dir, mode, t) {
   else { g.beginPath(); g.arc(mx, my, hr * .14, .2, Math.PI - .2); g.stroke(); }
   // 슬픔: 눈물 줄기
   if (mode === "sad") { const ty = ((t * 1.2) % 1) * hr * .5; E(g, hx + ox - ex, ey + hr * .2 + ty, hr * .06, hr * .09, "#7cc4ff"); E(g, hx + ox + ex, ey + hr * .25 + ty * .8, hr * .05, hr * .08, "#7cc4ff"); }
+}
+
+// 윗옷 무늬: 몸통 사각형 안에만(줄무늬 = 가로 띠 2줄, 물방울 = 점 5개, 뒤에서 봐도 같음)
+function topPattern(g, c, [rx, ry, rw, rh, rr], s, dir) {
+  g.save(); g.beginPath(); g.roundRect(rx, ry, rw, rh, rr); g.clip(); g.fillStyle = c.patInk;
+  if (c.pat === "stripe") for (const k of [.28, .66]) g.fillRect(rx, ry + rh * k, rw, Math.max(1.5, rh * .16));
+  else if (c.pat === "dot") for (const [u, v] of [[.22, .3], [.6, .22], [.82, .62], [.4, .72], [.08, .78]]) E(g, rx + rw * u, ry + rh * v, s * .022, s * .022, c.patInk);
+  g.restore();
 }
 
 function heart(g, x, y, s, c = "#ff5c8a") {
@@ -201,6 +213,7 @@ export function drawCharacter(g, look, pal, x, y, s, dir, walk, moving, emote) {
     g.quadraticCurveTo(x - s * .24, by + s * .08, x - s * .13, by - s * .02); g.closePath(); g.fill();
     g.strokeStyle = "rgba(0,0,0,.12)"; g.lineWidth = Math.max(1, s * .008); g.stroke();
   } else { R(g, x - s * .15, by - s * .11, s * .3, s * .2, s * .07, c.top); R(g, x - s * .15, by + s * .04, s * .3, s * .06, s * .03, c.bot); }
+  if (c.pat && c.pat !== "plain") topPattern(g, c, skirt ? [x - s * .13, by - s * .11, s * .26, s * .11, s * .05] : [x - s * .15, by - s * .11, s * .3, s * .15, s * .07], s, dir);
   // 팔(+ 손 모양): 내린 팔은 머리 뒤(먼저), 든 팔은 머리 앞(나중)에 — 큰 머리에 가려지지 않게 어깨를 바깥으로
   const arm = (sx, a) => {
     const up = Math.abs(a) > 1.0, px = x + sx * s * (up ? .2 : .15), py = by - s * (up ? .1 : .07), L = up ? .17 : .14;

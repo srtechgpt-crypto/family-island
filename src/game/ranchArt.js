@@ -153,3 +153,49 @@ export function drawHearts(g, cx, cy, s, p) {
   }
   g.restore();
 }
+
+// ---- 버전 8: 양 우리·양·게시판 ----
+// 양 우리: 낮은 나무 울타리(사각형 둘레) + 바닥 풀빛
+export function drawPen(g, x, y, w, h, TS) {
+  g.save();
+  g.fillStyle = "rgba(170,210,120,.35)"; rr(g, x + TS * 0.15, y + TS * 0.15, w - TS * 0.3, h - TS * 0.3, TS * 0.3); g.fill();
+  g.strokeStyle = "#a77b4f"; g.lineWidth = Math.max(2, TS * 0.08);
+  for (const off of [0.22, 0.42]) { rr(g, x + TS * 0.2, y + TS * off, w - TS * 0.4, h - TS * 0.62, TS * 0.12); g.stroke(); }
+  g.fillStyle = "#8a5f3a";
+  for (let i = 0; i <= w / TS; i++) for (const yy of [y + TS * 0.05, y + h - TS * 0.5]) g.fillRect(x + TS * 0.2 + i * (w - TS * 0.4) / (w / TS) - TS * 0.06, yy, TS * 0.12, TS * 0.4);
+  g.restore();
+}
+// 양: 털이 많으면 둥근 구름 몸, 깎았으면 작은 몸. flip = 왼쪽 보기
+export function drawSheep(g, cx, cy, s, flip, t, sheared, munch) {
+  g.save(); g.translate(cx, cy); if (flip) g.scale(-1, 1);
+  shadow(g, 0, s * 0.02, s * 0.32, s * 0.08);
+  g.fillStyle = "#4b3a32"; for (const lx of [-0.16, -0.06, 0.08, 0.17]) g.fillRect(lx * s, -s * 0.13, s * 0.05, s * 0.13);   // 다리
+  const k = sheared ? 0.72 : 1, wob = Math.sin(t * 2.4) * s * 0.01;
+  if (sheared) { g.beginPath(); g.ellipse(0, -s * 0.24, s * 0.24, s * 0.15, 0, 0, 7); fs(g, "#f4e7d8", "#d1bfa8", 1.2); }
+  else for (const [u, v, r] of [[-0.2, -0.24, 0.13], [-0.07, -0.32, 0.15], [0.08, -0.31, 0.14], [0.18, -0.22, 0.12], [0, -0.18, 0.16], [-0.14, -0.15, 0.11], [0.12, -0.14, 0.11]]) {
+    g.beginPath(); g.arc(u * s, v * s + wob, r * s, 0, 7); fs(g, "#fffdf8", "#ddd3c4", 1);
+  }
+  const hx = s * 0.27 * k + s * 0.04, hy = -s * 0.3 + (munch ? Math.max(0, Math.sin(t * 6)) * s * 0.08 : 0);
+  g.beginPath(); g.ellipse(hx, hy, s * 0.1, s * 0.12, 0.3, 0, 7); fs(g, "#5a463c");                                    // 얼굴
+  g.beginPath(); g.ellipse(hx - s * 0.06, hy - s * 0.08, s * 0.07, s * 0.035, -0.5, 0, 7); fs(g, "#5a463c");            // 귀
+  if (!sheared) { g.beginPath(); g.arc(hx - s * 0.02, hy - s * 0.1, s * 0.06, 0, 7); fs(g, "#fffdf8", "#ddd3c4", 1); }   // 앞머리 털
+  g.fillStyle = "#fff"; g.beginPath(); g.arc(hx + s * 0.04, hy - s * 0.01, s * 0.022, 0, 7); g.fill();
+  g.fillStyle = "#1d1410"; g.beginPath(); g.arc(hx + s * 0.045, hy - s * 0.01, s * 0.012, 0, 7); g.fill();
+  g.restore();
+}
+// 게시판: 기둥 둘 + 나무 판 + 종이 쪽지(부탁 수만큼, 최대 4장)
+export function drawBoard(g, x, y, TS, notes, glow) {
+  g.save();
+  g.fillStyle = "#7a4f2b"; g.fillRect(x + TS * 0.12, y - TS * 0.2, TS * 0.1, TS * 1.1); g.fillRect(x + TS * 0.78, y - TS * 0.2, TS * 0.1, TS * 1.1);
+  rr(g, x - TS * 0.05, y - TS * 0.75, TS * 1.1, TS * 0.8, TS * 0.08); fs(g, "#c99b62", "#6e4325", Math.max(1.5, TS * 0.05));
+  g.fillStyle = "#a77b4f"; g.fillRect(x - TS * 0.05, y - TS * 0.82, TS * 1.1, TS * 0.12);
+  const spots = [[0.05, -0.65], [0.55, -0.62], [0.12, -0.32], [0.58, -0.3]];
+  for (let i = 0; i < Math.min(4, notes); i++) {
+    const [u, v] = spots[i]; g.save(); g.translate(x + TS * u, y + TS * v); g.rotate((i % 2 ? 0.08 : -0.07));
+    g.fillStyle = "#fffaf0"; g.fillRect(0, 0, TS * 0.36, TS * 0.26); g.fillStyle = "#e3463b"; g.beginPath(); g.arc(TS * 0.18, TS * 0.03, TS * 0.035, 0, 7); g.fill();
+    g.fillStyle = "rgba(80,60,40,.5)"; g.fillRect(TS * 0.05, TS * 0.11, TS * 0.25, TS * 0.03); g.fillRect(TS * 0.05, TS * 0.17, TS * 0.18, TS * 0.03);
+    g.restore();
+  }
+  if (glow) { g.fillStyle = "#ffd35c"; g.beginPath(); g.arc(x + TS * 0.95, y - TS * 0.78, TS * 0.13, 0, 7); g.fill(); g.fillStyle = "#4f2f19"; g.font = `${Math.round(TS * 0.2)}px Jua, sans-serif`; g.textAlign = "center"; g.fillText("!", x + TS * 0.95, y - TS * 0.71); }
+  g.restore();
+}

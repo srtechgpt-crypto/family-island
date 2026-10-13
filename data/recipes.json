@@ -174,5 +174,79 @@
       "weed": 3,
       "flower_yellow": 1
     }
+  },
+  "thread": {
+    "outputKind": "item",
+    "out": {
+      "thread": 1
+    },
+    "items": {
+      "wool": 2
+    }
+  },
+  "cloth": {
+    "outputKind": "item",
+    "out": {
+      "cloth": 1
+    },
+    "items": {
+      "thread": 2
+    }
+  },
+  "paint_red": {
+    "outputKind": "item",
+    "out": {
+      "paint_red": 1
+    },
+    "items": {
+      "flower_red": 2
+    }
+  },
+  "paint_yellow": {
+    "outputKind": "item",
+    "out": {
+      "paint_yellow": 1
+    },
+    "items": {
+      "flower_yellow": 2
+    }
+  },
+  "paint_white": {
+    "outputKind": "item",
+    "out": {
+      "paint_white": 1
+    },
+    "items": {
+      "flower_white": 2
+    }
+  },
+  "paint_green": {
+    "outputKind": "item",
+    "out": {
+      "paint_green": 1
+    },
+    "items": {
+      "weed": 3
+    }
+  },
+  "paint_orange": {
+    "outputKind": "item",
+    "out": {
+      "paint_orange": 1
+    },
+    "items": {
+      "paint_red": 1,
+      "paint_yellow": 1
+    }
+  },
+  "paint_pink": {
+    "outputKind": "item",
+    "out": {
+      "paint_pink": 1
+    },
+    "items": {
+      "paint_red": 1,
+      "paint_white": 1
+    }
   }
 }

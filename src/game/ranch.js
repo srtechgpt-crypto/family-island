@@ -5,8 +5,8 @@ import { serverNow, isConnected } from "../services/fb.js";
 import * as W from "../services/worldStore.js";
 import * as FS from "../services/farmStore.js";
 import { sendEmote } from "../services/emoteStore.js";
-import { growth, waterSlot, seedOfDay, eggSupply, fedToday, feedZone, seedboxZone } from "../domain/farm.js";
-import { drawCoop, drawHen, drawNest, drawEgg, drawTrough, drawSeedbox, drawPetHouse, drawSoil, drawCrop, drawDrops, drawPet, drawHearts } from "./ranchArt.js";
+import { growth, waterSlot, seedOfDay, eggSupply, fedToday, feedZone, seedboxZone, shearZone, shearId } from "../domain/farm.js";
+import { drawCoop, drawHen, drawNest, drawEgg, drawTrough, drawSeedbox, drawPetHouse, drawSoil, drawCrop, drawDrops, drawPet, drawHearts, drawPen, drawSheep } from "./ranchArt.js";
 
 const DIRV = [[0, 1], [-1, 0], [1, 0], [0, -1]];
 
@@ -40,6 +40,12 @@ export class RanchLayer {
     if (this.near(c.seedbox.x, c.seedbox.y, 1.5)) return { k: "r_seedbox", label: W.isTaken(seedboxZone(c), "seedbox_" + state.mid) ? "씨앗은 내일 또 ✓" : "씨앗 받기 🌱" };
     if (this.near(c.trough.x, c.trough.y, 1.5)) return { k: "r_feed", label: W.isTaken(feedZone(c), "feed_" + state.mid) ? "오늘 모이 줬어요 ✓" : "모이 주기 🐔" };
     const ph = c.petHouse; if (this.near(ph.x + ph.w / 2 - 0.5, ph.y + ph.h - 0.5, 1.8)) return { k: "r_pethouse", label: "동물 친구 집" };
+    // v8 양: 가까운 양 — 오늘 안 깎았으면 털 깎기, 깎았으면 쓰다듬기
+    if (c.sheepPen) {
+      const t = performance.now() / 1000; let sb = null, sd = 1.4;
+      (c.sheep || []).forEach((id, i) => { const p = this.sheepPos(i, t), d = Math.hypot(p.x - g.me.x, p.y - g.me.y); if (d < sd) { sd = d; sb = id; } });
+      if (sb) return this.shorn(sb) ? { k: "r_sheeppat", sheep: sb, label: "쓰다듬기 🐑" } : { k: "r_shear", sheep: sb, label: "털 깎기 ✂️" };
+    }
     // 가장 가까운 텃밭 칸(앞칸 우선)
     let best = null, bd = 1.25;
     const f = g.front();
@@ -72,9 +78,19 @@ export class RanchLayer {
     const g = this.game, ui = g.ui, c = this.cfg;
     if (t.k === "r_pethouse") return ui.openPet();
     if (t.k === "r_pat") return this.pat(t.mid);
+    if (t.k === "r_sheeppat") { this.hearts.push({ sheep: t.sheep, until: performance.now() + 1600 }); ui.toast("🐑 메에~ 양이 좋아해요! 털은 내일 다시 자라요", 1800); return; }
     if (t.k === "r_wait" || t.k === "r_info") { if (t.k === "r_info") this.infoToast(t.plot); return; }
     if (!isConnected()) { ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "r_plant") return ui.openPlant(t.plot);
+    if (t.k === "r_shear") {
+      g.busy = true;
+      try {
+        const ok = await g.gain(shearZone(c), shearId(c, t.sheep, state.mid), "wool", c.woolQty, "털이 다시 자라는 중이에요. 내일 또 깎아요");
+        if (ok) { this.hearts.push({ sheep: t.sheep, until: performance.now() + 1600 }); ui.toast(`✂️ 싹둑싹둑! 양털 ×${c.woolQty} 가방에 넣었어요
+작업대에서 양털 2개 → 실을 만들어요`, 2600); }
+      } finally { g.busy = false; }
+      return;
+    }
     if (t.k === "r_seedbox") {
       const seed = seedOfDay(W.today(), state.mid, c);
       g.busy = true; try { await g.gain(seedboxZone(c), "seedbox_" + state.mid, seed, c.seedboxQty, "오늘 씨앗은 벌써 받았어요. 내일 또 와요"); } finally { g.busy = false; }
@@ -128,6 +144,14 @@ export class RanchLayer {
     sendEmote("heart").catch(() => {});
     const pet = this.petOf(mid);
     if (pet) this.game.ui.toast(`🐾 ${pet.name}${mid === state.mid ? "" : `(${nameOf(mid)}네)`}가 좋아해요!`, 1500);
+  }
+
+  // ---------- 양(v8) ----------
+  shorn(sheepId) { return W.isTaken(shearZone(this.cfg), shearId(this.cfg, sheepId, state.mid)); }
+  // 우리 안을 천천히 거님(시간으로 정해짐). 칸 좌표(가운데)
+  sheepPos(i, t) {
+    const P = this.cfg.sheepPen, ph = t * 0.11 + i * 3.3;
+    return { x: P.x + 1 + (P.w - 2) * (0.5 + 0.45 * Math.sin(ph + i)), y: P.y + 1.2 + (P.h - 2.2) * (0.5 + 0.45 * Math.sin(ph * 0.7 + i * 2.1)), flip: Math.cos(ph + i) < 0, munch: Math.sin(ph * 4) > 0.6 };
   }
 
   // ---------- 애완동물 따라다니기 ----------
@@ -199,6 +223,18 @@ export class RanchLayer {
     list.push({ y: c.trough.y + 0.9, f: () => drawTrough(g, sx(c.trough.x), sy(c.trough.y), TS, fed) });
     list.push({ y: c.seedbox.y + 0.9, f: () => drawSeedbox(g, sx(c.seedbox.x), sy(c.seedbox.y), TS, !W.isTaken(seedboxZone(c), "seedbox_" + state.mid)) });
     list.push({ y: c.petHouse.y + c.petHouse.h, f: () => drawPetHouse(g, sx(c.petHouse.x), sy(c.petHouse.y), c.petHouse.w * TS, c.petHouse.h * TS, TS) });
+    // v8 양 우리 + 양 2마리
+    if (c.sheepPen) {
+      const P = c.sheepPen;
+      list.push({ y: P.y - 0.1, f: () => drawPen(g, sx(P.x), sy(P.y), P.w * TS, P.h * TS, TS) });
+      (c.sheep || []).forEach((id, i) => {
+        const p = this.sheepPos(i, t), cut = this.shorn(id);
+        list.push({ y: p.y, f: () => {
+          drawSheep(g, sx(p.x), sy(p.y), TS * 1.25, p.flip, t + i, cut, p.munch);
+          const h = this.hearts.find(q => q.sheep === id); if (h) drawHearts(g, sx(p.x), sy(p.y) - TS * 0.6, TS, 1 - (h.until - performance.now()) / 1600);
+        } });
+      });
+    }
     // 닭 3마리: 시간으로 정해지는 걸음(모든 폰이 비슷하게)
     const A = c.henArea, flash = performance.now() < this.feedFlash;
     for (let i = 0; i < 3; i++) {

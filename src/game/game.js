@@ -23,6 +23,7 @@ import { CampLayer } from "./v3camp.js";
 import { BugLayer } from "./v3bugs.js";
 import { LakeLayer } from "./v4lake.js";
 import { RanchLayer } from "./ranch.js";
+import { BoardLayer } from "./v8board.js";
 import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
@@ -37,6 +38,7 @@ export class Game {
     this.bugs = new BugLayer(this);
     this.lakeL = new LakeLayer(this);     // v4: 밭·목장·나루터·뱃놀이·캠프 저녁 하늘
     this.ranch = new RanchLayer(this);    // v7: 텃밭·닭·애완동물
+    this.board = new BoardLayer(this);    // v8: 오늘의 부탁 게시판
     this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
@@ -160,6 +162,7 @@ export class Game {
     for (const h of this.world.houses) if (Math.abs(m.x - (h.door.x + 0.5)) < 0.9 && Math.abs(m.y - (h.door.y + 1)) < 1.1)
       return { k: "door", h, label: h.mid === state.mid ? "우리 집" : nameOf(h.mid) + "네" };
     if (this.camp.near(m.x, m.y, 1.8)) return { k: "camp", label: "캠프파이어" };
+    const bt = this.board.target(); if (bt) return bt;
     const bug = this.bugs.target(); if (bug) return bug;
     const rt = this.ranch.target(); if (rt) return rt;
     // 가까운 것(떨어진 과일 > 꽃·조개·잡초 > 나무·돌)
@@ -211,6 +214,8 @@ export class Game {
     if (t.k === "boatOn") return this.lakeL.board(t.dock);
     if (t.k === "boatOff") return this.lakeL.leave(t.dock);
     if (t.k.startsWith("r_")) return this.ranch.act(t);
+    if (t.k === "board") return this.ui.openBoard();
+    if (t.k === "fishAim") { this.ui.toast("찌가 물에 닿게 배 방향을 돌려요 🎣"); return; }
     const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "door") return this.enterHouse(t.h.mid);
@@ -470,6 +475,7 @@ export class Game {
     this.lakeL.addGround(list, g, TS, camX, camY, x0, y0, x1, y1);
     this.ranch.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
     this.ranch.addPets(list, g, TS, -camX, -camY, now / 1000);
+    this.board.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
       const px = x * TS - camX, py = y * TS - camY;
