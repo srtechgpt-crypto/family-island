@@ -2,6 +2,33 @@
 const U = 32, K = 1.5;
 const cache = new Map();
 
+// PixelLab 가구 그림(art/furn): list.json = { 종류: 1(한 장) | 4(방향별 _0~_3: 0 위 벽·1 오른쪽·2 아래·3 왼쪽) }. 없으면 코드 그림
+const FART = {};
+export async function loadFurnArt() {
+  try {
+    const r = await fetch("art/furn/list.json"); if (!r.ok) return;
+    const list = await r.json();
+    const load = nm => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = "art/furn/" + nm + ".png"; });
+    await Promise.all(Object.entries(list).map(async ([t, n]) => { FART[t] = await Promise.all((n === 4 ? [0, 1, 2, 3].map(i => t + "_" + i) : [t]).map(load)); }));
+  } catch (e) { for (const k of Object.keys(FART)) delete FART[k]; }
+  cache.clear();
+}
+// 도트 그림 가구: 칸 너비에 맞추고 키는 칸보다 커도 됨(위로 솟음, 최대 칸 높이+0.7칸). 한 장짜리 긴 가구(식탁)는 옆 벽이면 90도 돌림
+// 돌려받는 캔버스의 over = 위로 솟은 칸 수(그릴 때 그만큼 위에서 시작)
+function furnImgCanvas(imgs, w, h, rot) {
+  const r = rot & 3, img = imgs.length === 4 ? imgs[r] : imgs[0], k = K * 2, pad = 1;
+  const W = w * U, H = h * U, turn90 = imgs.length === 1 && r % 2 === 1 && w !== h;
+  const iw = turn90 ? img.height : img.width, ih = turn90 ? img.width : img.height;
+  const s = Math.min((W - pad * 2) / iw, (H + U * 0.7 - pad) / ih), dw = iw * s, dh = ih * s;
+  const over = Math.max(0, dh + pad - H);
+  const c = document.createElement("canvas"); c.width = W * k; c.height = (H + over) * k; c.over = over / U;
+  const g = c.getContext("2d"); g.scale(k, k); g.imageSmoothingEnabled = false;
+  const x = (W - dw) / 2, y = H + over - pad - dh;
+  if (turn90) { g.translate(x + dw, y); g.rotate(Math.PI / 2); g.drawImage(img, 0, 0, dh, dw); }
+  else g.drawImage(img, x, y, dw, dh);
+  return c;
+}
+
 const WOOD = { hi: "#e6b77d", mid: "#c58b55", lo: "#9c6438", dk: "#6e4325", line: "#4f2f19" };
 
 function rr(g, x, y, w, h, r) { g.beginPath(); g.roundRect(x, y, w, h, r); }
@@ -339,6 +366,7 @@ const DRAW = {
 export function furnArt(type, w, h, rot = 0) {
   const key = type + "|" + w + "|" + h + "|" + rot;
   if (cache.has(key)) return cache.get(key);
+  if (FART[type]) { const c = furnImgCanvas(FART[type], w, h, rot % 4); cache.set(key, c); return c; }
   const c = document.createElement("canvas"); c.width = w * U * K; c.height = h * U * K;
   const g = c.getContext("2d"); g.scale(K, K); g.lineJoin = "round"; g.lineCap = "round";
   const fn = DRAW[type];

@@ -550,7 +550,8 @@ export class Game {
       const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
       list.push({ y: f.y + h, f: () => {
         g.imageSmoothingEnabled = true;
-        g.drawImage(furnArt(f.type, w, h, f.rot || 0), ox + f.x * TS, oy + f.y * TS, w * TS, h * TS);
+        const fc = furnArt(f.type, w, h, f.rot || 0), up = fc.over || 0;   // 도트 그림 가구는 위로 솟을 수 있음
+        g.drawImage(fc, ox + f.x * TS, oy + (f.y - up) * TS, w * TS, (h + up) * TS);
         g.imageSmoothingEnabled = false;
         if (this.deco && this.deco.picked === id) { g.strokeStyle = "#ffd35c"; g.lineWidth = 3; g.strokeRect(ox + f.x * TS, oy + f.y * TS, w * TS, h * TS); }
       } });

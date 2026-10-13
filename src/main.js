@@ -9,6 +9,7 @@ import { recoverPlan } from "./domain/gather.js";
 import { loadWorld } from "./game/world.js";
 import { loadArt } from "./game/sprites.js";
 import { loadAnimalArt } from "./game/ranchArt.js";
+import { loadFurnArt } from "./game/furnArt.js";
 import { Game } from "./game/game.js";
 import { UI, bindAdminExtras } from "./ui/ui.js";
 import { state } from "./state.js";
@@ -32,6 +33,7 @@ async function boot() {
       loadWorld(),
       loadArt(),
       loadAnimalArt(),
+      loadFurnArt(),
     ]);
   } catch (e) { $("loadMsg").textContent = "게임 파일을 못 불러왔어요. 인터넷 연결을 확인하고 다시 열어 주세요."; return; }
   ui = new UI(data); bindAdminExtras(ui);
