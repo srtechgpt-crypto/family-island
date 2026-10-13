@@ -1,5 +1,6 @@
 // v8 화면: 옷장 '옷 만들기'·'내가 만든 옷', 오늘의 부탁 게시판
 import { state } from "../state.js";
+import { iconHtml } from "../game/sprites.js";
 import * as P from "../services/playerStore.js";
 import * as RQ from "../services/requestStore.js";
 import { isConnected } from "../services/fb.js";
@@ -93,7 +94,7 @@ export function installV8(UI) {
       if (r.done) right = `<small>✅ ${esc(nameOf(r.done.by))}${r.done.by === state.mid ? "(나)" : ""}가 들어줬어요</small>`;
       else if (r.by === state.mid) right = `<button class="btn ghost" type="button" data-cancel="${r.id}">지우기</button>`;
       else { const have = inv[r.item] || 0; right = have >= r.qty ? `<button class="btn" type="button" data-help="${r.id}">들어주기</button>` : `<small>내 가방 ${have}/${r.qty}</small>`; }
-      return `<div class="req${r.done ? " done" : ""}"><span class="ri">${it.icon}</span><div class="txt"><b>${esc(who)}</b> · ${line}${r.done ? "" : `<small>${r.by === state.mid ? "가족이 들어주면 가방으로 와요" : "들어주면 도움 도장 🏅 +1"}</small>`}</div>${right}</div>`;
+      return `<div class="req${r.done ? " done" : ""}"><span class="ri">${iconHtml(r.item, it.icon)}</span><div class="txt"><b>${esc(who)}</b> · ${line}${r.done ? "" : `<small>${r.by === state.mid ? "가족이 들어주면 가방으로 와요" : "들어주면 도움 도장 🏅 +1"}</small>`}</div>${right}</div>`;
     }).join("");
     $("boardList").querySelectorAll("[data-help]").forEach(b => b.onclick = () => this.boardHelp(b.dataset.help, b));
     $("boardList").querySelectorAll("[data-cancel]").forEach(b => b.onclick = async () => { b.disabled = true; const r = await RQ.cancel(b.dataset.cancel); if (!r.ok) this.toast(r.reason); this.openBoard(); });

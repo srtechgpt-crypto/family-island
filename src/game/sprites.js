@@ -10,8 +10,92 @@ const TILE_COL = {
   [T.BRIDGE]: ["#a77b4f", "#8a6440"], [T.ROCK]: ["#8d8f94", "#777a80"],
 };
 
+// PixelLab 바닥 타일(art/ground). 못 불러오면 아래 코드 그림으로 그린다
+let GROUND = null;
+const GROUND_CLASS = { [T.SEA]: "sea", [T.SAND]: "sand", [T.GRASS]: "grass", [T.ROCK]: "grass", [T.PATH]: "path", [T.RIVER]: "lake", [T.POND]: "lake", [T.BRIDGE]: "lake" };
+const loadImg = src => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = src; });
+export async function loadGroundArt() {
+  try {
+    const r = await fetch("art/ground/ground.json"); if (!r.ok) return;
+    const j = await r.json();
+    for (const s of Object.values(j.sets)) s.image = await loadImg("art/ground/" + s.img);
+    GROUND = j;
+  } catch (e) { GROUND = null; }
+}
+// PixelLab 물건 그림(art/obj): 불러오면 아래 코드 그림 캔버스를 그 그림으로 다시 칠한다(못 불러오면 코드 그림 그대로)
+export let OBJ_ART = false;
+export async function loadArt() {
+  await Promise.all([loadGroundArt(), loadObjArt(), loadIcons()]);
+}
+// 아이템 그림 아이콘(art/icon/<id>.png). 목록에 없으면 이모지 그대로
+const ICONS = new Set();
+async function loadIcons() {
+  try { const r = await fetch("art/icon/list.json"); if (r.ok) for (const k of await r.json()) ICONS.add(k); } catch (e) { /* 이모지로 */ }
+}
+export function iconHtml(id, emoji) {
+  return ICONS.has(id) ? `<img class="pxi" src="art/icon/${id}.png" alt="${emoji || ""}" draggable="false">` : (emoji || "");
+}
+async function loadObjArt() {
+  const TARGET = { tree: SPR.tree, fruitApple: SPR.fruitApple, fruitOrange: SPR.fruitOrange, rock: SPR.rock, shell: SPR.shell, weed: SPR.weed,
+    flower_red: SPR.flower.red, flower_yellow: SPR.flower.yellow, flower_white: SPR.flower.white,
+    stone: FORAGE_SPR.stone, mushroom_red: FORAGE_SPR.mushroom_red, mushroom_brown: FORAGE_SPR.mushroom_brown, mushroom_white: FORAGE_SPR.mushroom_white,
+    herb_mint: FORAGE_SPR.herb_mint, herb_chamomile: FORAGE_SPR.herb_chamomile, twig: TWIG_SPR,
+    apple: DROP_SPR.apple, orange: DROP_SPR.orange, honeycomb: DROP_SPR.honeycomb };
+  try {
+    const imgs = await Promise.all(Object.keys(TARGET).map(k => loadImg("art/obj/" + k + ".png")));
+    Object.values(TARGET).forEach((c, i) => { c.width = imgs[i].width; c.height = imgs[i].height; c.getContext("2d").drawImage(imgs[i], 0, 0); });
+    OBJ_ART = true;
+  } catch (e) { OBJ_ART = false; }
+}
+// 두 지형 사이 타일 세트 찾기(없으면 null)
+function pairSet(a, b) {
+  for (const s of Object.values(GROUND.sets)) if ((s.lower === a && s.upper === b) || (s.lower === b && s.upper === a)) return s;
+  return null;
+}
+// 세트가 없는 조합은 드물게 나오는 쪽을 가까운 지형으로 바꿔 두 지형으로 줄인다
+function fitCorners(cs) {
+  cs = cs.slice();
+  for (let n = 0; n < 4; n++) {
+    const kinds = [...new Set(cs)];
+    if (kinds.length === 1 || (kinds.length === 2 && pairSet(kinds[0], kinds[1]))) return cs;
+    const has = k => kinds.includes(k);
+    const swap = has("path") ? ["path", "grass"] : has("lake") ? ["lake", has("sea") || (has("sand") && !has("grass")) ? "sea" : "grass"] : has("sea") && has("grass") && !has("sand") ? ["grass", "sand"] : ["sand", "grass"];
+    cs = cs.map(c => c === swap[0] ? swap[1] : c);
+  }
+  return cs;
+}
+function renderGroundArt(world) {
+  const S = 16, c = cv(world.w * S, world.h * S), g = c.getContext("2d");
+  const cls = (x, y) => GROUND_CLASS[world.tile(x, y)] || "sea";
+  // 꼭짓점마다 타일 1장: 둘레 4칸의 지형이 타일 네 모서리(칸 경계가 타일 한가운데로 와서 칸 단위 지도가 그대로 맞음)
+  for (let vy = 0; vy <= world.h; vy++) for (let vx = 0; vx <= world.w; vx++) {
+    const cs = fitCorners([cls(vx - 1, vy - 1), cls(vx, vy - 1), cls(vx - 1, vy), cls(vx, vy)]);
+    const kinds = [...new Set(cs)];
+    let set, key;
+    if (kinds.length === 1) {
+      const h = (vx * 73856093 ^ vy * 19349663) >>> 0;
+      const sets = Object.values(GROUND.sets).filter(s => s.lower === kinds[0] || s.upper === kinds[0]);
+      set = sets[kinds[0] === "grass" ? 0 : h % sets.length];
+      key = set.upper === kinds[0] ? "1111" : "0000";
+    } else {
+      set = pairSet(kinds[0], kinds[1]);
+      key = cs.map(k => k === set.upper ? 1 : 0).join("");
+    }
+    const [tx, ty] = set.tiles[key];
+    g.drawImage(set.image, tx, ty, S, S, vx * S - S / 2, vy * S - S / 2, S, S);
+  }
+  // 다리·바위는 그 칸 위에 덧그림
+  for (let y = 0; y < world.h; y++) for (let x = 0; x < world.w; x++) {
+    const t = world.tile(x, y);
+    if (t === T.BRIDGE) { px(g, "#a77b4f", x * S, y * S, S, S); for (let k = 0; k < S; k += 4) px(g, "#8a6440", x * S + k, y * S, 1, S); px(g, "#6d4c30", x * S, y * S, S, 1); px(g, "#6d4c30", x * S, y * S + S - 1, S, 1); }
+    if (t === T.ROCK) { px(g, "rgba(0,0,0,.18)", x * S + 2, y * S + 12, 12, 2); px(g, "#8d8f94", x * S + 2, y * S + 4, 12, 9); px(g, "#a2a5aa", x * S + 3, y * S + 3, 9, 5); px(g, "#c4c7cc", x * S + 5, y * S + 4, 4, 2); }
+  }
+  return c;
+}
+
 // 섬 전체 바닥을 한 장으로 미리 그린다(1칸=16px)
 export function renderGround(world) {
+  if (GROUND) return renderGroundArt(world);
   const S = 16, c = cv(world.w * S, world.h * S), g = c.getContext("2d");
   for (let y = 0; y < world.h; y++) for (let x = 0; x < world.w; x++) {
     const t = world.tile(x, y), [a, b] = TILE_COL[t] || TILE_COL[T.SEA];

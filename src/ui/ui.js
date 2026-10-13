@@ -1,5 +1,6 @@
 // 화면 위 버튼·창(가방·도감·작업대·꾸미기·가족 관리)·알림
 import { state, onState } from "../state.js";
+import { iconHtml } from "../game/sprites.js";
 import { FAMILY, familyOf, nameOf } from "../config/gameConfig.js";
 import * as P from "../services/playerStore.js";
 import * as F from "../services/family.js";
@@ -74,7 +75,7 @@ export class UI {
   busy(on) { $("busy").hidden = !on; }
   bite() { try { navigator.vibrate && navigator.vibrate([120]); } catch { /* 진동 없음 */ } }
   fishCaught(fish, first) {
-    $("fishIcon").textContent = fish.icon; $("fishName").textContent = fish.name;
+    $("fishIcon").innerHTML = iconHtml(fish.id, fish.icon); $("fishName").textContent = fish.name;
     $("fishInfo").textContent = `${fish.size}cm${first ? " · 도감에 새로 올렸어요!" : ""}`;
     $("pFish").hidden = false; clearTimeout(this._ft); this._ft = setTimeout(() => $("pFish").hidden = true, 2600);
   }
@@ -133,7 +134,7 @@ export class UI {
     const furn = state.player ? Object.values(state.player.furn).filter(f => f.state === "stored") : [];
     const fcount = {}; furn.forEach(f => fcount[f.type] = (fcount[f.type] || 0) + 1);
     $("bagGrid").innerHTML = keys.length || furn.length
-      ? keys.map(k => { const it = this.data.items[k] || { icon: "❔", name: k }; return `<div class="cell"><b>${it.icon}</b>${esc(it.name)}<small>×${inv[k]}</small>${this.bagAction(k)}</div>`; }).join("")
+      ? keys.map(k => { const it = this.data.items[k] || { icon: "❔", name: k }; return `<div class="cell"><b>${iconHtml(k, it.icon)}</b>${esc(it.name)}<small>×${inv[k]}</small>${this.bagAction(k)}</div>`; }).join("")
         + Object.entries(fcount).map(([t, n]) => `<div class="cell furn"><b>${this.furnIcon(t)}</b>${esc((this.data.furniture[t] || { name: t }).name)}<small>×${n}</small></div>`).join("")
       : `<p class="note">아직 비어 있어요. 나무를 흔들어 보세요.</p>`;
     this.bindBagActions();
@@ -150,7 +151,7 @@ export class UI {
     const n = this.data.fish.filter(f => dex[f.id]).length;
     $("dexSub").textContent = `${n} / ${this.data.fish.length}종 잡았어요`;
     $("dexGrid").innerHTML = this.data.fish.map(f => dex[f.id]
-      ? `<div class="cell"><b>${f.icon}</b>${esc(f.name)}<small>최대 ${dex[f.id].biggest}cm</small></div>`
+      ? `<div class="cell"><b>${iconHtml(f.id, f.icon)}</b>${esc(f.name)}<small>최대 ${dex[f.id].biggest}cm</small></div>`
       : `<div class="cell dim"><b>❔</b>???<small>${{ sea: "바다", river: "강", pond: "연못", lake: "호수(배 위)" }[f.water]}</small></div>`).join("");
     $("pDex").hidden = false;
   }
@@ -162,7 +163,7 @@ export class UI {
       const ok = Object.entries(r.items).every(([k, n]) => (inv[k] || 0) >= n);
       const need = Object.entries(r.items).map(([k, n]) => `${esc((this.data.items[k] || {}).name || k)} ${inv[k] || 0}/${n}`).join(" · ");
       const o = this.craftOut(r);
-      return `<div class="recipe"><span class="ri">${o.icon}</span><div class="name">${esc(o.name)}<small>${need}</small></div><button class="btn${ok ? "" : " ghost"}" type="button" data-r="${id}" ${ok ? "" : "disabled"}>만들기</button></div>`;
+      return `<div class="recipe"><span class="ri">${o.img}</span><div class="name">${esc(o.name)}<small>${need}</small></div><button class="btn${ok ? "" : " ghost"}" type="button" data-r="${id}" ${ok ? "" : "disabled"}>만들기</button></div>`;
     }).join("");
     $("craftList").querySelectorAll("[data-r]").forEach(b => b.onclick = async () => {
       b.disabled = true; this.busy(true);
@@ -177,8 +178,9 @@ export class UI {
 
   // 작업대 결과물 이름·그림(가구 또는 아이템)
   craftOut(r) {
-    if (r.outputKind === "item") { const k = Object.keys(r.out || {})[0], it = this.data.items[k] || { icon: "📦", name: k }; return { icon: it.icon, name: it.name }; }
-    return { icon: this.furnIcon(r.type), name: (this.data.furniture[r.type] || { name: r.type }).name };
+    if (r.outputKind === "item") { const k = Object.keys(r.out || {})[0], it = this.data.items[k] || { icon: "📦", name: k }; return { icon: it.icon, img: iconHtml(k, it.icon), name: it.name }; }
+    const icon = this.furnIcon(r.type);
+    return { icon, img: icon, name: (this.data.furniture[r.type] || { name: r.type }).name };
   }
 
   // ---- 꾸미기 ----

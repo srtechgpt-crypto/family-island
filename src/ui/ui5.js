@@ -1,5 +1,6 @@
 // v7 목장 화면: 씨앗 고르기(텃밭 빈 칸), 애완동물 고르기(동물 친구 집)
 import { state } from "../state.js";
+import { iconHtml } from "../game/sprites.js";
 import * as FS from "../services/farmStore.js";
 import { drawPet } from "../game/ranchArt.js";
 import { josa } from "../config/gameConfig.js";
@@ -17,7 +18,7 @@ export function installV5(UI) {
     const farm = this.data.farm, items = this.data.items, inv = (state.player && state.player.inv) || {};
     const rows = farm.order.map(crop => {
       const c = farm.crops[crop], seed = items[c.seed], out = items[c.item], n = inv[c.seed] || 0;
-      return `<button type="button" class="cell${n ? "" : " dim"}" data-crop="${crop}" ${n ? "" : "disabled"}><b>${out.icon}</b>${esc(seed.name)}<small>${n}개 · ${c.ms / 60000}분</small></button>`;
+      return `<button type="button" class="cell${n ? "" : " dim"}" data-crop="${crop}" ${n ? "" : "disabled"}><b>${iconHtml(c.item, out.icon)}</b>${esc(seed.name)}<small>${n}개 · ${c.ms / 60000}분</small></button>`;
     }).join("");
     $("plantGrid").innerHTML = rows;
     const none = farm.order.every(crop => !(inv[farm.crops[crop].seed] > 0));

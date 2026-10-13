@@ -1,6 +1,6 @@
 // 게임 화면: 섬·집 그리기, 걷기, 행동(흔들기·줍기·낚시·문), 꾸미기
 import { T, WATER } from "./world.js";
-import { SPR, DROP_SPR, FORAGE_SPR, TWIG_SPR, renderGround } from "./sprites.js";
+import { SPR, DROP_SPR, FORAGE_SPR, TWIG_SPR, OBJ_ART, renderGround } from "./sprites.js";
 import { furnArt } from "./furnArt.js";
 import { drawCharacter } from "./character.js";
 import { renderMapBase, drawMap } from "./minimap.js";
@@ -494,7 +494,7 @@ export class Game {
       list.push({ y: o.y + 0.3, f: () => g.drawImage(img, o.x * TS - camX, o.y * TS - camY, TS, TS) });
     }
     for (const d of this.fruitDrops())
-      list.push({ y: d.y + 0.4, f: () => { g.imageSmoothingEnabled = d.item === "honeycomb"; g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS); g.imageSmoothingEnabled = false; } });
+      list.push({ y: d.y + 0.4, f: () => { g.imageSmoothingEnabled = d.item === "honeycomb" && !OBJ_ART; g.drawImage(DROP_SPR[d.item] || DROP_SPR.apple, d.x * TS - camX, d.y * TS - camY, TS, TS); g.imageSmoothingEnabled = false; } });
     const t = now / 1000;
     for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => { if (o.mode === "boat") this.lakeL.drawBoatShape(g, o.x * TS - camX, o.y * TS - camY, TS, o.d || 0, t); this.drawPerson(o.m, o.x * TS - camX, o.y * TS - camY, o.d || 0, o.walk, o.moving && o.mode !== "boat", { x: o.tx, y: o.ty, boat: o.mode === "boat" }); } });
     list.push({ y: m.y, f: () => { if (this.lakeL.boating) this.lakeL.drawBoatShape(g, m.x * TS - camX, m.y * TS - camY, TS, m.dir, t); this.drawPerson(state.mid, m.x * TS - camX, m.y * TS - camY, m.dir, m.walk, m.moving && !this.lakeL.boating, { x: m.x, y: m.y, boat: this.lakeL.boating }); } });

@@ -1,5 +1,6 @@
 // v3 화면: 캠프파이어 창, 요리 창, 가족 추억, 우리 집 밖(겉모습·옮기기), 살금살금, 가방 먹기·놓아주기, 도감 탭
 import { state, onState } from "../state.js";
+import { iconHtml } from "../game/sprites.js";
 import { nameOf, FAMILY, josa } from "../config/gameConfig.js";
 import * as P from "../services/playerStore.js";
 import * as H from "../services/houseStore.js";
@@ -96,7 +97,7 @@ export function installV3(UI) {
     $("cookList").innerHTML = Object.entries(recipes).map(([id, r]) => {
       const ok = Object.entries(r.items).every(([k, n]) => have(k) >= n), out = items[r.out] || { icon: "🍽️", name: r.out };
       const need = Object.entries(r.items).map(([k, n]) => `${esc(label(k))} ${have(k)}/${n}`).join(" · ");
-      return `<div class="recipe"><span class="ri">${out.icon}</span><div class="name">${esc(out.name)}<small>${need}</small></div><button class="btn${ok ? "" : " ghost"}" type="button" data-k="${id}" ${ok ? "" : "disabled"}>만들기</button></div>`;
+      return `<div class="recipe"><span class="ri">${iconHtml(r.out, out.icon)}</span><div class="name">${esc(out.name)}<small>${need}</small></div><button class="btn${ok ? "" : " ghost"}" type="button" data-k="${id}" ${ok ? "" : "disabled"}>만들기</button></div>`;
     }).join("");
     $("cookList").querySelectorAll("[data-k]").forEach(b => b.onclick = async () => {
       if (at === "camp" && !this.game.camp.lit()) { this.toast("불이 꺼졌어요. 집 조리대에서도 만들 수 있어요"); return; }
@@ -141,14 +142,14 @@ export function installV3(UI) {
     const BAND = { day: "낮", evening: "저녁", night: "밤" }, PLACE = { flower: "꽃", tree: "나무", water: "물가", sand: "모래", grass: "풀밭" };
     $("dexSub").textContent = `${ids.filter(i => dex[i]).length} / ${ids.length}종 잡았어요`;
     $("dexGrid").innerHTML = ids.map(i => { const it = this.data.items["insect_" + i] || { icon: "🐞", name: i };
-      return dex[i] ? `<div class="cell"><b>${it.icon}</b>${esc(it.name)}<small>${dex[i].count}마리</small></div>`
+      return dex[i] ? `<div class="cell"><b>${iconHtml("insect_" + i, it.icon)}</b>${esc(it.name)}<small>${dex[i].count}마리</small></div>`
         : `<div class="cell dim"><b>❔</b>???<small>${sp[i].bands.map(b => BAND[b]).join("·")} ${sp[i].places.map(p => PLACE[p]).join("·")}</small></div>`; }).join("");
   };
   proto.dexFood = function () {
     const dex = (state.player && state.player.cookDex) || {}, foods = Object.entries(this.data.items).filter(([, it]) => it.kind === "food");
     $("dexSub").textContent = `${foods.filter(([k]) => dex[k]).length} / ${foods.length}가지 먹어 봤어요`;
     $("dexGrid").innerHTML = foods.map(([k, it]) => dex[k]
-      ? `<div class="cell"><b>${it.icon}</b>${esc(it.name)}<small>${dex[k].count}번 먹음</small></div>`
+      ? `<div class="cell"><b>${iconHtml(k, it.icon)}</b>${esc(it.name)}<small>${dex[k].count}번 먹음</small></div>`
       : `<div class="cell dim"><b>❔</b>???<small>&nbsp;</small></div>`).join("");
   };
 
@@ -203,11 +204,11 @@ export function installV3(UI) {
     if (tab === "cook") {
       html = `<p class="sub">요리는 <b>불 붙은 캠프파이어</b>(가족 2명 이상 모였을 때) 앞이나 <b>집 조리대</b> 앞에서 '🍳 요리하기'를 눌러 만들어요. 조리대는 작업대에서 만들어요.</p>`
         + Object.values(this.data.cooking.recipes).map(r => { const o = items[r.out] || { icon: "🍽️", name: r.out };
-          return `<div class="help-item"><b>${o.icon} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
+          return `<div class="help-item"><b>${iconHtml(r.out, o.icon)} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
     } else if (tab === "craft") {
       html = `<p class="sub">거실의 작업대(망치) 앞에서 '만들기'를 눌러요.</p>`
         + Object.values(this.data.recipes).map(r => { const o = this.craftOut(r);
-          return `<div class="help-item"><b>${o.icon} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
+          return `<div class="help-item"><b>${o.img} ${esc(o.name)}</b>${need(r.items)}</div>`; }).join("");
     } else {
       html = help.howto.map(([t, d]) => `<div class="help-item"><b>${esc(t)}</b>${esc(d)}</div>`).join("");
     }

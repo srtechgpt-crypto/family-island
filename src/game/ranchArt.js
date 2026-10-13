@@ -4,6 +4,22 @@
 const rr = (g, x, y, w, h, r) => { g.beginPath(); g.roundRect(x, y, w, h, r); };
 const fs = (g, fill, stroke, lw = 1.5) => { g.fillStyle = fill; g.fill(); if (stroke) { g.lineWidth = lw; g.strokeStyle = stroke; g.stroke(); } };
 const shadow = (g, cx, cy, rx, ry) => { g.fillStyle = "rgba(40,25,10,.22)"; g.beginPath(); g.ellipse(cx, cy, rx, ry, 0, 0, 7); g.fill(); };
+// PixelLab 동물 그림(art/animal): 오른쪽을 보는 옆모습, 여백 없이 잘림. 못 불러오면 아래 코드 그림
+const ANI = {};
+export async function loadAnimalArt() {
+  const names = ["hen", "sheep", "sheep_sheared", "dog", "cat", "rabbit"];
+  try {
+    const imgs = await Promise.all(names.map(n => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = "art/animal/" + n + ".png"; })));
+    names.forEach((n, i) => { ANI[n] = imgs[i]; });
+  } catch (e) { for (const k of Object.keys(ANI)) delete ANI[k]; }
+}
+// 발밑(cx,cy)에 키 h로 그림. flip = 왼쪽 보기, rot = 앞으로 숙이기(라디안), sq = 납작해지기
+function drawAni(g, img, cx, cy, h, flip, rot = 0, sq = 0) {
+  const w = h * img.width / img.height, sm = g.imageSmoothingEnabled;
+  g.save(); g.translate(cx, cy); if (flip) g.scale(-1, 1); g.rotate(rot); g.scale(1 + sq, 1 - sq);
+  g.imageSmoothingEnabled = false; g.drawImage(img, -w / 2, -h, w, h); g.imageSmoothingEnabled = sm;
+  g.restore();
+}
 
 // ---- 닭장: x,y,w,h = 칸 단위를 화면 픽셀로 바꾼 사각형 ----
 export function drawCoop(g, x, y, w, h, s) {
@@ -23,6 +39,7 @@ export function drawCoop(g, x, y, w, h, s) {
 
 // ---- 닭 ----
 export function drawHen(g, cx, cy, s, flip, t, peck) {
+  if (ANI.hen) { shadow(g, cx, cy + s * 0.02, s * 0.28, s * 0.08); drawAni(g, ANI.hen, cx, cy, s * 0.9, flip, peck ? Math.max(0, Math.sin(t * 9)) * 0.35 : 0, Math.sin(t * 3) * 0.02); return; }
   g.save(); g.translate(cx, cy); if (flip) g.scale(-1, 1);
   shadow(g, 0, s * 0.02, s * 0.28, s * 0.08);
   const bob = peck ? Math.max(0, Math.sin(t * 9)) * s * 0.12 : Math.sin(t * 3) * s * 0.015;
@@ -125,6 +142,7 @@ const PET = {
 export function drawPet(g, kind, cx, cy, s, faceLeft, t, moving, hop) {
   const c = PET[kind] || PET.dog;
   const jump = (moving ? Math.abs(Math.sin(t * 9)) * s * 0.05 : 0) + (kind === "rabbit" && moving ? Math.abs(Math.sin(t * 6)) * s * 0.08 : 0) + hop * s * 0.25;
+  if (ANI[kind]) { shadow(g, cx, cy, s * 0.26, s * 0.07); drawAni(g, ANI[kind], cx, cy - jump, s * (kind === "rabbit" ? 0.62 : 0.55), faceLeft, moving ? Math.sin(t * 12) * 0.06 : 0, moving ? 0 : Math.sin(t * 2.5) * 0.015); return; }
   shadow(g, cx, cy, s * 0.26, s * 0.07);
   g.save(); g.translate(cx, cy - jump); if (faceLeft) g.scale(-1, 1);
   const legs = moving ? Math.sin(t * 12) * s * 0.03 : 0;
@@ -167,6 +185,8 @@ export function drawPen(g, x, y, w, h, TS) {
 }
 // 양: 털이 많으면 둥근 구름 몸, 깎았으면 작은 몸. flip = 왼쪽 보기
 export function drawSheep(g, cx, cy, s, flip, t, sheared, munch) {
+  const sImg = sheared ? ANI.sheep_sheared : ANI.sheep;
+  if (sImg) { shadow(g, cx, cy + s * 0.02, s * 0.32, s * 0.08); drawAni(g, sImg, cx, cy, s * (sheared ? 0.72 : 0.82), flip, munch ? Math.max(0, Math.sin(t * 6)) * 0.12 : 0, Math.sin(t * 2.4) * 0.02); return; }
   g.save(); g.translate(cx, cy); if (flip) g.scale(-1, 1);
   shadow(g, 0, s * 0.02, s * 0.32, s * 0.08);
   g.fillStyle = "#4b3a32"; for (const lx of [-0.16, -0.06, 0.08, 0.17]) g.fillRect(lx * s, -s * 0.13, s * 0.05, s * 0.13);   // 다리
