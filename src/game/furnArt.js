@@ -343,6 +343,52 @@ function piano(g, W, H) {
   g.fillStyle = "#1b1418"; for (let i = 0; i < n; i++) if ([0, 1, 3, 4, 5].includes(i % 7)) g.fillRect(4 + i * 4 + 2.6, ky, 2.4, kh * 0.6);
 }
 
+// ---- v9 새 가구(PixelLab 그림을 못 불러올 때 쓰는 간단한 코드 그림) ----
+function desk(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 3, 2.5);
+  g.fillStyle = WOOD.dk; for (const x of [4, W - 8]) { rr(g, x, H - 12, 4, 10, 1); g.fill(); }
+  rr(g, 2, 4, W - 4, H - 14, 3); fillStroke(g, woodGrad(g, 0, 4, 0, H - 10));
+  rr(g, W - 22, H - 14, 18, 8, 1.5); fillStroke(g, WOOD.lo); g.fillStyle = WOOD.hi; g.beginPath(); g.arc(W - 13, H - 10, 1.4, 0, 7); g.fill();
+  rr(g, 8, 7, 10, 7, 1); fillStroke(g, "#7fb7d8", "#4d7f9e", 0.8);                 // 책
+  rr(g, W / 2, 6, 4, 7, 1); fillStroke(g, "#ffd35c", "#b08a2e", 0.8);              // 연필꽂이
+}
+function mirror(g) {
+  shadow(g, 16, 29.5, 8, 2);
+  rr(g, 8, 1, 16, 27, 7); fillStroke(g, woodGrad(g, 8, 0, 24, 0));
+  rr(g, 10.5, 3.5, 11, 22, 5); fillStroke(g, woodGrad(g, 10, 3, 22, 26, "#e9f6ff", "#9ccbe8"), "#6f9fbf", 0.8);
+  g.strokeStyle = "rgba(255,255,255,.8)"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(13, 9); g.lineTo(17, 5.5); g.moveTo(13, 13); g.lineTo(19, 7.5); g.stroke();
+}
+function vanity(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 3, 2.5);
+  rr(g, 3, H - 16, W - 6, 13, 2); fillStroke(g, woodGrad(g, 0, H - 16, 0, H - 3));
+  for (const x of [8, W - 20]) { rr(g, x, H - 13, 12, 7, 1); fillStroke(g, WOOD.lo); }
+  g.beginPath(); g.ellipse(W / 2, 9, 9, 8, 0, 0, 7); fillStroke(g, WOOD.mid);
+  g.beginPath(); g.ellipse(W / 2, 9, 7, 6, 0, 0, 7); fillStroke(g, "#cfeaff", "#6f9fbf", 0.8);
+  g.fillStyle = "#ff9fb1"; g.beginPath(); g.arc(W / 2 + 12, H - 18, 2.2, 0, 7); g.fill();
+}
+function bunk(g, W, H) {
+  shadow(g, W / 2, H - 2.5, W / 2 - 2, 2.5);
+  g.fillStyle = WOOD.dk; for (const x of [2, W - 5]) { rr(g, x, 1, 3, H - 3, 1); g.fill(); }
+  for (const y of [3, H / 2 + 2]) {
+    rr(g, 4, y, W - 8, H / 2 - 6, 3); fillStroke(g, "#fffaf2", "#bfb3a0", 0.8);
+    rr(g, 4, y + 7, W - 8, H / 2 - 13, 3); fillStroke(g, "#6aa6d8", "#3f6f9e", 0.8);
+  }
+  g.strokeStyle = WOOD.mid; g.lineWidth = 1.5; for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(W - 9, H / 2 - 4 + i * 4); g.lineTo(W - 4, H / 2 - 4 + i * 4); g.stroke(); }
+}
+function clock(g) {
+  shadow(g, 16, 29.5, 7, 2);
+  rr(g, 9, 1, 14, 28, 3); fillStroke(g, woodGrad(g, 9, 0, 23, 0, WOOD.mid, WOOD.lo));
+  g.beginPath(); g.arc(16, 8, 5, 0, 7); fillStroke(g, "#fffaf0", "#6e4325", 0.8);
+  g.strokeStyle = "#333"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(16, 8); g.lineTo(16, 5); g.moveTo(16, 8); g.lineTo(18.5, 9); g.stroke();
+  rr(g, 12, 15, 8, 11, 2); fillStroke(g, "#3a2a1c", "#2a1d12", 0.6);
+  g.fillStyle = "#ffd35c"; g.beginPath(); g.arc(16, 22, 2, 0, 7); g.fill();
+}
+function dresser(g) {
+  shadow(g, 16, 29.5, 10, 2);
+  rr(g, 4, 6, 24, 22, 2); fillStroke(g, woodGrad(g, 0, 6, 0, 28));
+  for (let i = 0; i < 3; i++) { rr(g, 6, 8 + i * 6.5, 20, 5.5, 1); fillStroke(g, WOOD.mid, WOOD.line, 0.7); g.fillStyle = WOOD.hi; g.beginPath(); g.arc(16, 10.8 + i * 6.5, 1.2, 0, 7); g.fill(); }
+}
+
 const DRAW = {
   sofa_wood: (g, W, H, rot) => turn(g, W, H, rot, sofa),
   dining_table: (g, W, H) => diningTable(g, W, H),
@@ -360,6 +406,12 @@ const DRAW = {
   lamp_shell: g => lamp(g),
   bed_log: (g, W, H, rot) => { bed.rot = rot; bed(g, Math.min(W, H)); },
   bookshelf_wood: (g, W, H, rot) => turn(g, W, H, rot, shelf),
+  desk_wood: (g, W, H, rot) => turn(g, W, H, rot, desk),
+  mirror_stand: g => mirror(g),
+  vanity: (g, W, H, rot) => turn(g, W, H, rot, vanity),
+  bunk_bed: (g, W, H) => bunk(g, W, H),
+  clock_tall: g => clock(g),
+  dresser: g => dresser(g),
 };
 
 // w,h = 돌린 뒤 칸 수

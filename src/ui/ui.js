@@ -140,7 +140,7 @@ export class UI {
     this.bindBagActions();
     $("pBag").hidden = false;
   }
-  furnIcon(t) { return { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚", stove_wood: "🍳", wardrobe_wood: "🚪", sofa_wood: "🛋️", dining_table: "🍽️", fireplace_stone: "🔥", cabinet_low: "🗄️", rocking_chair: "🪑", fish_tank: "🐠", tree_pot: "🌳", piano_wood: "🎹" }[t] || "📦"; }
+  furnIcon(t) { return { chair_wood: "🪑", pot_flower: "🪴", table_wood: "🟫", bed_log: "🛏️", lamp_shell: "💡", bookshelf_wood: "📚", stove_wood: "🍳", wardrobe_wood: "🚪", sofa_wood: "🛋️", dining_table: "🍽️", fireplace_stone: "🔥", cabinet_low: "🗄️", rocking_chair: "🪑", fish_tank: "🐠", tree_pot: "🌳", piano_wood: "🎹", desk_wood: "📝", mirror_stand: "🪞", vanity: "💄", bunk_bed: "🛏️", clock_tall: "🕰️", dresser: "🗄️" }[t] || "📦"; }
 
   // ---- 도감 ----
   openDex() {
@@ -196,8 +196,8 @@ export class UI {
     $("decoGrid").innerHTML = stored.length ? stored.map(([id, f]) => `<button type="button" class="cell${g.deco.sel === id ? " sel" : ""}" data-f="${id}"><b>${this.furnIcon(f.type)}</b>${esc((this.data.furniture[f.type] || { name: f.type }).name)}</button>`).join("")
       : `<p class="note">가방에 놓을 가구가 없어요. 거실 작업대(망치)에서 만들어요.</p>`;
     $("decoGrid").querySelectorAll("[data-f]").forEach(b => b.onclick = () => { g.deco.picked = null; g.decoSelect(g.deco.sel === b.dataset.f ? null : b.dataset.f); this.decoRefresh(); });
-    $("decoRot").onclick = async () => { const room = this.data.rooms[g.room]; this.busy(true); const r = await P.rotateFurniture(room, this.data.furniture, g.deco.picked).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("돌릴 수 없어요 (" + (r.reason || "") + ")"); this.decoRefresh(); };
-    $("decoStore").onclick = async () => { this.busy(true); const r = await P.storeFurniture(g.deco.picked).catch(() => ({ ok: false })); this.busy(false); if (r.ok) g.deco.picked = null; else this.toast("넣지 못했어요"); this.decoRefresh(); };
+    $("decoRot").onclick = async () => { const room = this.data.rooms[g.room], pf = state.player.furn[g.deco.picked]; if (pf && g.coversMe(pf.type, pf.x, pf.y, ((pf.rot || 0) + 1) % 4)) { this.toast("캐릭터가 서 있는 자리예요"); return; } this.busy(true); const r = await P.rotateFurniture(room, this.data.furniture, g.deco.picked).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("돌릴 수 없어요 (" + (r.reason || "") + ")"); this.decoRefresh(); };
+    $("decoStore").onclick = async () => { const deco = g.deco, id = deco.picked; this.busy(true); const r = await P.storeFurniture(id).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("넣지 못했어요"); else if (g.deco === deco && deco.picked === id) deco.picked = null; this.decoRefresh(); };   // 저장 중 꾸미기를 닫거나 다른 가구를 골랐으면 그대로 둠
     $("decoMove").onclick = () => { g.deco.sel = g.deco.picked; g.deco.picked = null; this.decoRefresh(); };
   }
   decoPicked(id) { this.game.deco.picked = id; this.game.deco.sel = null; this.decoRefresh(); }

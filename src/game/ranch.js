@@ -156,7 +156,7 @@ export class RanchLayer {
 
   // ---------- 애완동물 따라다니기 ----------
   petOf(mid) { const m = state.members[mid]; const p = m && m.pet; return p && this.cfg.pets.includes(p.kind) ? p : null; }
-  place() { return this.game.mode === "island" ? "island" : "house_" + this.game.houseMid; }
+  place() { return this.game.mode === "island" ? "island" : "house_" + this.game.houseMid + "_" + this.game.room; }   // v9: 방을 옮기면 동물도 새 방 자리에서 시작
   // people: [{mid, x, y, dir, boat}] — 지금 화면에 있는 사람(나 포함)
   tick(dt, people) {
     const place = this.place(), seen = new Set();

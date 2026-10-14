@@ -248,5 +248,48 @@
       "paint_red": 1,
       "paint_white": 1
     }
+  },
+  "desk_wood": {
+    "type": "desk_wood",
+    "items": {
+      "branch": 8,
+      "stone": 1
+    }
+  },
+  "mirror_stand": {
+    "type": "mirror_stand",
+    "items": {
+      "branch": 3,
+      "shell": 3,
+      "stone": 2
+    }
+  },
+  "vanity": {
+    "type": "vanity",
+    "items": {
+      "branch": 6,
+      "shell": 2,
+      "flower_white": 1
+    }
+  },
+  "bunk_bed": {
+    "type": "bunk_bed",
+    "items": {
+      "branch": 12,
+      "cloth": 2
+    }
+  },
+  "clock_tall": {
+    "type": "clock_tall",
+    "items": {
+      "branch": 4,
+      "stone": 3
+    }
+  },
+  "dresser": {
+    "type": "dresser",
+    "items": {
+      "branch": 6
+    }
   }
 }

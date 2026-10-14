@@ -1,6 +1,10 @@
 {
-  "living": { "id": "living", "name": "거실", "w": 11, "h": 8, "blocked": [[1, 1]], "door": [[5, 7]], "walkway": [[5, 6], [3, 1], [7, 1]],
-              "links": [{ "x": 3, "y": 0, "to": "bed" }, { "x": 7, "y": 0, "to": "small" }] },
-  "bed":    { "id": "bed", "name": "침실", "w": 9, "h": 7, "blocked": [], "door": [[4, 6]], "walkway": [[4, 5]], "back": { "room": "living", "x": 3, "y": 1 } },
-  "small":  { "id": "small", "name": "작은방", "w": 7, "h": 6, "blocked": [], "door": [[3, 5]], "walkway": [[3, 4]], "back": { "room": "living", "x": 7, "y": 1 } }
+  "living": { "id": "living", "name": "거실", "floor": 1, "w": 15, "h": 10, "blocked": [[1, 1]], "door": [[7, 9]], "walkway": [[7, 8], [3, 1], [7, 1], [11, 1]],
+              "links": [{ "x": 3, "y": 0, "to": "bed" }, { "x": 7, "y": 0, "to": "small" }, { "x": 11, "y": 0, "to": "up", "stairs": "up", "label": "2층으로" }] },
+  "bed":    { "id": "bed", "name": "침실", "floor": 1, "w": 11, "h": 9, "blocked": [], "door": [[5, 8]], "walkway": [[5, 7]], "back": { "room": "living", "x": 3, "y": 0 }, "exitLabel": "거실로" },
+  "small":  { "id": "small", "name": "작은방", "floor": 1, "w": 9, "h": 8, "blocked": [], "door": [[4, 7]], "walkway": [[4, 6]], "back": { "room": "living", "x": 7, "y": 0 }, "exitLabel": "거실로" },
+  "up":     { "id": "up", "name": "2층 거실", "floor": 2, "w": 13, "h": 9, "blocked": [], "door": [[6, 8]], "walkway": [[6, 7], [3, 1], [9, 1]], "stairsDown": true,
+              "links": [{ "x": 3, "y": 0, "to": "study" }, { "x": 9, "y": 0, "to": "attic" }], "back": { "room": "living", "x": 11, "y": 0 }, "exitLabel": "1층으로" },
+  "study":  { "id": "study", "name": "공부방", "floor": 2, "w": 10, "h": 8, "blocked": [], "door": [[5, 7]], "walkway": [[5, 6]], "back": { "room": "up", "x": 3, "y": 0 }, "exitLabel": "2층 거실로" },
+  "attic":  { "id": "attic", "name": "다락방", "floor": 2, "attic": true, "w": 10, "h": 7, "blocked": [], "door": [[5, 6]], "walkway": [[5, 5]], "back": { "room": "up", "x": 9, "y": 0 }, "exitLabel": "2층 거실로" }
 }

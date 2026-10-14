@@ -28,6 +28,35 @@ import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
 
+// v9 집 그림: 계단(올라가기 = 위 벽에 난 계단 / 내려가기 = 아래 줄 계단), 2층 창문, 다락방 경사 지붕
+function drawStairs(g, sx, sy, TS, goingUp) {
+  g.fillStyle = "#5a3f27"; g.fillRect(sx, sy, TS + 1, TS + 1);
+  for (let i = 0; i < 4; i++) {
+    const k = goingUp ? i : 3 - i, y = sy + (TS / 4) * i;
+    g.fillStyle = ["#8a6240", "#9c7049", "#b08155", "#c4935f"][k]; g.fillRect(sx + TS * 0.08, y + 1, TS * 0.84, TS / 4 - 1);
+    g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(sx + TS * 0.08, y + TS / 4 - 2, TS * 0.84, 1.5);
+  }
+  g.fillStyle = "#6e4325"; g.fillRect(sx, sy, TS * 0.08, TS + 1); g.fillRect(sx + TS * 0.92, sy, TS * 0.08, TS + 1);
+}
+function drawWindow(g, sx, sy, TS) {
+  g.fillStyle = "#8a6240"; g.fillRect(sx + TS * 0.18, sy + TS * 0.08, TS * 0.64, TS * 0.48);
+  g.fillStyle = "#bfe3ff"; g.fillRect(sx + TS * 0.24, sy + TS * 0.13, TS * 0.52, TS * 0.38);
+  g.fillStyle = "#8a6240"; g.fillRect(sx + TS * 0.48, sy + TS * 0.13, TS * 0.04, TS * 0.38); g.fillRect(sx + TS * 0.24, sy + TS * 0.3, TS * 0.52, TS * 0.04);
+  g.fillStyle = "rgba(255,255,255,.6)"; g.fillRect(sx + TS * 0.28, sy + TS * 0.16, TS * 0.12, TS * 0.05);
+}
+function drawAtticRoof(g, ox, oy, room, TS) {
+  // 위 벽 양쪽 끝을 비스듬한 서까래로 덮어 다락 느낌(칸 판정은 그대로) + 가운데 둥근 창
+  g.fillStyle = "#7a5233";
+  for (const side of [0, 1]) {
+    const x0 = side ? ox + room.w * TS : ox, dir = side ? -1 : 1;
+    g.beginPath(); g.moveTo(x0, oy); g.lineTo(x0 + dir * TS * 2.2, oy); g.lineTo(x0 + dir * TS, oy + TS); g.lineTo(x0, oy + TS * 1.6); g.closePath(); g.fill();
+  }
+  const cx = ox + room.w * TS / 2, cy = oy + TS * 0.45, r = TS * 0.28;
+  g.fillStyle = "#bfe3ff"; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fill();
+  g.strokeStyle = "#7a5233"; g.lineWidth = Math.max(2, TS * 0.07); g.stroke();
+  g.beginPath(); g.moveTo(cx - r, cy); g.lineTo(cx + r, cy); g.moveTo(cx, cy - r); g.lineTo(cx, cy + r); g.stroke();
+}
+
 export class Game {
   constructor(canvas, world, data, ui) {
     this.cv = canvas; this.g = canvas.getContext("2d");
@@ -72,7 +101,9 @@ export class Game {
     if (this.mode === "house" && this.data.rooms[this.room]) {
       const r = this.data.rooms[this.room];
       const free = this.deco ? this.W - this.decoReserve() - 16 : this.W - 260;   // 꾸미기 중엔 오른쪽 꾸미기 창을 피해서
-      this.TS = Math.max(24, Math.floor(Math.min((this.H - 70) / (r.h + 0.6), free / r.w)));
+      const fit = Math.floor(Math.min((this.H - 70) / (r.h + 0.6), free / r.w));
+      // v9: 방이 커져도 캐릭터가 너무 작지 않게 — 평소엔 최소 크기를 두고 넘치면 카메라가 나를 따라감(houseOrigin)
+      this.TS = this.deco ? Math.max(18, fit) : Math.max(fit, Math.min(34, Math.floor(this.H / 9)));
     } else this.TS = this.islandTS;
   }
 
@@ -154,9 +185,10 @@ export class Game {
       if (this.room === "living" && this.houseMid === state.mid && room.blocked.some(([x, y]) => x === f.x && y === f.y)) return { k: "bench", label: "만들기" };
       if (this.houseMid === state.mid && this.furnAt(f.x, f.y) === "stove_wood") return { k: "stove", label: "요리하기" };
       if (this.houseMid === state.mid && this.furnAt(f.x, f.y) === "wardrobe_wood") return { k: "wardrobe", label: "옷 갈아입기" };
-      if (room.door.some(([x, y]) => x === tx && y === ty)) return { k: "exit", label: this.room === "living" ? "밖으로" : "거실로" };
+      if (this.houseMid === state.mid && ["mirror_stand", "vanity"].includes(this.furnAt(f.x, f.y))) return { k: "mirror", label: "거울 보기 🪞" };
+      if (room.door.some(([x, y]) => x === tx && y === ty)) return { k: "exit", label: this.room === "living" ? "밖으로" : (room.exitLabel || "거실로") };
       const link = (room.links || []).find(l => l.x === tx && l.y === ty);
-      if (link) return { k: "link", to: link.to, label: this.data.rooms[link.to].name };
+      if (link) return { k: "link", to: link.to, label: link.label || this.data.rooms[link.to].name };
       return this.ranch.petTarget();
     }
     for (const h of this.world.houses) if (Math.abs(m.x - (h.door.x + 0.5)) < 0.9 && Math.abs(m.y - (h.door.y + 1)) < 1.1)
@@ -219,12 +251,12 @@ export class Game {
     const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
     if (t.k === "door") return this.enterHouse(t.h.mid);
-    if (t.k === "exit") return this.room === "living" ? this.leaveHouse() : this.goRoom(this.data.rooms[this.room].back.room, this.data.rooms[this.room].back);
-    if (t.k === "link") return this.goRoom(t.to);
+    if (t.k === "exit") { if (this.room === "living") return this.leaveHouse(); this.goRoom(this.data.rooms[this.room].back.room, this.data.rooms[this.room].back); return this.sendPosNow().catch(() => {}); }
+    if (t.k === "link") { this.goRoom(t.to); return this.sendPosNow().catch(() => {}); }
     if (t.k === "bench") return this.ui.openCraft();
     if (t.k === "camp") return this.ui.openCamp();
     if (t.k === "stove") return this.ui.openCook("stove");
-    if (t.k === "wardrobe") return this.ui.openCloset(false);
+    if (t.k === "wardrobe" || t.k === "mirror") return this.ui.openCloset(false);
     if (t.k === "bug") return this.bugs.catchIt(t.o);
     if (t.k === "fish") { this.fishing = { st: "wait", water: t.water, bx: t.fx + 0.5, by: t.fy + 0.5, until: performance.now() + 2000 + Math.random() * 4500 }; return; }
     this.busy = true;
@@ -315,14 +347,14 @@ export class Game {
     this.ui.inHouse(mid === state.mid, nameOf(mid));
   }
   goRoom(id, at) {
-    const room = this.data.rooms[id]; this.room = id; this.fitTS();
+    const room = this.data.rooms[id]; this.room = id; this.fitTS(); W.setRoom(id);
     if (at) { this.me.x = at.x + 0.5; this.me.y = at.y + 1.5; this.me.dir = 0; }
     else { const [dx, dy] = room.door[0]; this.me.x = dx + 0.5; this.me.y = dy - 0.5; this.me.dir = 3; }
     if (this.deco) this.ui.decoRefresh();
   }
   leaveHouse() {
     if (this.houseUnsub) this.houseUnsub(); this.houseUnsub = null;
-    this.mode = "island"; this.deco = null; this.ui.decoClose(); this.fitTS();
+    this.mode = "island"; this.deco = null; this.ui.decoClose(); this.fitTS(); W.setRoom(null);
     // 그사이 집이 옮겨졌을 수 있으니 지금 집의 문 앞으로
     const hs = this.world.houseOf(this.houseMid);
     if (hs) { this.me.x = hs.door.x + 0.5; this.me.y = hs.door.y + 1.5; } else { this.me.x = this.islandPos.x; this.me.y = this.islandPos.y + 0.4; }
@@ -331,7 +363,21 @@ export class Game {
   }
   // 꾸미기 창(index.html #pDeco: 너비 min(46vw,340px), 오른쪽 12px)이 차지하는 폭
   decoReserve() { return Math.min(this.W * 0.46, 340) + 24; }
-  houseOrigin() { const room = this.data.rooms[this.room], left = this.deco ? this.W - this.decoReserve() : this.W; return { ox: (left - room.w * this.TS) / 2, oy: (this.H - room.h * this.TS) / 2 + this.TS * 0.3 }; }
+  // 방 원점(화면 좌표). 방이 화면보다 크면 나를 가운데 두고 방 가장자리에서 멈춤 — 그리기·꾸미기 탭 모두 이것만 씀
+  houseOrigin() {
+    const room = this.data.rooms[this.room], TS = this.TS, left = this.deco ? this.W - this.decoReserve() : this.W;
+    const rw = room.w * TS, rh = room.h * TS, top = TS * 0.75;   // 위쪽은 방 이름 자리
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const ox = rw <= left ? (left - rw) / 2 : clamp(left / 2 - this.me.x * TS, left - rw, 0);
+    const oy = rh <= this.H - top ? (this.H - rh) / 2 + TS * 0.3 : clamp(this.H / 2 - this.me.y * TS, this.H - rh, top);
+    return { ox, oy };
+  }
+  // 가구(type, 놓을 자리·방향)가 내 캐릭터 칸을 덮는지
+  coversMe(type, x, y, rot) {
+    const d = this.data.furniture[type]; if (!d) return false;
+    const [w, h] = (rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h], mx = Math.floor(this.me.x), my = Math.floor(this.me.y);
+    return mx >= x && mx < x + w && my >= y && my < y + h;
+  }
 
   // 꾸미기: 고른 가구를 바닥에 놓기 / 놓인 가구 누르기 → 선택
   startDeco() { if (this.mode === "house" && this.houseMid === state.mid) { this.deco = { sel: null }; this.fitTS(); return true; } return false; }
@@ -347,15 +393,17 @@ export class Game {
     });
     if (hit && !this.deco.sel) { this.ui.decoPicked(hit[0]); return; }
     if (!this.deco.sel) return;
-    if (Math.floor(this.me.x) === tx && Math.floor(this.me.y) === ty) { this.ui.toast("캐릭터가 서 있는 자리예요"); return; }
     const f = p.furn[this.deco.sel];
+    if (this.coversMe(f.type, tx, ty, f.rot || 0)) { this.ui.toast("캐릭터가 서 있는 자리예요"); return; }
     const chk = canPlace(room, this.data.furniture, p, this.deco.sel, tx, ty, f.rot || 0);
     if (!chk.ok) { this.ui.toast("여기엔 놓을 수 없어요 (" + chk.reason + ")"); return; }
+    const deco = this.deco, roomId = this.room, selId = deco.sel;   // 저장하는 사이 꾸미기를 끄거나 방을 옮기거나 다른 가구를 골라도 엉뚱한 선택을 지우지 않게
     this.ui.busy(true);
-    const r = await P.placeFurniture(room, this.data.furniture, this.deco.sel, tx, ty, f.rot || 0).catch(() => ({ ok: false }));
+    const r = await P.placeFurniture(room, this.data.furniture, deco.sel, tx, ty, f.rot || 0).catch(() => ({ ok: false }));
     this.ui.busy(false);
     if (!r.ok) { this.ui.toast("놓지 못했어요 (" + (r.reason || "저장 실패") + ")"); return; }
-    this.deco.sel = null; this.ui.decoRefresh();
+    if (this.deco !== deco || this.room !== roomId || deco.sel !== selId) return;
+    deco.sel = null; this.ui.decoRefresh();
   }
 
   // ---------- 반복 ----------
@@ -401,7 +449,7 @@ export class Game {
     requestAnimationFrame(t2 => this.loop(t2));
   }
 
-  posMode() { return this.lakeL && this.lakeL.boating ? "boat" : "walk"; }
+  posMode() { return this.mode === "island" && this.lakeL && this.lakeL.boating ? "boat" : "walk"; }   // 집 안은 늘 걷기(규칙: 집에서 배 금지)
   sendPosNow() { return W.sendPos(this.me.x, this.me.y, this.me.dir, true, this.camp.heartbeatMs(), this.posMode()) || Promise.resolve(); }
   othersHereList() { return [...W.othersHere().values()]; }
 
@@ -527,19 +575,24 @@ export class Game {
 
   drawHouse() {
     const g = this.g, TS = this.TS, room = this.data.rooms[this.room], { ox, oy } = this.houseOrigin();
-    const color = familyOf(this.houseMid).color;
+    const color = familyOf(this.houseMid).color, up = room.floor === 2;
     g.imageSmoothingEnabled = false;
     g.fillStyle = "#3a2d22"; g.fillRect(0, 0, this.W, this.H);
     for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
       const sx = ox + x * TS, sy = oy + y * TS;
       const isDoor = room.door.some(([a, b]) => a === x && b === y), isLink = (room.links || []).some(l => l.x === x && l.y === y);
+      const link = isLink && room.links.find(l => l.x === x && l.y === y);
+      if (link && link.stairs) { drawStairs(g, sx, sy, TS, true); continue; }
       if (isLink) { g.fillStyle = "#6d4c30"; g.fillRect(sx, sy, TS + 1, TS + 1); g.fillStyle = "#a77b4f"; g.fillRect(sx + TS * 0.15, sy + TS * 0.1, TS * 0.7, TS * 0.9); continue; }
       if (y === 0 || x === 0 || x === room.w - 1 || (y === room.h - 1 && !isDoor)) {
-        g.fillStyle = y === 0 ? "#efe2c6" : "#d6c19d"; g.fillRect(sx, sy, TS + 1, TS + 1);
+        g.fillStyle = y === 0 ? (up ? "#f4ead6" : "#efe2c6") : (up ? "#dcc9a6" : "#d6c19d"); g.fillRect(sx, sy, TS + 1, TS + 1);
         if (y === 0) { g.fillStyle = color; g.globalAlpha = 0.3; g.fillRect(sx, sy + TS * 0.62, TS + 1, TS * 0.12); g.globalAlpha = 1; }
-      } else if (isDoor) { g.fillStyle = "#2a2018"; g.fillRect(sx, sy, TS + 1, TS + 1); }
-      else { g.fillStyle = (x + y) % 2 ? "#c99e6e" : "#d4aa79"; g.fillRect(sx, sy, TS + 1, TS + 1); }
+        if (y === 0 && up && !room.attic && x % 4 === 2 && x < room.w - 1) drawWindow(g, sx, sy, TS);
+      } else if (isDoor && room.stairsDown) drawStairs(g, sx, sy, TS, false);
+      else if (isDoor) { g.fillStyle = "#2a2018"; g.fillRect(sx, sy, TS + 1, TS + 1); }
+      else { g.fillStyle = up ? ((x + y) % 2 ? "#e0bd8a" : "#e9c897") : ((x + y) % 2 ? "#c99e6e" : "#d4aa79"); g.fillRect(sx, sy, TS + 1, TS + 1); }
     }
+    if (room.attic) drawAtticRoof(g, ox, oy, room, TS);
     if (this.deco) { g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 1; for (let y = 1; y < room.h - 1; y++) for (let x = 1; x < room.w - 1; x++) g.strokeRect(ox + x * TS, oy + y * TS, TS, TS); }
     const list = [];
     if (this.room === "living") for (const [bx, by] of room.blocked) list.push({ y: by + 1, f: () => g.drawImage(SPR.bench, ox + bx * TS, oy + by * TS, TS, TS) });
@@ -562,7 +615,14 @@ export class Game {
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
     g.font = `${Math.round(TS * 0.45)}px Jua, sans-serif`; g.textAlign = "center"; g.fillStyle = "#fffdf6";
     const owner = nameOf(this.houseMid);
-    g.fillText(`${this.houseMid === state.mid ? "우리 집" : owner + "네 집"} · ${room.name}${this.houseMid === state.mid ? "" : " (구경 중)"}`, this.W / 2, oy - TS * 0.35);
+    const title = `${this.houseMid === state.mid ? "우리 집" : owner + "네 집"} · ${room.name}${this.houseMid === state.mid ? "" : " (구경 중)"}`;
+    // 방 이름은 시계와 위 버튼 사이 빈자리 가운데(좁으면 글자를 줄임)
+    let cx = this.W / 2, gap = this.W;
+    const cl = document.getElementById("clock"), bb = document.getElementById("bBag");
+    if (cl && bb) { const a = cl.getBoundingClientRect().right, b = bb.getBoundingClientRect().left; if (b - a > 60) { cx = (a + b) / 2; gap = b - a - 12; } }
+    const tw0 = g.measureText(title).width; if (tw0 > gap) g.font = `${Math.floor(TS * 0.45 * gap / tw0)}px Jua, sans-serif`;
+    if (oy - TS * 0.35 < TS * 0.6) { const tw = Math.min(tw0, gap) + 20; g.fillStyle = "rgba(42,32,24,.75)"; g.beginPath(); g.roundRect(cx - tw / 2, TS * 0.12, tw, TS * 0.6, 10); g.fill(); g.fillStyle = "#fffdf6"; }
+    g.fillText(title, cx, Math.max(oy - TS * 0.35, TS * 0.58));
   }
 
   drawJoy() {

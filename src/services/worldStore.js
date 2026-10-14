@@ -117,7 +117,7 @@ export async function myRecentClaims() {
 
 // ---- 가족 위치 ----
 // 가족 위치 전체(presence/*)를 한 번만 받아 두고, 게임 화면(지금 있는 곳)과 미니맵(모두)이 나눠 쓴다
-let presRef = null, presPlace = null, lastSent = 0, lastPos = null, presAllUnsub = null;
+let presRef = null, presPlace = null, presRoom = null, lastSent = 0, lastPos = null, presAllUnsub = null;
 let presenceAll = {};
 const others = new Map();  // 지금 있는 곳의 다른 가족: ses → {m,x,y,tx,ty,d,walk}
 export const othersHere = () => others;
@@ -128,6 +128,7 @@ function syncOthers() {
   const seen = new Set();
   for (const [ses, v] of Object.entries(here)) {
     if (ses === state.ses || !v || v.m === state.mid) continue;
+    if (presPlace !== "island" && (v.r || "living") !== presRoom) continue;   // v9: 집 안에선 같은 방 사람만(다른 방에서 오면 새로 생겨 제자리에 바로 보임)
     // 옛 기기·꺼진 앱의 흔적은 빼기: 그 사람의 현재 세션만, 10분 넘게 소식 없으면 숨김
     const cur = state.members[v.m];
     if (!cur || cur.ses !== ses || (typeof v.t === "number" && serverNow() - v.t > 10 * 60 * 1000)) continue;
@@ -151,6 +152,13 @@ export function enterPlace(place) {
   lastPos = null;
 }
 export const currentPlace = () => presPlace;
+// v9: 집 안 지금 방(섬이면 null). 방을 옮기면 다른 가족 목록을 다시 거르고 다음 위치를 꼭 보냄
+export function setRoom(room) {
+  if (presRoom === room) return;
+  presRoom = room; lastPos = null;
+  others.clear();
+  syncOthers();
+}
 // 다시 연결될 때마다 '끊기면 내 위치 지우기'를 다시 걸어 둔다(서버는 한 번 끊기면 예약을 잊음)
 onValue(ref(db, ".info/connected"), s => { if (s.val() === true && presRef) onDisconnect(presRef).remove().catch(() => {}); });
 
@@ -160,11 +168,13 @@ export function sendPos(x, y, d, force, beatMs = 60000, mode = "walk") {
   if (!presRef) return;
   const now = performance.now();
   if (!force && now - lastSent < 250) return;
-  if (!force && now - lastSent < beatMs && lastPos && Math.abs(lastPos.x - x) < 0.01 && Math.abs(lastPos.y - y) < 0.01 && lastPos.d === d && lastPos.mode === mode) return;
+  const r = presPlace !== "island" ? presRoom : null;
+  if (!force && now - lastSent < beatMs && lastPos && Math.abs(lastPos.x - x) < 0.01 && Math.abs(lastPos.y - y) < 0.01 && lastPos.d === d && lastPos.mode === mode && lastPos.r === r) return;
   const val = { m: state.mid, x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100, d, t: serverTimestamp() };
   if (mode === "boat") val.mode = "boat";
+  if (r) val.r = r;   // 규칙: 집이면 r 필수, 섬이면 금지
   lastSent = now;
-  return set(presRef, val).then(() => { lastPos = { x, y, d, mode }; }).catch(e => { lastPos = null; throw e; });
+  return set(presRef, val).then(() => { lastPos = { x, y, d, mode, r }; }).catch(e => { lastPos = null; throw e; });
 }
 
 export function leavePresence() { if (presRef) remove(presRef).catch(() => {}); presRef = null; }
