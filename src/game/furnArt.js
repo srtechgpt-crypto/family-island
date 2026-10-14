@@ -389,7 +389,39 @@ function dresser(g) {
   for (let i = 0; i < 3; i++) { rr(g, 6, 8 + i * 6.5, 20, 5.5, 1); fillStroke(g, WOOD.mid, WOOD.line, 0.7); g.fillStyle = WOOD.hi; g.beginPath(); g.arc(16, 10.8 + i * 6.5, 1.2, 0, 7); g.fill(); }
 }
 
+// v10 코드 대체 그림(도트 그림을 못 불러올 때)
+function trophy(g) {
+  shadow(g, 16, 29.5, 8, 2);
+  rr(g, 9, 23, 14, 6, 1); fillStroke(g, WOOD.mid);
+  g.beginPath(); g.moveTo(9, 5); g.lineTo(23, 5); g.quadraticCurveTo(23, 17, 16, 18); g.quadraticCurveTo(9, 17, 9, 5); fillStroke(g, "#ffcf3f", "#b8860b");
+  rr(g, 14.5, 17, 3, 6, 1); fillStroke(g, "#ffcf3f", "#b8860b", 0.8);
+  g.strokeStyle = "#b8860b"; g.lineWidth = 1.5; g.beginPath(); g.arc(8, 9, 3, Math.PI * 0.5, Math.PI * 1.5); g.stroke(); g.beginPath(); g.arc(24, 9, 3, -Math.PI * 0.5, Math.PI * 0.5); g.stroke();
+}
+function gemLamp(g) {
+  shadow(g, 16, 29.5, 8, 2);
+  rr(g, 10, 22, 12, 7, 1); fillStroke(g, WOOD.mid);
+  g.fillStyle = "rgba(140,200,255,.35)"; g.beginPath(); g.arc(16, 13, 10, 0, 7); g.fill();
+  g.beginPath(); g.moveTo(16, 3); g.lineTo(22, 12); g.lineTo(16, 22); g.lineTo(10, 12); g.closePath(); fillStroke(g, "#7fd0ff", "#3b6fa8");
+  g.beginPath(); g.moveTo(16, 3); g.lineTo(18, 12); g.lineTo(16, 22); g.closePath(); g.fillStyle = "#d6a2ff"; g.fill();
+}
+function cakeDeco(g) {
+  shadow(g, 16, 29.5, 11, 2);
+  rr(g, 5, 18, 22, 10, 2); fillStroke(g, WOOD.mid);
+  rr(g, 8, 10, 16, 9, 2); fillStroke(g, "#fff6ea", "#c99a76");
+  g.fillStyle = "#e8493c"; for (const x of [11, 16, 21]) { g.beginPath(); g.arc(x, 11, 1.6, 0, 7); g.fill(); }
+  for (const x of [12, 16, 20]) { g.fillStyle = "#7fc3ff"; g.fillRect(x - 0.6, 5, 1.2, 5); g.fillStyle = "#ffcf3f"; g.beginPath(); g.ellipse(x, 4, 1, 1.6, 0, 0, 7); g.fill(); }
+}
+function balloons(g) {
+  g.fillStyle = "#6e4325"; g.fillRect(14, 26, 4, 3);
+  const C = ["#ff6b8a", "#ffd35c", "#6cc4ff"];
+  [[10, 9], [16, 6], [22, 10]].forEach(([x, y], i) => { g.strokeStyle = "rgba(80,60,40,.7)"; g.lineWidth = 0.6; g.beginPath(); g.moveTo(16, 26); g.lineTo(x, y + 5); g.stroke(); g.beginPath(); g.ellipse(x, y, 4.5, 5.5, 0, 0, 7); fillStroke(g, C[i], "rgba(0,0,0,.25)", 0.6); });
+}
+
 const DRAW = {
+  trophy_gold: g => trophy(g),
+  gem_lamp: g => gemLamp(g),
+  bday_cake: g => cakeDeco(g),
+  balloon_bunch: g => balloons(g),
   sofa_wood: (g, W, H, rot) => turn(g, W, H, rot, sofa),
   dining_table: (g, W, H) => diningTable(g, W, H),
   fireplace_stone: (g, W, H, rot) => turn(g, W, H, rot, fireplace),

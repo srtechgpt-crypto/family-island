@@ -82,6 +82,7 @@ export class HouseLayer {
     return (r.reasons || []).slice(0, 2).map(c => PLACE_REASON_TEXT[c] || c).join(" · ");
   }
   async confirm() {
+    if (this.game.events && this.game.events.active()) return { ok: false, reason: "보물찾기가 끝나면 집을 옮길 수 있어요" };   // v10: 보물이 집에 가리지 않게
     const m = this.move; if (!m || !m.res || !m.res.ok) return { ok: false, reason: this.reasonText() || "여기엔 지을 수 없어요" };
     const pos = { ...m.pos };
     const r = await H.moveHouse(pos, latest => {

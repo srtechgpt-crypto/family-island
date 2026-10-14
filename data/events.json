@@ -1,0 +1,91 @@
+{
+  "ver": 1,
+  "hunt": {
+    "bonus": [
+      {
+        "item": "branch",
+        "qty": 3
+      },
+      {
+        "item": "stone",
+        "qty": 2
+      },
+      {
+        "item": "shell",
+        "qty": 2
+      },
+      {
+        "item": "flower_white",
+        "qty": 2
+      },
+      {
+        "item": "flower_red",
+        "qty": 2
+      },
+      {
+        "item": "paint_pink",
+        "qty": 1
+      },
+      {
+        "item": "paint_yellow",
+        "qty": 1
+      },
+      {
+        "item": "seed_carrot",
+        "qty": 1
+      },
+      {
+        "item": "seed_pumpkin",
+        "qty": 1
+      },
+      {
+        "item": "food_marsh_golden",
+        "qty": 1
+      },
+      {
+        "item": "wool",
+        "qty": 1
+      },
+      {
+        "item": "honey",
+        "qty": 1
+      }
+    ]
+  },
+  "bday": {
+    "gifts": [
+      {
+        "item": "food_honey_apple",
+        "qty": 1
+      },
+      {
+        "item": "food_fruit_skewer",
+        "qty": 1
+      },
+      {
+        "item": "paint_pink",
+        "qty": 1
+      },
+      {
+        "item": "paint_yellow",
+        "qty": 1
+      },
+      {
+        "item": "seed_tomato",
+        "qty": 2
+      },
+      {
+        "item": "flower_red",
+        "qty": 3
+      },
+      {
+        "item": "wool",
+        "qty": 2
+      },
+      {
+        "item": "gem",
+        "qty": 1
+      }
+    ]
+  }
+}

@@ -5,6 +5,7 @@ import { nameOf, FAMILY, josa } from "../config/gameConfig.js";
 import * as P from "../services/playerStore.js";
 import * as H from "../services/houseStore.js";
 import * as CS from "../services/campfireStore.js";
+import { validHunt, huntResult } from "../domain/hunt.js";
 import * as SP from "../audio/songPlayer.js";
 import { drawHouse } from "../game/houseArt.js";
 import { validateExterior } from "../domain/houseAppearance.js";
@@ -13,6 +14,8 @@ import { isConnected } from "../services/fb.js";
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ROAST_NAME = { raw: "덜 익음", golden: "노릇노릇", burnt: "탐" };
+// v10: 그날 보물찾기(마지막 판 번호 = 판 수, 마지막 판 1등)
+const huntLine = h => { if (!validHunt(h)) return ""; const r = huntResult(h); return `<div class="note">💎 보물찾기 ${h.n}판${r.winners.length ? ` · 마지막 판 1등 ${r.winners.map(m => esc(nameOf(m))).join("·")}` : ""}</div>`; };
 
 export function installV3(UI) {
   const proto = UI.prototype;
@@ -75,7 +78,7 @@ export function installV3(UI) {
         const date = new Date(d.day * 86400000);   // KST 일 번호 → 날짜(UTC 기준으로 그 날)
         const who = Object.keys(d.attendance || {}).sort();
         const roasts = Object.entries(d.roasts || {}).map(([m, r]) => `${esc(nameOf(m))} ${Object.values(r).map(x => ROAST_NAME[x] || x).join("·")}`).join(" / ");
-        return `<div class="mem"><b>${date.getUTCFullYear()}년 ${date.getUTCMonth() + 1}월 ${date.getUTCDate()}일</b>${who.length >= FAMILY.length ? " 🌟 모두 모였어요!" : ""}${d.fireworks ? " 🎆 불꽃놀이!" : ""}<div>모인 가족: ${who.map(m => esc(nameOf(m))).join(", ") || "-"}</div>${roasts ? `<div class="note">🍡 ${roasts}</div>` : ""}</div>`;
+        return `<div class="mem"><b>${date.getUTCFullYear()}년 ${date.getUTCMonth() + 1}월 ${date.getUTCDate()}일</b>${who.length >= FAMILY.length ? " 🌟 모두 모였어요!" : ""}${d.fireworks ? " 🎆 불꽃놀이!" : ""}<div>모인 가족: ${who.map(m => esc(nameOf(m))).join(", ") || "-"}</div>${roasts ? `<div class="note">🍡 ${roasts}</div>` : ""}${huntLine(d.hunt)}</div>`;
       }).join("") : `<p class="note">아직 기록이 없어요. 저녁에 캠프파이어에 모여 봐요!</p>`;
     } catch { $("memList").innerHTML = `<p class="note">불러오지 못했어요. 연결을 확인해 주세요.</p>`; }
   };
@@ -182,6 +185,7 @@ export function installV3(UI) {
   };
   proto.startHouseMove = function () {
     const g = this.game, c = g.houseL.canStartMove();
+    if (g.events && g.events.active()) { this.toast("보물찾기가 끝나면 집을 옮길 수 있어요"); return; }   // v10: 보물이 집에 가리지 않게
     if (!c.ok) { this.toast(`가족 모두 새 버전으로 한 번 들어와야 집을 옮길 수 있어요\n(아직: ${c.who.join(", ")})`, 3500); return; }
     $("pHouse").hidden = true;
     g.houseL.startMove();

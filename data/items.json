@@ -493,5 +493,15 @@
     "name": "황금잉어",
     "kind": "fish",
     "icon": "✨"
+  },
+  "gem": {
+    "name": "보석",
+    "kind": "material",
+    "icon": "💎"
+  },
+  "food_cake_slice": {
+    "name": "생일 케이크 조각",
+    "kind": "food",
+    "icon": "🍰"
   }
 }

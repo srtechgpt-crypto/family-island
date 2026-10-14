@@ -24,6 +24,7 @@ import { BugLayer } from "./v3bugs.js";
 import { LakeLayer } from "./v4lake.js";
 import { RanchLayer } from "./ranch.js";
 import { BoardLayer } from "./v8board.js";
+import { EventLayer } from "./v10events.js";
 import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
@@ -68,6 +69,7 @@ export class Game {
     this.lakeL = new LakeLayer(this);     // v4: 밭·목장·나루터·뱃놀이·캠프 저녁 하늘
     this.ranch = new RanchLayer(this);    // v7: 텃밭·닭·애완동물
     this.board = new BoardLayer(this);    // v8: 오늘의 부탁 게시판
+    this.events = new EventLayer(this);   // v10: 캠프 보물찾기·생일 잔치
     this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
@@ -179,6 +181,7 @@ export class Game {
     const m = this.me, round = W.today();
     if (this.houseL.move) return { k: "houseMove", label: this.houseL.move.res && this.houseL.move.res.ok ? "여기로 옮기기" : "여긴 안 돼요" };
     if (this.camp.roast) return { k: "roast", label: "꺼내기!" };
+    if (this.mode === "island") { const et = this.events.target(); if (et) return et; }   // v10 보물 열기가 가장 앞
     if (this.mode === "island") { const lt = this.lakeL.target(); if (lt || this.lakeL.boating) return lt; }
     if (this.mode === "house") {
       const room = this.data.rooms[this.room], f = this.front(), tx = Math.floor(m.x), ty = Math.floor(m.y);
@@ -247,6 +250,7 @@ export class Game {
     if (t.k === "boatOff") return this.lakeL.leave(t.dock);
     if (t.k.startsWith("r_")) return this.ranch.act(t);
     if (t.k === "board") return this.ui.openBoard();
+    if (t.k === "treasure") return this.events.open(t.i);
     if (t.k === "fishAim") { this.ui.toast("찌가 물에 닿게 배 방향을 돌려요 🎣"); return; }
     const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
@@ -426,7 +430,7 @@ export class Game {
     // 연결이 끊겼다 다시 붙으면 배에서 내려 나루터에서 다시 시작(물 위 좌표가 남지 않게)
     const conn = isConnected(); if (conn && this.wasConn === false) { this.lakeL.reset(); this.sendPosNow().catch(() => {}); } this.wasConn = conn;
     W.sendPos(this.me.x, this.me.y, this.me.dir, false, this.camp.heartbeatMs(), this.posMode())?.catch(() => {});
-    this.houseL.update(); this.camp.tick(); this.bugs.tick(dt);
+    this.houseL.update(); this.camp.tick(); this.events.tick(); this.bugs.tick(dt);
     this.ranch.tick(dt, [{ mid: state.mid, x: this.me.x, y: this.me.y, dir: this.me.dir, boat: this.lakeL.boating },
       ...[...W.othersHere().values()].map(o => ({ mid: o.m, x: o.x, y: o.y, dir: typeof o.d === "number" ? o.d : 0, boat: o.mode === "boat" }))]);
     if (this.mode === "island") {
@@ -441,6 +445,7 @@ export class Game {
     }
     if (this.mode === "island") { this.drawIsland(now, dt); this.drawMini(); } else this.drawHouse();
     this.camp.drawOverlay(this.g, dt);
+    this.events.drawOverlay(this.g);
     this.drawJoy();
     const t = this.fishing ? { label: this.fishing.st === "bite" ? "지금!" : "기다려요" } : this.target();
     this.ui.setAction(t ? t.label : null);
@@ -476,8 +481,9 @@ export class Game {
     if (sway) { g.save(); g.translate(x, y + TS * 0.25); g.rotate(sway); g.translate(-x, -(y + TS * 0.25)); }
     const { headTop } = drawCharacter(g, look, this.data.appearance, x, y + TS * 0.25, s, dir, walk, moving, this.emoteOf(mid, w));
     if (sway) g.restore();
+    const hat = this.events && this.events.hatOn(mid) ? this.events.drawHat(g, x, headTop, TS, mid) : 0;   // v10 생일 고깔모자
     g.font = `${Math.round(TS * 0.36)}px Jua, sans-serif`; g.textAlign = "center";
-    const tw = g.measureText(name).width + 10, ty = headTop - TS * 0.12;
+    const tw = g.measureText(name).width + 10, ty = headTop - TS * 0.12 - hat * 0.8;
     g.fillStyle = "rgba(255,253,246,.92)"; g.beginPath(); g.roundRect(x - tw / 2, ty - TS * 0.42, tw, TS * 0.42, 8); g.fill();
     g.fillStyle = f.color; g.fillText(name, x, ty - TS * 0.1);
   }
@@ -488,6 +494,7 @@ export class Game {
     g.beginPath(); g.roundRect(M.x - 3, M.y - 3, M.w + 6, M.h + 6, 12); g.fill(); g.stroke();
     const marks = mapMarkers(W.allPresence(), state.members, this.world.houses, state.mid, serverNow());
     drawMap(g, this.mapBase, this.world, M.x, M.y, M.w, M.h, marks, { x: this.me.x, y: this.me.y }, state.mid, m => familyOf(m).color, nameOf, false, { camp: this.data.campfire });
+    this.events.drawMapHints(g, M.x, M.y, M.w, M.h, false);
   }
   // 큰 지도 글자: 도움말 글자(data/help.json mapLabels) — v3 때 '숲' 글자 중 v4 호수에 잠긴 것만 뺌
   mapLabels() {
@@ -505,6 +512,7 @@ export class Game {
     let me = { x: this.me.x, y: this.me.y };
     if (this.mode === "house") { const hs = this.world.houseOf(this.houseMid); me = { x: hs.door.x + 0.5, y: hs.door.y + 0.5 }; }
     drawMap(g, this.mapBase, this.world, 6, 6, w - 12, h - 12, marks, me, state.mid, m => familyOf(m).color, nameOf, true, { camp: this.data.campfire, labels: this.mapLabels() });
+    this.events.drawMapHints(g, 6, 6, w - 12, h - 12, true);
   }
 
   drawIsland(now, dt = 0) {
@@ -524,6 +532,7 @@ export class Game {
     this.ranch.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
     this.ranch.addPets(list, g, TS, -camX, -camY, now / 1000);
     this.board.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
+    this.events.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
       const px = x * TS - camX, py = y * TS - camY;

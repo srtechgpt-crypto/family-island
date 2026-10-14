@@ -100,7 +100,7 @@ export async function startSession(fid, mid) {
 
 // 백업: 가족 데이터(비밀 제외) 한 파일
 export async function backupFamily(fid) {
-  const parts = ["meta", "members", "uidMap", "players", "claims", "drops", "housing", "camplog"];
+  const parts = ["meta", "members", "uidMap", "players", "claims", "drops", "housing", "camplog", "bday"];   // v10: 생일 카드도
   const out = { app: "family-island", version: 1, at: Date.now(), fid };
   for (const p of parts) out[p] = (await get(ref(db, fpath(fid, p)))).val();
   return out;

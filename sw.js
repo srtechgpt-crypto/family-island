@@ -1,5 +1,5 @@
 // 오프라인 캐시: 앱 파일·그림·라이브러리. 게임 기록은 Firebase(인터넷)에서.
-const VERSION = "fi-54a2954f07";
+const VERSION = "fi-0a3a2ddb93";
 const CORE = [
   "./", "index.html", "manifest.webmanifest", "icons/icon-192.png", "icons/icon-512.png",
   "src/main.js", "src/state.js", "src/config/gameConfig.js", "src/config/firebaseConfig.js",

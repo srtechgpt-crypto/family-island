@@ -6,6 +6,8 @@ import * as W from "./services/worldStore.js";
 import * as H from "./services/houseStore.js";
 import { db, ref, get, set, onValue, fpath, serverNow } from "./services/fb.js";
 import { recoverPlan } from "./domain/gather.js";
+import * as EV from "./services/eventStore.js";
+import { payKey } from "./domain/hunt.js";
 import { loadWorld } from "./game/world.js";
 import { loadArt } from "./game/sprites.js";
 import { loadAnimalArt } from "./game/ranchArt.js";
@@ -28,8 +30,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board })),
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board", "events"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events })),
       loadWorld(),
       loadArt(),
       loadAnimalArt(),
@@ -93,6 +95,13 @@ async function enter(mid) {
       if (c.by !== state.mid) { await W.dropMine(id); continue; }
       const g = c.qty > 0 ? await P.giveClaim(c) : { ok: true };
       if (g.ok) await W.dropMine(id);
+    }
+  } catch { /* 다음에 다시 */ }
+  // v10: 보물을 열고 지급 전에 꺼졌던 것 — 내 받을 줄(huntMine, 날짜 제한 없음)
+  try {
+    for (const r of await EV.myHuntMine()) {
+      const g = await P.payHuntTx(payKey(r.day, r.n, r.i), { item: r.item, qty: r.qty }, data.items);
+      if (g.ok) await EV.dropHuntMine(r.day, r.n, r.i);
     }
   } catch { /* 다음에 다시 */ }
   await H.watchHousing();   // v3: 집 자리·겉모습(공유)

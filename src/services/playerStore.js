@@ -11,6 +11,8 @@ import { applyRoast } from "../domain/campfire.js";
 import { applyCatch, markFled, releaseInsect } from "../domain/insects.js";
 import { removeItems } from "../domain/inventory.js";
 import { sewOutfit } from "../domain/outfits.js";
+import { payHunt } from "../domain/hunt.js";
+import { openCard, selfGift } from "../domain/bday.js";
 import { state, emit } from "../state.js";
 
 export const norm = raw => {
@@ -121,3 +123,8 @@ export function payIgnition(day) {
 // ---- 버전 8 ----
 // 옷 만들기: 옷감 1 + 물감 1 → 무늬 윗옷
 export function sew(pattern, dye) { const req = "w_" + rid(10); return tx(p => sewOutfit(p, pattern, dye, req)); }
+
+// v10 이벤트: 보물 지급(보석+덤), 생일 카드 상자 열기, 주인공 몫 가구 — 모두 done 키로 한 번만
+export const payHuntTx = (key, reward, items) => tx(p => payHunt(p, key, reward, items));
+export const openCardTx = (day, from, gift, items) => tx(p => openCard(p, day, from, gift, items));
+export const selfGiftTx = day => tx(p => selfGift(p, day));

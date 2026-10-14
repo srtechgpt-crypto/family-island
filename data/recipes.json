@@ -291,5 +291,19 @@
     "items": {
       "branch": 6
     }
+  },
+  "trophy_gold": {
+    "type": "trophy_gold",
+    "items": {
+      "gem": 5,
+      "stone": 2
+    }
+  },
+  "gem_lamp": {
+    "type": "gem_lamp",
+    "items": {
+      "gem": 3,
+      "branch": 2
+    }
   }
 }

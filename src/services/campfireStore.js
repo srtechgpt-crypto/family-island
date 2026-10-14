@@ -84,6 +84,7 @@ export async function readMemories() {
   // 불꽃놀이는 실제로 터진 날만(campfires/{day}/fireworks) — 하루 누적 참석 수로 짐작하지 않는다
   await Promise.all(list.map(async d => {
     try { d.fireworks = (await get(ref(db, fpath(state.fid, "campfires", String(d.day), "fireworks")))).exists(); } catch { d.fireworks = false; }
+    try { d.hunt = (await get(ref(db, fpath(state.fid, "campfires", String(d.day), "hunt")))).val(); } catch { d.hunt = null; }   // v10: 그날 마지막 보물찾기
   }));
   return list;
 }

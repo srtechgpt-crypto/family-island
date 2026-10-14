@@ -125,6 +125,23 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 #housePrev{width:200px;height:186px;background:#9fd57f;border-radius:12px;flex:none}
 #houseOpts{flex:1;min-width:230px;display:flex;flex-direction:column;gap:8px}
 .mem{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;background:#fff}
+/* v10 이벤트·생일 */
+.evt-sec{margin:0 0 12px;border:2px dashed #e0b84a;border-radius:14px;padding:8px 10px;background:#fff8dc}
+.evt-sec .note{margin:2px 0 6px}
+.evt-sec>b{font-family:var(--f-display);font-size:18px}
+#huntGo{position:fixed;left:50%;top:104px;transform:translateX(-50%);pointer-events:auto;z-index:6;font-size:17px}
+.hres{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:6px 10px;margin-bottom:6px;background:#fff;font-family:var(--f-display);font-size:18px}
+.hres .crown{font-size:22px;width:28px;text-align:center}
+.hres i{display:inline-block;width:14px;height:14px;border-radius:50%}
+.card10{border:2px solid #f3b6c6;border-radius:14px;padding:8px 10px;margin-bottom:8px;background:#fff7fa}
+.card10 .emo{font-size:26px;margin-right:6px}
+.card10 .who{font-family:var(--f-display);font-size:16px}
+.emopick{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.emopick button{font-size:24px;border:2px solid var(--line);border-radius:12px;background:#fff;padding:2px 8px;cursor:pointer}
+.emopick button[aria-pressed="true"]{border-color:#e85d8a;background:#ffe6ee}
+.bdrow{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.bdrow .name{min-width:70px;font-family:var(--f-display)}
+.bdrow select{font-size:16px;padding:3px;width:auto;flex:0 0 auto;margin:0}
 .mem b{font-family:var(--f-display);font-weight:400;font-size:16px}
 #ver{position:fixed;left:6px;bottom:4px;font-size:10px;color:rgba(255,255,255,.7)}
 </style>
@@ -179,6 +196,7 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
       <div class="chip who" id="who" hidden></div>
     </div>
     <div class="menu">
+      <button class="btn" id="bBday" type="button" hidden>🎂 생일</button>
       <button class="btn" id="bBag" type="button">가방</button>
       <button class="btn" id="bDex" type="button">도감</button>
       <button class="btn" id="bCloset" type="button">옷장</button>
@@ -190,6 +208,7 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
     </div>
   </div>
   <button class="btn off" id="act" type="button" hidden>행동</button>
+  <button class="btn" id="huntGo" type="button" hidden>🏝️ 섬으로 나가기 (보물찾기 중!)</button>
   <button class="btn" id="cookBtn" type="button" hidden>🍳 요리하기</button>
   <div id="emotes" hidden><button class="emo" type="button" data-e="wave" aria-label="손 흔들기">👋</button><button class="emo" type="button" data-e="heart" aria-label="하트">💗</button><button class="emo" type="button" id="emoMore" aria-label="감정 표현 더 보기">😊</button></div>
 <div class="panel" id="pEmo" hidden><div class="emoHead"><div class="tabs" id="emoTabs"><button type="button" data-g="face" aria-pressed="true">표정</button><button type="button" data-g="action" aria-pressed="false">동작</button><button type="button" data-g="dance" aria-pressed="false">춤</button></div><button type="button" class="emoX" id="emoClose" aria-label="닫기">✕</button></div><div class="emoGrid" id="emoGrid"></div></div>
@@ -213,6 +232,8 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 </div>
 <div class="panel" id="pCamp" hidden>
   <h2>🔥 캠프파이어</h2><p class="camp-stat" id="campStat"></p><p class="sub" id="campSub"></p>
+  <div id="campEvt" class="evt-sec top" hidden><b>🎉 이벤트</b><p class="note" id="evNote"></p>
+    <div class="camp-btns"><button class="btn" type="button" id="evHunt">💎 보물찾기</button><button class="btn ghost" type="button" id="evHuntRes" hidden>📜 오늘 보물찾기 결과</button></div></div>
   <div class="camp-btns">
     <button class="btn" type="button" id="campLight">불 붙이기 (나뭇가지 1)</button>
     <button class="btn" type="button" id="campRoast">🍡 마시멜로 굽기</button>
@@ -224,6 +245,8 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
 </div>
 <div class="panel" id="pCook" hidden><h2>🍳 요리</h2><p class="sub" id="cookSub">재료를 모아 요리를 만들어요. 가방에서 '먹기'를 누르면 요리 도감에 올라요.</p><div id="cookList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
+<div class="panel" id="pHuntRes" hidden><h2>💎 보물찾기 결과</h2><p class="sub" id="huntResSub"></p><div id="huntResList"></div><div class="row"><button class="btn" type="button" data-close>좋아요!</button></div></div>
+<div class="panel" id="pBday" hidden><h2>🎂 생일 잔치</h2><div id="bdayBody"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pMem" hidden><h2>📖 가족 추억</h2><p class="sub">캠프파이어에 모인 날들</p><div id="memList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pHouse" hidden>
   <h2>🏠 우리 집 밖</h2><p class="sub">지붕·벽·문·창문·우편함·울타리를 골라요. 다른 가족 폰에도 똑같이 보여요.</p>
@@ -277,6 +300,7 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
   <p class="sub">아빠만 보이는 화면이에요.</p>
   <div><b>들어오고 싶은 가족</b><div id="reqList" style="margin-top:6px"></div></div>
   <div class="admin-sec"><b>가족 이름</b><p class="note">게임 안에서 보일 이름이에요(1~6글자).</p><div id="nameList"></div></div>
+  <div class="admin-sec"><b>가족 생일</b><p class="note">넣어 두면 그날 섬에 풍선이 달리고 생일 잔치가 열려요.</p><div id="bdayList"></div></div>
   <div class="admin-sec"><b>초대 QR</b><p class="note">가족 폰 카메라로 찍으면 신청 화면이 열려요. 가족 밖으로 보내지 마세요.</p>
     <div id="qr"></div><input type="text" id="inviteLink" readonly>
     <div class="row"><button class="btn ghost" id="copyLink" type="button">주소 복사</button><button class="btn ghost" id="newInvite" type="button">새 초대 주소 만들기</button></div></div>
