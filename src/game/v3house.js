@@ -2,6 +2,7 @@
 import { houseCanvas, HOUSE_PAD } from "./houseArt.js";
 import { resolveHouses, buildPlacementStatic, validateHousePlacement, PLACE_REASON_TEXT } from "../domain/housing.js";
 import { exteriorOf } from "../domain/houseAppearance.js";
+import { inOuter } from "../domain/isle.js";
 import { state, onState } from "../state.js";
 import { nameOf } from "../config/gameConfig.js";
 import * as H from "../services/houseStore.js";
@@ -13,6 +14,11 @@ export class HouseLayer {
     this.def = d.houseAppearance;
     // v4: 밭·호수·나루터·목장도 집을 놓을 수 없는 자리
     this.stat = buildPlacementStatic(game.world.map, { forage: d.forage, insects: d.insects, campfire: d.campfire, fields: d.gatheringFields.fields, lake: d.lake, docks: game.world.map.docks, ranch: game.world.map.ranch });
+    // v11: 숲섬(연못 고리 포함 바깥 타원)과 발전 게시판 자리는 집을 놓을 수 없음
+    const I = d.isle, P = I.pond;
+    for (let y = Math.floor(P.cy - P.RY) - 1; y <= Math.ceil(P.cy + P.RY) + 1; y++) for (let x = Math.floor(P.cx - P.RX) - 1; x <= Math.ceil(P.cx + P.RX) + 1; x++)
+      if (inOuter(P, x, y)) { this.stat.blocked.add(`${x},${y}`); this.stat.protectedCells.add(`${x},${y}`); }
+    for (const c of [I.board, ...I.projects.map(p => p.sign)]) { this.stat.blocked.add(`${c.x},${c.y}`); this.stat.protectedCells.add(`${c.x},${c.y}`); }
     this.move = null;      // { pos, key, res }
     this.sync();
     onState(w => { if (w === "housing" || w === "members") this.sync(); });

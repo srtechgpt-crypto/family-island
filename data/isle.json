@@ -1,0 +1,40 @@
+{
+  "ver": 1,
+  "board": { "x": 44, "y": 25 },
+  "pond": { "cx": 33, "cy": 28, "RX": 10.5, "RY": 7.5, "rx": 8, "ry": 5.2 },
+  "bridge": [{ "x": 41, "y": 27 }, { "x": 42, "y": 27 }],
+  "projects": [
+    {
+      "id": "bridge", "name": "숲섬 다리", "icon": "🌉",
+      "desc": "연못 건너 숲섬으로 가는 다리를 놓아요. 숲섬엔 버섯·약초가 30분마다 새로 나요.",
+      "need": { "branch": 30, "stone": 20 },
+      "sign": { "x": 43, "y": 28 },
+      "reward": "model_bridge"
+    },
+    {
+      "id": "park", "name": "숲 놀이터", "icon": "🛝",
+      "desc": "숲섬에 그네·미끄럼틀·시소를 지어요. 다 같이 타고 놀아요!",
+      "need": { "branch": 25, "stone": 15, "thread": 6, "flower_yellow": 10 },
+      "sign": { "x": 29, "y": 27 },
+      "reward": "swing_mini"
+    },
+    {
+      "id": "tower", "name": "전망대", "icon": "🗼",
+      "desc": "높은 전망대에 오르면 섬 전체와 가족이 어디 있는지 한눈에 보여요.",
+      "need": { "branch": 40, "stone": 30, "shell": 20, "honey": 3 },
+      "sign": { "x": 34, "y": 26 },
+      "reward": "model_tower"
+    }
+  ],
+  "rides": [
+    { "id": "swing", "name": "그네", "label": "그네 타기", "x": 27, "y": 25, "w": 2, "h": 1, "ms": 4000, "project": "park" },
+    { "id": "slide", "name": "미끄럼틀", "label": "미끄럼틀 타기", "x": 30, "y": 25, "w": 2, "h": 1, "ms": 2200, "project": "park" },
+    { "id": "seesaw", "name": "시소", "label": "시소 타기", "x": 28, "y": 29, "w": 2, "h": 1, "ms": 3000, "project": "park" }
+  ],
+  "tower": { "x": 35, "y": 24, "w": 2, "h": 2 },
+  "forest": {
+    "id": "forest", "name": "숲섬 채집",
+    "items": ["mushroom_red", "mushroom_white", "herb_mint", "herb_chamomile", "flower_yellow", "mushroom_brown"],
+    "cells": [[33, 24], [38, 25], [27, 27], [30, 27], [26, 28], [35, 28], [31, 29], [34, 29], [37, 29], [33, 30], [29, 31], [35, 31]]
+  }
+}

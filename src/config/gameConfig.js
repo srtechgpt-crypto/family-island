@@ -1,5 +1,5 @@
 // 가족 자리·앱 버전 등 고정 설정
-export const APP_VERSION = 10;   // 10: 캠프 보물찾기(hunt·huntMine)·생일(bday) / 6: 밭 칸 위치·열매 수 / 7: 목장(텃밭·닭·애완동물)·돌밭 / 8: 만든 옷(appearance.outfit)·부탁 게시판(helped·reqMine) / 9: 넓은 집·2층(방 크기·presence r)
+export const APP_VERSION = 11;   // 11: 섬 발전(isle/give·숲섬 연못 고리 지도·기념 가구) / 10: 캠프 보물찾기(hunt·huntMine)·생일(bday) / 6: 밭 칸 위치·열매 수 / 7: 목장(텃밭·닭·애완동물)·돌밭 / 8: 만든 옷(appearance.outfit)·부탁 게시판(helped·reqMine) / 9: 넓은 집·2층(방 크기·presence r)
 export const FAMILY = [
   { mid: "m0", name: "할머니", color: "#c77d4a" },
   { mid: "m1", name: "아빠", color: "#3d6fb6" },

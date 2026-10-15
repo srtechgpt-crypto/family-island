@@ -97,6 +97,9 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 .recipe small,.req small{color:var(--muted);display:block}
 .ri{font-size:28px}
 .req select{width:auto;flex:1}
+.isleP{display:flex;align-items:center;gap:10px;border:2px solid var(--line);border-radius:12px;padding:8px;margin:8px 0 4px;background:#fff}.isleP .ip{font-size:30px}.isleP .txt{flex:1}.isleP small{display:block;color:var(--muted)}.isleP.done{background:#eef8e6}.isleP.lock{opacity:.6}
+.isleI{display:flex;align-items:center;gap:8px;padding:4px 6px 4px 18px}.isleI .ri{font-size:24px}.isleI .txt{flex:1;font-size:15px}.isleI small{display:block;color:var(--muted);font-size:12px}.isleI small.ok{color:#3a8a3a;font-weight:700}.isleI .gb{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.isleI .gb .btn{padding:6px 10px;font-size:14px}
+.bar{height:8px;background:#e8dfcb;border-radius:6px;overflow:hidden;margin:3px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,#7ab857,#f0b43c)}.bar.big{height:12px}
 #pDeco{left:auto;right:calc(12px + env(safe-area-inset-right,0px));top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));transform:none;width:min(46vw,340px);max-height:70%}
 #pFish{text-align:center;pointer-events:none}
 #fishIcon{font-size:56px}
@@ -289,6 +292,11 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
       <div class="qty"><button type="button" class="btn ghost" id="askMinus" aria-label="하나 빼기">−</button><b id="askQty">1</b><button type="button" class="btn ghost" id="askPlus" aria-label="하나 더">+</button></div></div>
     <p class="note" id="askPreview"></p>
     <div class="row" style="justify-content:flex-start"><button class="btn" type="button" id="askGo">부탁 올리기</button></div></div>
+  <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
+</div>
+<div class="panel" id="pIsle" hidden>
+  <h2>🏗️ 섬 발전 게시판</h2><p class="sub" id="isleSub"></p>
+  <div id="isleBody"></div>
   <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
 </div>
 <div class="panel" id="pPlant" hidden><h2>🌱 씨앗 심기</h2><p class="sub" id="plantSub"></p><div class="grid" id="plantGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>

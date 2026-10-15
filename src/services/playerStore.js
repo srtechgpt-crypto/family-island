@@ -128,3 +128,6 @@ export function sew(pattern, dye) { const req = "w_" + rid(10); return tx(p => s
 export const payHuntTx = (key, reward, items) => tx(p => payHunt(p, key, reward, items));
 export const openCardTx = (day, from, gift, items) => tx(p => openCard(p, day, from, gift, items));
 export const selfGiftTx = day => tx(p => selfGift(p, day));
+
+// v11 섬 발전: 기념 가구(done i_{pid})
+export const isleTx = fn => tx(fn);

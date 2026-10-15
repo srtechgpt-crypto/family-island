@@ -17,6 +17,7 @@ import { installV3 } from "./ui3.js";
 import { installV5 } from "./ui5.js";
 import { installV8 } from "./ui8.js";
 import { installV10 } from "./ui10.js";
+import { installV11 } from "./ui11.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -40,7 +41,7 @@ export class UI {
     $("emoClose").onclick = () => { $("pEmo").hidden = true; };
     $("emoTabs").querySelectorAll("button").forEach(b => b.onclick = () => this.emoTab(b.dataset.g));
     $("emoGrid").addEventListener("click", e => { const b = e.target.closest("button[data-e]"); if (!b) return; $("pEmo").hidden = true; this.emote(b.dataset.e); });
-    this.bindV3(); this.bindV5(); this.bindV8(); this.bindV10();
+    this.bindV3(); this.bindV5(); this.bindV8(); this.bindV10(); this.bindV11();
     setInterval(() => this.clock(), 10000); this.clock();
     onConnection(c => { $("net").hidden = c; });
     onState(w => {
@@ -248,6 +249,7 @@ installV3(UI);
 installV5(UI);
 installV8(UI);
 installV10(UI);
+installV11(UI);
 
 // 관리자 화면의 나머지 버튼(복사·초대 바꾸기·백업·복원)
 export function bindAdminExtras(ui) {

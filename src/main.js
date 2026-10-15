@@ -8,6 +8,7 @@ import { db, ref, get, set, onValue, fpath, serverNow } from "./services/fb.js";
 import { recoverPlan } from "./domain/gather.js";
 import * as EV from "./services/eventStore.js";
 import { payKey } from "./domain/hunt.js";
+import { forestField } from "./domain/isle.js";
 import { loadWorld } from "./game/world.js";
 import { loadArt } from "./game/sprites.js";
 import { loadAnimalArt } from "./game/ranchArt.js";
@@ -30,8 +31,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board", "events"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events })),
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board", "events", "isle"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events, isle]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields: { ...gatheringFields, fields: [...gatheringFields.fields, forestField(isle)] }, farm, board, events, isle })),   // v11: 숲섬 채집 칸은 처음부터 고정 등록
       loadWorld(),
       loadArt(),
       loadAnimalArt(),

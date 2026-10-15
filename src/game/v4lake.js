@@ -60,7 +60,8 @@ export class LakeLayer {
   // 바닥 꾸밈: 물건·사람보다 먼저 그리도록 아주 작은 y로 넣는다
   addGround(list, g, TS, camX, camY, x0, y0, x1, y1) {
     const vis = r => r.x + r.w >= x0 && r.x <= x1 && r.y + r.h >= y0 && r.y <= y1;
-    for (const f of this.fields) if (vis(f.rect)) list.push({ y: -1e6, f: () => this.drawField(g, f, TS, camX, camY) });
+    // v11 숲섬 채집 칸(rect 없음)은 밭 바닥 없이
+    for (const f of this.fields) if (f.rect && vis(f.rect)) list.push({ y: -1e6, f: () => this.drawField(g, f, TS, camX, camY) });
     if (this.ranch && vis(this.ranch)) list.push({ y: -1e6, f: () => this.drawRanch(g, TS, camX, camY) });
     for (const d of this.docks) if (d.x >= x0 - 2 && d.x <= x1 + 2 && d.y >= y0 - 2 && d.y <= y1 + 2) list.push({ y: d.y + 0.1, f: () => this.drawDock(g, d, TS, camX, camY) });
   }

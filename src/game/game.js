@@ -25,6 +25,8 @@ import { LakeLayer } from "./v4lake.js";
 import { RanchLayer } from "./ranch.js";
 import { BoardLayer } from "./v8board.js";
 import { EventLayer } from "./v10events.js";
+import { IsleLayer } from "./v11isle.js";
+import { applyPond } from "../domain/isle.js";
 import * as SP from "../audio/songPlayer.js";
 
 const DIRS = [[0, 1], [-1, 0], [1, 0], [0, -1]];
@@ -62,6 +64,7 @@ export class Game {
   constructor(canvas, world, data, ui) {
     this.cv = canvas; this.g = canvas.getContext("2d");
     this.world = world; this.data = data; this.ui = ui;
+    applyPond(world.tiles, world.w, data.isle, false);   // v11: 숲섬 연못 고리(다리는 공사가 끝나면 IsleLayer가 놓음)
     this.ground = renderGround(world);
     this.houseL = new HouseLayer(this);   // v3: 공유 집 위치를 먼저 반영
     this.camp = new CampLayer(this);
@@ -70,6 +73,7 @@ export class Game {
     this.ranch = new RanchLayer(this);    // v7: 텃밭·닭·애완동물
     this.board = new BoardLayer(this);    // v8: 오늘의 부탁 게시판
     this.events = new EventLayer(this);   // v10: 캠프 보물찾기·생일 잔치
+    this.isle = new IsleLayer(this);      // v11: 섬 발전(숲섬·다리·놀이터·전망대)
     this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
@@ -115,6 +119,7 @@ export class Game {
     addEventListener("keyup", e => { this.keys[e.key] = false; });
     this.cv.addEventListener("pointerdown", e => {
       SP.unlock();
+      if (this.isle && this.isle.view) { this.isle.view = null; return; }   // v11 전망대 보기 끝
       if (this.deco) { this.decoTap(e.clientX, e.clientY); return; }
       const M = this.MM;
       if (this.mode === "island" && e.clientX >= M.x && e.clientX <= M.x + M.w && e.clientY >= M.y && e.clientY <= M.y + M.h) { this.ui.openMap(); return; }
@@ -181,6 +186,7 @@ export class Game {
     const m = this.me, round = W.today();
     if (this.houseL.move) return { k: "houseMove", label: this.houseL.move.res && this.houseL.move.res.ok ? "여기로 옮기기" : "여긴 안 돼요" };
     if (this.camp.roast) return { k: "roast", label: "꺼내기!" };
+    if (this.mode === "island" && this.isle.ride) return { k: "rideBusy", label: "신나요!" };
     if (this.mode === "island") { const et = this.events.target(); if (et) return et; }   // v10 보물 열기가 가장 앞
     if (this.mode === "island") { const lt = this.lakeL.target(); if (lt || this.lakeL.boating) return lt; }
     if (this.mode === "house") {
@@ -198,6 +204,7 @@ export class Game {
       return { k: "door", h, label: h.mid === state.mid ? "우리 집" : nameOf(h.mid) + "네" };
     if (this.camp.near(m.x, m.y, 1.8)) return { k: "camp", label: "캠프파이어" };
     const bt = this.board.target(); if (bt) return bt;
+    const it = this.isle.target(); if (it) return it;   // v11 발전 게시판·공사 안내·타기·전망대
     const bug = this.bugs.target(); if (bug) return bug;
     const rt = this.ranch.target(); if (rt) return rt;
     // 가까운 것(떨어진 과일 > 꽃·조개·잡초 > 나무·돌)
@@ -229,7 +236,9 @@ export class Game {
     }
     // v7: 오늘 모이를 줬으면 둥지 달걀(목장 근처에서만 계산)
     const eggs = this.ranch ? this.ranch.eggs() : [];
-    return eggs.length ? this.supplyList.concat(eggs) : this.supplyList;
+    // v11: 숲섬 채집 칸은 다리가 놓이기 전엔 없는 것처럼(그리기·행동 모두 이 목록을 씀)
+    const list = this.isle && !this.isle.forestOpen() ? this.supplyList.filter(o => !o.id.startsWith("v11_forest_")) : this.supplyList;
+    return eggs.length ? list.concat(eggs) : list;
   }
   nearZones() { const zx = Math.floor(this.me.x / 16), zy = Math.floor(this.me.y / 16), out = []; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) out.push(`z${zx + dx}_${zy + dy}`); return out; }
   nearObjects() {
@@ -250,6 +259,8 @@ export class Game {
     if (t.k === "boatOff") return this.lakeL.leave(t.dock);
     if (t.k.startsWith("r_")) return this.ranch.act(t);
     if (t.k === "board") return this.ui.openBoard();
+    if (t.k === "rideBusy") return;
+    if (["isle", "isleSign", "ride", "tower"].includes(t.k)) return this.isle.act(t);
     if (t.k === "treasure") return this.events.open(t.i);
     if (t.k === "fishAim") { this.ui.toast("찌가 물에 닿게 배 방향을 돌려요 🎣"); return; }
     const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
@@ -416,7 +427,7 @@ export class Game {
     let mx = 0, my = 0;
     if (this.joy) { const d = Math.hypot(this.joy.dx, this.joy.dy); if (d > 8) { const s = Math.max(d, 45); mx = this.joy.dx / s; my = this.joy.dy / s; } }
     if (this.keys.ArrowLeft) mx = -1; if (this.keys.ArrowRight) mx = 1; if (this.keys.ArrowUp) my = -1; if (this.keys.ArrowDown) my = 1;
-    if (this.fishing || this.deco || state.kicked || this.ui.modalOpen() || this.camp.roast) mx = my = 0;
+    if (this.fishing || this.deco || state.kicked || this.ui.modalOpen() || this.camp.roast || (this.isle && this.isle.busy())) mx = my = 0;
     if (this.fishing) {
       if (this.fishing.st === "wait" && now > this.fishing.until) { this.fishing.st = "bite"; this.fishing.biteAt = now; this.ui.bite(); }
       else if (this.fishing.st === "bite" && now - this.fishing.biteAt > (FISH_WINDOW[state.mid] || FISH_WINDOW.default) + 150) { this.fishing = null; this.ui.toast("앗, 놓쳤어요. 쏙! 할 때 눌러요"); }
@@ -429,6 +440,7 @@ export class Game {
     }
     // 연결이 끊겼다 다시 붙으면 배에서 내려 나루터에서 다시 시작(물 위 좌표가 남지 않게)
     const conn = isConnected(); if (conn && this.wasConn === false) { this.lakeL.reset(); this.sendPosNow().catch(() => {}); } this.wasConn = conn;
+    this.isle.tick();
     W.sendPos(this.me.x, this.me.y, this.me.dir, false, this.camp.heartbeatMs(), this.posMode())?.catch(() => {});
     this.houseL.update(); this.camp.tick(); this.events.tick(); this.bugs.tick(dt);
     this.ranch.tick(dt, [{ mid: state.mid, x: this.me.x, y: this.me.y, dir: this.me.dir, boat: this.lakeL.boating },
@@ -446,6 +458,7 @@ export class Game {
     if (this.mode === "island") { this.drawIsland(now, dt); this.drawMini(); } else this.drawHouse();
     this.camp.drawOverlay(this.g, dt);
     this.events.drawOverlay(this.g);
+    if (this.mode === "island") this.isle.drawOverlay(this.g);
     this.drawJoy();
     const t = this.fishing ? { label: this.fishing.st === "bite" ? "지금!" : "기다려요" } : this.target();
     this.ui.setAction(t ? t.label : null);
@@ -532,6 +545,7 @@ export class Game {
     this.ranch.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
     this.ranch.addPets(list, g, TS, -camX, -camY, now / 1000);
     this.board.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
+    this.isle.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
     this.events.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
