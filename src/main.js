@@ -31,8 +31,8 @@ let data, world, ui, entered = false;
 async function boot() {
   try {
     [data, world] = await Promise.all([
-      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board", "events", "isle"].map(n => loadJSON(`data/${n}.json`)))
-        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events, isle]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields: { ...gatheringFields, fields: [...gatheringFields.fields, forestField(isle)] }, farm, board, events, isle })),   // v11: 숲섬 채집 칸은 처음부터 고정 등록
+      Promise.all(["items", "fish", "furniture", "recipes", "rooms", "appearance", "forage", "houseAppearance", "cooking", "insects", "campfire", "songs", "help", "lake", "gathering", "gathering.fields", "farm", "board", "events", "isle", "decor", "sets", "bloom", "contest"].map(n => loadJSON(`data/${n}.json`)))
+        .then(([items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields, farm, board, events, isle, decor, sets, bloom, contest]) => ({ items, fish, furniture, recipes, rooms, appearance, forage, houseAppearance, cooking, insects, campfire, songs, help, lake, gathering, gatheringFields: { ...gatheringFields, fields: [...gatheringFields.fields, forestField(isle)] }, farm, board, events, isle, decor, sets, bloom, contest })),   // v12 꾸미기, v11: 숲섬 채집 칸은 처음부터 고정 등록
       loadWorld(),
       loadArt(),
       loadAnimalArt(),

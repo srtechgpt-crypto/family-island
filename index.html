@@ -123,6 +123,11 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 .tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
 .tabs button{font-family:var(--f-display);font-size:16px;border:2px solid var(--line);border-radius:12px;background:#fff;padding:3px 12px;cursor:pointer;color:var(--ink)}
 .tabs button[aria-pressed="true"]{border-color:var(--leaf);background:#eef7e6}
+.sw{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 10px}.sw button{flex:0 0 74px;width:74px;line-height:1.1;text-shadow:0 0 3px #fff;border:3px solid var(--line);border-radius:10px;height:48px;cursor:pointer;font-size:11px;color:#333;display:flex;align-items:flex-end;justify-content:center;padding:2px;font-family:var(--f-body)}.sw button[aria-pressed="true"]{border-color:#e8574f;box-shadow:0 0 0 2px #ffd35c}.sw button:disabled{opacity:.35;cursor:default}
+.paints{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}.paints button{width:40px;height:40px;border-radius:50%;border:3px solid var(--line);cursor:pointer;font-size:12px}.paints button:disabled{opacity:.3}
+.setRow,.ctRow{border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin-bottom:8px;background:#fff;display:flex;align-items:center;gap:8px}.setRow .txt,.ctRow .txt{flex:1;min-width:0}.setRow small,.ctRow small{display:block;color:var(--muted)}.setRow .ok{color:#2e8b57}
+.cell.lay{position:relative}.cell.lay i{position:absolute;top:2px;right:4px;font-style:normal;font-size:10px;color:var(--muted)}.cell.miss{border-style:dashed}
+#bHeart{color:#e8466b}
 .cell .mini{margin-top:4px;font-family:var(--f-display);font-size:13px;border:2px solid var(--leaf);border-radius:8px;background:#fff;color:var(--ink);padding:1px 8px;cursor:pointer}
 #houseSet{display:flex;gap:12px;flex-wrap:wrap}
 #housePrev{width:200px;height:186px;background:#9fd57f;border-radius:12px;flex:none}
@@ -205,6 +210,9 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
       <button class="btn" id="bCloset" type="button">옷장</button>
       <button class="btn" id="bHelp" type="button">도움말</button>
       <button class="btn ghost" id="bDeco" type="button" hidden>꾸미기</button>
+      <button class="btn ghost" id="bYard" type="button" hidden>🌷 마당 꾸미기</button>
+      <button class="btn ghost" id="bHeart" type="button" hidden>♥ 좋아요</button>
+      <button class="btn ghost" id="bContest" type="button">🏆 대회</button>
       <button class="btn ghost" id="bHouse" type="button" hidden>우리 집 밖</button>
       <button class="btn ghost" id="bSneak" type="button" hidden aria-pressed="false">살금살금</button>
       <button class="btn ghost" id="bAdmin" type="button" hidden>가족 관리</button>
@@ -226,10 +234,11 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
 <div class="panel" id="pDex" hidden><h2>도감</h2><div class="tabs" id="dexTabs"><button type="button" data-t="fish" aria-pressed="true">🐟 물고기</button><button type="button" data-t="bug" aria-pressed="false">🦋 곤충</button><button type="button" data-t="food" aria-pressed="false">🍳 요리</button></div><p class="sub" id="dexSub"></p><div class="grid" id="dexGrid"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pCraft" hidden><h2>작업대</h2><p class="sub">재료가 모이면 가구와 도구를 만들 수 있어요.</p><div id="craftList"></div><div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div></div>
 <div class="panel" id="pDeco" hidden>
-  <h2>꾸미기</h2><p class="sub" id="decoHint"></p>
-  <div class="row" id="decoPick" hidden style="justify-content:flex-start;margin:0 0 10px">
-    <button class="btn" id="decoMove" type="button">옮기기</button><button class="btn" id="decoRot" type="button">돌리기</button><button class="btn ghost" id="decoStore" type="button">가방에 넣기</button>
+  <h2 id="decoTitle">꾸미기</h2><div class="tabs" id="decoTabs"></div><p class="sub" id="decoHint"></p>
+  <div class="row" id="decoPick" hidden style="justify-content:flex-start;margin:0 0 10px;flex-wrap:wrap;gap:6px">
+    <button class="btn" id="decoMove" type="button">옮기기</button><button class="btn" id="decoRot" type="button">돌리기</button><button class="btn ghost" id="decoStore" type="button">가방에 넣기</button><button class="btn ghost" id="decoPaint" type="button">🎨 색칠</button><button class="btn ghost" id="decoShow" type="button" hidden>🐟 전시</button>
   </div>
+  <div id="decoExtra"></div>
   <div class="grid" id="decoGrid"></div>
   <div class="row"><button class="btn ghost" id="decoDone" type="button">꾸미기 끝</button></div>
 </div>
@@ -292,6 +301,11 @@ input[type=text],select{font:inherit;font-size:16px;padding:8px 10px;border:2px 
       <div class="qty"><button type="button" class="btn ghost" id="askMinus" aria-label="하나 빼기">−</button><b id="askQty">1</b><button type="button" class="btn ghost" id="askPlus" aria-label="하나 더">+</button></div></div>
     <p class="note" id="askPreview"></p>
     <div class="row" style="justify-content:flex-start"><button class="btn" type="button" id="askGo">부탁 올리기</button></div></div>
+  <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
+</div>
+<div class="panel" id="pContest" hidden>
+  <h2>🏆 이 주의 꾸미기 대회</h2><p class="sub" id="ctSub"></p>
+  <div id="ctBody"></div>
   <div class="row"><button class="btn ghost" type="button" data-close>닫기</button></div>
 </div>
 <div class="panel" id="pIsle" hidden>

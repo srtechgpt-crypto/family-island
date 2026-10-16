@@ -18,6 +18,7 @@ import { installV5 } from "./ui5.js";
 import { installV8 } from "./ui8.js";
 import { installV10 } from "./ui10.js";
 import { installV11 } from "./ui11.js";
+import { installV12 } from "./ui12.js";
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -41,7 +42,7 @@ export class UI {
     $("emoClose").onclick = () => { $("pEmo").hidden = true; };
     $("emoTabs").querySelectorAll("button").forEach(b => b.onclick = () => this.emoTab(b.dataset.g));
     $("emoGrid").addEventListener("click", e => { const b = e.target.closest("button[data-e]"); if (!b) return; $("pEmo").hidden = true; this.emote(b.dataset.e); });
-    this.bindV3(); this.bindV5(); this.bindV8(); this.bindV10(); this.bindV11();
+    this.bindV3(); this.bindV5(); this.bindV8(); this.bindV10(); this.bindV11(); this.bindV12();
     setInterval(() => this.clock(), 10000); this.clock();
     onConnection(c => { $("net").hidden = c; });
     onState(w => {
@@ -199,7 +200,7 @@ export class UI {
       : `<p class="note">가방에 놓을 가구가 없어요. 거실 작업대(망치)에서 만들어요.</p>`;
     $("decoGrid").querySelectorAll("[data-f]").forEach(b => b.onclick = () => { g.deco.picked = null; g.decoSelect(g.deco.sel === b.dataset.f ? null : b.dataset.f); this.decoRefresh(); });
     $("decoRot").onclick = async () => { const room = this.data.rooms[g.room], pf = state.player.furn[g.deco.picked]; if (pf && g.coversMe(pf.type, pf.x, pf.y, ((pf.rot || 0) + 1) % 4)) { this.toast("캐릭터가 서 있는 자리예요"); return; } this.busy(true); const r = await P.rotateFurniture(room, this.data.furniture, g.deco.picked).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("돌릴 수 없어요 (" + (r.reason || "") + ")"); this.decoRefresh(); };
-    $("decoStore").onclick = async () => { const deco = g.deco, id = deco.picked; this.busy(true); const r = await P.storeFurniture(id).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("넣지 못했어요"); else if (g.deco === deco && deco.picked === id) deco.picked = null; this.decoRefresh(); };   // 저장 중 꾸미기를 닫거나 다른 가구를 골랐으면 그대로 둠
+    $("decoStore").onclick = async () => { const deco = g.deco, id = deco.picked; this.busy(true); const r = await P.storeFurniture(id, this.data.furniture).catch(() => ({ ok: false })); this.busy(false); if (!r.ok) this.toast("넣지 못했어요"); else if (g.deco === deco && deco.picked === id) deco.picked = null; this.decoRefresh(); };   // 저장 중 꾸미기를 닫거나 다른 가구를 골랐으면 그대로 둠
     $("decoMove").onclick = () => { g.deco.sel = g.deco.picked; g.deco.picked = null; this.decoRefresh(); };
   }
   decoPicked(id) { this.game.deco.picked = id; this.game.deco.sel = null; this.decoRefresh(); }
@@ -250,6 +251,7 @@ installV5(UI);
 installV8(UI);
 installV10(UI);
 installV11(UI);
+installV12(UI);
 
 // 관리자 화면의 나머지 버튼(복사·초대 바꾸기·백업·복원)
 export function bindAdminExtras(ui) {

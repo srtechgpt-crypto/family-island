@@ -446,6 +446,9 @@ const DRAW = {
   dresser: g => dresser(g),
 };
 
+// v12: 러그·길처럼 칸에 꽉 채워 그릴 원본 그림(없으면 null)
+export const furnRawImg = type => FART[type] ? FART[type][0] : null;
+
 // w,h = 돌린 뒤 칸 수
 export function furnArt(type, w, h, rot = 0) {
   const key = type + "|" + w + "|" + h + "|" + rot;

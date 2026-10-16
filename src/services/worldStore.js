@@ -43,6 +43,9 @@ export function watchAround(tx, ty) {
   }
 }
 
+// v12: 한 회차·한 구역 claims 구독(꽃 섞어 심기 z99_99)
+export function watchZone(round, zone, cb) { return onValue(ref(db, fpath(state.fid, "claims", round, zone)), s => cb(s.val() || {}), () => {}); }
+
 // 줍기 확정: 없을 때만 내 이름으로 생성. 성공하면 claim 객체.
 export async function claim(zone, pid, item, qty) {
   const r = today();

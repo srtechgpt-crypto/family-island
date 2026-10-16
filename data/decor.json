@@ -1,0 +1,119 @@
+{
+  "ver": 1,
+  "walls": [
+    {
+      "id": "wp_plain",
+      "name": "기본 벽",
+      "a": "#efe2c6",
+      "b": "#efe2c6",
+      "pat": "plain"
+    },
+    {
+      "id": "wp_mint",
+      "name": "민트 벽지",
+      "a": "#cdeee0",
+      "b": "#b5e3cf",
+      "pat": "stripe"
+    },
+    {
+      "id": "wp_pink",
+      "name": "분홍 하트 벽지",
+      "a": "#fbd9e5",
+      "b": "#f49ac1",
+      "pat": "heart"
+    },
+    {
+      "id": "wp_star",
+      "name": "밤하늘 별 벽지",
+      "a": "#2f3f72",
+      "b": "#f5d76e",
+      "pat": "star"
+    },
+    {
+      "id": "wp_wood",
+      "name": "통나무 벽",
+      "a": "#c58b55",
+      "b": "#9c6438",
+      "pat": "plank"
+    },
+    {
+      "id": "wp_flower",
+      "name": "꽃무늬 벽지",
+      "a": "#fff4d6",
+      "b": "#e8574f",
+      "pat": "dot"
+    },
+    {
+      "id": "wp_sky",
+      "name": "하늘 구름 벽지",
+      "a": "#bfe3ff",
+      "b": "#ffffff",
+      "pat": "cloud"
+    },
+    {
+      "id": "wp_brick",
+      "name": "벽돌 벽",
+      "a": "#c86b4f",
+      "b": "#e9d7c6",
+      "pat": "brick"
+    }
+  ],
+  "floors": [
+    {
+      "id": "fl_plain",
+      "name": "기본 마루",
+      "a": "#d4aa79",
+      "b": "#c99e6e",
+      "pat": "check"
+    },
+    {
+      "id": "fl_check",
+      "name": "흑백 체크 바닥",
+      "a": "#f4f1ea",
+      "b": "#3b3b44",
+      "pat": "check"
+    },
+    {
+      "id": "fl_grass",
+      "name": "잔디 바닥",
+      "a": "#8fcf6b",
+      "b": "#7cbf5a",
+      "pat": "grass"
+    },
+    {
+      "id": "fl_tile",
+      "name": "파란 타일",
+      "a": "#b7d8f2",
+      "b": "#8fbde6",
+      "pat": "tile"
+    },
+    {
+      "id": "fl_pink",
+      "name": "분홍 카펫 바닥",
+      "a": "#f7c6d9",
+      "b": "#efb0c8",
+      "pat": "soft"
+    },
+    {
+      "id": "fl_dark",
+      "name": "진한 나무 마루",
+      "a": "#8a5a36",
+      "b": "#7a4e2e",
+      "pat": "plank"
+    },
+    {
+      "id": "fl_sand",
+      "name": "모래 바닥",
+      "a": "#f1dfb0",
+      "b": "#e7d199",
+      "pat": "dot"
+    },
+    {
+      "id": "fl_stone",
+      "name": "돌 바닥",
+      "a": "#b9b5ad",
+      "b": "#a29d94",
+      "pat": "tile"
+    }
+  ]
+}

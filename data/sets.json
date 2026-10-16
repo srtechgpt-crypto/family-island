@@ -1,0 +1,60 @@
+{
+  "ver": 1,
+  "sets": [
+    {
+      "id": "forest",
+      "name": "숲속 세트",
+      "types": [
+        "chair_wood",
+        "table_wood",
+        "bed_log",
+        "bookshelf_wood",
+        "tree_pot"
+      ]
+    },
+    {
+      "id": "sea",
+      "name": "바다 세트",
+      "types": [
+        "lamp_shell",
+        "fish_tank",
+        "wall_fish",
+        "top_cups"
+      ]
+    },
+    {
+      "id": "princess",
+      "name": "공주 세트",
+      "types": [
+        "vanity",
+        "mirror_stand",
+        "rug_flower",
+        "top_doll",
+        "wall_curtain"
+      ]
+    },
+    {
+      "id": "study",
+      "name": "공부 세트",
+      "types": [
+        "desk_wood",
+        "bookshelf_wood",
+        "top_books",
+        "wall_clock",
+        "lamp_floor"
+      ]
+    },
+    {
+      "id": "garden",
+      "name": "정원 세트",
+      "types": [
+        "yard_bench",
+        "yard_flowerbed",
+        "yard_birdbath",
+        "yard_fence",
+        "path_stone"
+      ]
+    }
+  ],
+  "reward": "rosette_set"
+}

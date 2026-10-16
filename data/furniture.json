@@ -12,7 +12,8 @@
   "table_wood": {
     "name": "나무 탁자",
     "w": 1,
-    "h": 1
+    "h": 1,
+    "surface": true
   },
   "bed_log": {
     "name": "통나무 침대",
@@ -22,7 +23,8 @@
   "lamp_shell": {
     "name": "조개 램프",
     "w": 1,
-    "h": 1
+    "h": 1,
+    "light": 2.2
   },
   "bookshelf_wood": {
     "name": "나무 책장",
@@ -47,17 +49,20 @@
   "dining_table": {
     "name": "식탁",
     "w": 2,
-    "h": 1
+    "h": 1,
+    "surface": true
   },
   "fireplace_stone": {
     "name": "벽난로",
     "w": 2,
-    "h": 1
+    "h": 1,
+    "light": 3.2
   },
   "cabinet_low": {
     "name": "낮은 수납장",
     "w": 2,
-    "h": 1
+    "h": 1,
+    "surface": true
   },
   "rocking_chair": {
     "name": "흔들의자",
@@ -82,7 +87,8 @@
   "desk_wood": {
     "name": "나무 책상",
     "w": 2,
-    "h": 1
+    "h": 1,
+    "surface": true
   },
   "mirror_stand": {
     "name": "전신 거울",
@@ -92,7 +98,8 @@
   "vanity": {
     "name": "화장대",
     "w": 2,
-    "h": 1
+    "h": 1,
+    "surface": true
   },
   "bunk_bed": {
     "name": "이층 침대",
@@ -107,7 +114,8 @@
   "dresser": {
     "name": "서랍장",
     "w": 1,
-    "h": 1
+    "h": 1,
+    "surface": true
   },
   "trophy_gold": {
     "name": "반짝 트로피",
@@ -117,7 +125,8 @@
   "gem_lamp": {
     "name": "보석 등",
     "w": 1,
-    "h": 1
+    "h": 1,
+    "light": 2.6
   },
   "bday_cake": {
     "name": "생일 케이크 장식",
@@ -143,5 +152,264 @@
     "name": "작은 그네",
     "w": 1,
     "h": 1
+  },
+  "rug_round": {
+    "name": "둥근 러그",
+    "w": 2,
+    "h": 2,
+    "layer": "rug"
+  },
+  "rug_stripe": {
+    "name": "줄무늬 러그",
+    "w": 3,
+    "h": 2,
+    "layer": "rug"
+  },
+  "rug_flower": {
+    "name": "꽃무늬 러그",
+    "w": 3,
+    "h": 2,
+    "layer": "rug"
+  },
+  "rug_big": {
+    "name": "큰 파란 카펫",
+    "w": 4,
+    "h": 3,
+    "layer": "rug"
+  },
+  "wall_frame": {
+    "name": "풍경화 액자",
+    "w": 1,
+    "h": 1,
+    "layer": "wall"
+  },
+  "wall_clock": {
+    "name": "벽시계",
+    "w": 1,
+    "h": 1,
+    "layer": "wall"
+  },
+  "wall_shelf": {
+    "name": "벽 선반",
+    "w": 2,
+    "h": 1,
+    "layer": "wall"
+  },
+  "wall_banner": {
+    "name": "삼각 깃발 줄",
+    "w": 2,
+    "h": 1,
+    "layer": "wall"
+  },
+  "wall_curtain": {
+    "name": "커튼 창문",
+    "w": 1,
+    "h": 1,
+    "layer": "wall"
+  },
+  "wall_insect": {
+    "name": "곤충 표본 액자",
+    "w": 1,
+    "h": 1,
+    "layer": "wall",
+    "show": "insect"
+  },
+  "wall_fish": {
+    "name": "물고기 액자",
+    "w": 1,
+    "h": 1,
+    "layer": "wall",
+    "show": "fish"
+  },
+  "top_vase": {
+    "name": "꽃병",
+    "w": 1,
+    "h": 1,
+    "layer": "top"
+  },
+  "top_cups": {
+    "name": "찻잔 세트",
+    "w": 1,
+    "h": 1,
+    "layer": "top"
+  },
+  "top_books": {
+    "name": "책 더미",
+    "w": 1,
+    "h": 1,
+    "layer": "top"
+  },
+  "top_doll": {
+    "name": "곰 인형",
+    "w": 1,
+    "h": 1,
+    "layer": "top"
+  },
+  "top_candle": {
+    "name": "촛대",
+    "w": 1,
+    "h": 1,
+    "layer": "top",
+    "light": 1.8
+  },
+  "lamp_floor": {
+    "name": "스탠드 등",
+    "w": 1,
+    "h": 1,
+    "light": 2.8
+  },
+  "lamp_lantern": {
+    "name": "종이 등불",
+    "w": 1,
+    "h": 1,
+    "light": 2.4
+  },
+  "yard_bench": {
+    "name": "공원 벤치",
+    "w": 2,
+    "h": 1,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_lamppost": {
+    "name": "가로등",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "solid": true,
+    "light": 3
+  },
+  "yard_flowerbed": {
+    "name": "나무 화단",
+    "w": 2,
+    "h": 1,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_jar": {
+    "name": "장독대",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_tent": {
+    "name": "작은 텐트",
+    "w": 2,
+    "h": 2,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_birdbath": {
+    "name": "새 물그릇",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_fence": {
+    "name": "하얀 울타리",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_table": {
+    "name": "파라솔 탁자",
+    "w": 2,
+    "h": 2,
+    "layer": "yard",
+    "solid": true
+  },
+  "yard_scarecrow": {
+    "name": "밭 지킴이",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "solid": true
+  },
+  "path_stone": {
+    "name": "징검돌 길",
+    "w": 1,
+    "h": 1,
+    "layer": "path"
+  },
+  "path_brick": {
+    "name": "벽돌 길",
+    "w": 1,
+    "h": 1,
+    "layer": "path"
+  },
+  "path_deck": {
+    "name": "나무 마루 길",
+    "w": 1,
+    "h": 1,
+    "layer": "path"
+  },
+  "trophy_contest": {
+    "name": "꾸미기 대회 트로피",
+    "w": 1,
+    "h": 1
+  },
+  "rosette_set": {
+    "name": "세트 완성 리본",
+    "w": 1,
+    "h": 1
+  },
+  "plant_red": {
+    "name": "빨간 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "red"
+  },
+  "plant_yellow": {
+    "name": "노란 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "yellow"
+  },
+  "plant_white": {
+    "name": "하얀 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "white"
+  },
+  "plant_pink": {
+    "name": "분홍 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "pink"
+  },
+  "plant_orange": {
+    "name": "주황 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "orange"
+  },
+  "plant_purple": {
+    "name": "보라 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "purple"
+  },
+  "plant_blue": {
+    "name": "파란 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "blue"
+  },
+  "plant_gold": {
+    "name": "금빛 꽃 심기",
+    "w": 1,
+    "h": 1,
+    "layer": "yard",
+    "flower": "gold"
   }
 }

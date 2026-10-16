@@ -32,6 +32,7 @@ export class World {
     this.houses = houses;
     this.solid = new Uint8Array(this.solidStatic);
     for (const h of houses) for (let y = h.y; y < h.y + h.h; y++) for (let x = h.x; x < h.x + h.w; x++) this.solid[y * this.w + x] = 1;
+    if (this.extraSolidFn) for (const i of this.extraSolidFn(houses)) this.solid[i] = 1;   // v12 마당 물건(집 위치에 따라 다시 계산)
   }
   inHouse(x, y) { return this.houses.some(h => x >= h.x && x < h.x + h.w && y >= h.y && y < h.y + h.h); }
 

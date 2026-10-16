@@ -68,7 +68,7 @@ export function craftFurniture(recipeId, recipes) {
 }
 
 export const placeFurniture = (room, defs, furnId, x, y, rot) => tx(p => place(room, defs, p, furnId, x, y, rot));
-export const storeFurniture = furnId => tx(p => store(p, furnId));
+export const storeFurniture = (furnId, defs) => tx(p => store(p, furnId, defs));
 export const rotateFurniture = (room, defs, furnId) => tx(p => rotate(room, defs, p, furnId));
 
 // 물고기: 가방 + 도감을 한 번에(rev 한 번)
@@ -131,3 +131,4 @@ export const selfGiftTx = day => tx(p => selfGift(p, day));
 
 // v11 섬 발전: 기념 가구(done i_{pid})
 export const isleTx = fn => tx(fn);
+export const decorTx = fn => tx(fn);   // v12 꾸미기(벽지·색칠·전시·마당·세트·대회 상품)

@@ -1,0 +1,39 @@
+{
+  "ver": 1,
+  "chance": 35,
+  "maxPerDay": 4,
+  "mix": [
+    {
+      "a": "red",
+      "b": "white",
+      "out": "pink"
+    },
+    {
+      "a": "red",
+      "b": "yellow",
+      "out": "orange"
+    },
+    {
+      "a": "red",
+      "b": "pink",
+      "out": "purple"
+    },
+    {
+      "a": "white",
+      "b": "yellow",
+      "out": "blue"
+    },
+    {
+      "a": "blue",
+      "b": "purple",
+      "out": "gold",
+      "chance": 15
+    },
+    {
+      "a": "orange",
+      "b": "purple",
+      "out": "gold",
+      "chance": 10
+    }
+  ]
+}

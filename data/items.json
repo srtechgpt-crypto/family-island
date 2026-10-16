@@ -503,5 +503,100 @@
     "name": "생일 케이크 조각",
     "kind": "food",
     "icon": "🍰"
+  },
+  "flower_pink": {
+    "name": "분홍 꽃",
+    "kind": "material",
+    "icon": "🌸"
+  },
+  "flower_orange": {
+    "name": "주황 꽃",
+    "kind": "material",
+    "icon": "🏵️"
+  },
+  "flower_purple": {
+    "name": "보라 꽃",
+    "kind": "material",
+    "icon": "💜"
+  },
+  "flower_blue": {
+    "name": "파란 꽃",
+    "kind": "material",
+    "icon": "🔷"
+  },
+  "flower_gold": {
+    "name": "금빛 꽃",
+    "kind": "material",
+    "icon": "🌟"
+  },
+  "wp_mint": {
+    "name": "민트 벽지",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "wp_pink": {
+    "name": "분홍 하트 벽지",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "wp_star": {
+    "name": "밤하늘 별 벽지",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "wp_wood": {
+    "name": "통나무 벽",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "wp_flower": {
+    "name": "꽃무늬 벽지",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "wp_sky": {
+    "name": "하늘 구름 벽지",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "wp_brick": {
+    "name": "벽돌 벽",
+    "kind": "decor",
+    "icon": "🧻"
+  },
+  "fl_check": {
+    "name": "흑백 체크 바닥",
+    "kind": "decor",
+    "icon": "🟫"
+  },
+  "fl_grass": {
+    "name": "잔디 바닥",
+    "kind": "decor",
+    "icon": "🟫"
+  },
+  "fl_tile": {
+    "name": "파란 타일",
+    "kind": "decor",
+    "icon": "🟫"
+  },
+  "fl_pink": {
+    "name": "분홍 카펫 바닥",
+    "kind": "decor",
+    "icon": "🟫"
+  },
+  "fl_dark": {
+    "name": "진한 나무 마루",
+    "kind": "decor",
+    "icon": "🟫"
+  },
+  "fl_sand": {
+    "name": "모래 바닥",
+    "kind": "decor",
+    "icon": "🟫"
+  },
+  "fl_stone": {
+    "name": "돌 바닥",
+    "kind": "decor",
+    "icon": "🟫"
   }
 }

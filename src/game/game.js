@@ -26,6 +26,8 @@ import { RanchLayer } from "./ranch.js";
 import { BoardLayer } from "./v8board.js";
 import { EventLayer } from "./v10events.js";
 import { IsleLayer } from "./v11isle.js";
+import { DecoLayer } from "./v12deco.js";
+import { layerOf } from "../domain/placement.js";
 import { applyPond } from "../domain/isle.js";
 import * as SP from "../audio/songPlayer.js";
 
@@ -74,6 +76,7 @@ export class Game {
     this.board = new BoardLayer(this);    // v8: 오늘의 부탁 게시판
     this.events = new EventLayer(this);   // v10: 캠프 보물찾기·생일 잔치
     this.isle = new IsleLayer(this);      // v11: 섬 발전(숲섬·다리·놀이터·전망대)
+    this.d12 = new DecoLayer(this);       // v12: 벽지·바닥·러그·벽걸이·소품·조명·마당·꽃
     this.sneak = false;
     const h = world.houseOf(state.mid) || world.houses[0];
     this.me = { x: h.door.x + 0.5, y: h.door.y + 1.5, dir: 0, walk: 0 };
@@ -145,7 +148,7 @@ export class Game {
   furnCells() {
     const set = new Set(), p = this.housePlayer; if (!p) return set;
     for (const f of Object.values(p.furn)) {
-      if (f.state !== "placed" || f.room !== this.room) continue;
+      if (f.state !== "placed" || f.room !== this.room || layerOf(this.data.furniture, f.type) !== "floor") continue;   // v12 러그·벽걸이·소품은 걸음을 막지 않음
       const d = this.data.furniture[f.type]; if (!d) continue;
       const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
       for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) set.add((f.x + x) + "," + (f.y + y));
@@ -155,7 +158,7 @@ export class Game {
   furnAt(tx, ty) {
     const p = this.housePlayer; if (!p) return null;
     for (const f of Object.values(p.furn)) {
-      if (f.state !== "placed" || f.room !== this.room) continue;
+      if (f.state !== "placed" || f.room !== this.room || layerOf(this.data.furniture, f.type) !== "floor") continue;
       const d = this.data.furniture[f.type]; if (!d) continue;
       const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
       if (tx >= f.x && tx < f.x + w && ty >= f.y && ty < f.y + h) return f.type;
@@ -205,6 +208,7 @@ export class Game {
     if (this.camp.near(m.x, m.y, 1.8)) return { k: "camp", label: "캠프파이어" };
     const bt = this.board.target(); if (bt) return bt;
     const it = this.isle.target(); if (it) return it;   // v11 발전 게시판·공사 안내·타기·전망대
+    const bl = this.d12.bloomTarget(); if (bl) return bl;   // v12 마당에 새로 핀 꽃
     const bug = this.bugs.target(); if (bug) return bug;
     const rt = this.ranch.target(); if (rt) return rt;
     // 가까운 것(떨어진 과일 > 꽃·조개·잡초 > 나무·돌)
@@ -262,6 +266,7 @@ export class Game {
     if (t.k === "rideBusy") return;
     if (["isle", "isleSign", "ride", "tower"].includes(t.k)) return this.isle.act(t);
     if (t.k === "treasure") return this.events.open(t.i);
+    if (t.k === "bloom") { this.busy = true; try { await this.d12.pickBloom(t.b); } finally { this.busy = false; } return; }
     if (t.k === "fishAim") { this.ui.toast("찌가 물에 닿게 배 방향을 돌려요 🎣"); return; }
     const needNet = ["drop", "pick", "tree", "rock", "fish", "bench", "gather", "camp", "bug"].includes(t.k);
     if (needNet && !isConnected()) { this.ui.toast("인터넷 연결을 기다리는 중이에요"); return; }
@@ -376,6 +381,15 @@ export class Game {
     this.me.dir = 0;
     W.enterPlace("island"); EM.enterEmotePlace("island"); this.ui.inHouse(false, null, true);
   }
+  // v12 대회 구경: 그 가족 집의 그 방으로 바로(나가면 그 집 문 앞)
+  visitRoom(mid, roomId) {
+    if (this.lakeL.boating) { this.ui.toast("배에서 내린 뒤에 가요"); return; }
+    if (this.deco) this.ui.decoClose();
+    if (this.mode === "house") this.leaveHouse();
+    this.enterHouse(mid);
+    if (roomId !== "living" && this.data.rooms[roomId]) this.goRoom(roomId);
+    this.sendPosNow().catch(() => {});
+  }
   // 꾸미기 창(index.html #pDeco: 너비 min(46vw,340px), 오른쪽 12px)이 차지하는 폭
   decoReserve() { return Math.min(this.W * 0.46, 340) + 24; }
   // 방 원점(화면 좌표). 방이 화면보다 크면 나를 가운데 두고 방 가장자리에서 멈춤 — 그리기·꾸미기 탭 모두 이것만 씀
@@ -396,20 +410,25 @@ export class Game {
 
   // 꾸미기: 고른 가구를 바닥에 놓기 / 놓인 가구 누르기 → 선택
   startDeco() { if (this.mode === "house" && this.houseMid === state.mid) { this.deco = { sel: null }; this.fitTS(); return true; } return false; }
+  startYardDeco() { if (this.mode === "island" && this.d12.nearMyYard() && !this.lakeL.boating) { this.deco = { sel: null, yard: true }; return true; } return false; }
   stopDeco() { this.deco = null; this.fitTS(); }
   decoSelect(furnId) { if (this.deco) this.deco.sel = furnId; }
   async decoTap(sx, sy) {
+    if (this.deco.yard) return this.d12.yardTap(sx, sy);   // v12 마당
     const { ox, oy } = this.houseOrigin(), tx = Math.floor((sx - ox) / this.TS), ty = Math.floor((sy - oy) / this.TS);
     const p = state.player, room = this.data.rooms[this.room];
-    const hit = Object.entries(p.furn).find(([, f]) => {
+    // v12: 겹친 층은 소품 > 바닥 가구 > 벽걸이 > 러그 순서로 고름
+    const ORDER = { top: 0, floor: 1, wall: 2, rug: 3 };
+    const hit = Object.entries(p.furn).filter(([, f]) => {
       if (f.state !== "placed" || f.room !== this.room) return false;
-      const d = this.data.furniture[f.type], [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
+      const d = this.data.furniture[f.type]; if (!d) return false;
+      const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
       return tx >= f.x && tx < f.x + w && ty >= f.y && ty < f.y + h;
-    });
+    }).sort((a, b) => (ORDER[layerOf(this.data.furniture, a[1].type)] ?? 9) - (ORDER[layerOf(this.data.furniture, b[1].type)] ?? 9))[0];
     if (hit && !this.deco.sel) { this.ui.decoPicked(hit[0]); return; }
     if (!this.deco.sel) return;
     const f = p.furn[this.deco.sel];
-    if (this.coversMe(f.type, tx, ty, f.rot || 0)) { this.ui.toast("캐릭터가 서 있는 자리예요"); return; }
+    if (layerOf(this.data.furniture, f.type) === "floor" && this.coversMe(f.type, tx, ty, f.rot || 0)) { this.ui.toast("캐릭터가 서 있는 자리예요"); return; }
     const chk = canPlace(room, this.data.furniture, p, this.deco.sel, tx, ty, f.rot || 0);
     if (!chk.ok) { this.ui.toast("여기엔 놓을 수 없어요 (" + chk.reason + ")"); return; }
     const deco = this.deco, roomId = this.room, selId = deco.sel;   // 저장하는 사이 꾸미기를 끄거나 방을 옮기거나 다른 가구를 골라도 엉뚱한 선택을 지우지 않게
@@ -530,7 +549,7 @@ export class Game {
 
   drawIsland(now, dt = 0) {
     const g = this.g, TS = this.TS, S = TS / 16, m = this.me, round = W.today();
-    const camX = m.x * TS - this.W / 2, camY = m.y * TS - this.H / 2;
+    const camX = m.x * TS - this.W / 2 + (this.deco && this.deco.yard ? this.decoReserve() / 2 : 0), camY = m.y * TS - this.H / 2;
     this.camX = camX; this.camY = camY;
     g.imageSmoothingEnabled = false;
     g.fillStyle = "#4aa9c9"; g.fillRect(0, 0, this.W, this.H);
@@ -547,6 +566,7 @@ export class Game {
     this.board.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
     this.isle.addToList(list, g, TS, camX, camY, x0, y0, x1, y1);
     this.events.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
+    this.d12.addToList(list, g, TS, camX, camY, x0, y0, x1, y1, now / 1000);
     for (let y = Math.max(0, y0); y < y1; y++) for (let x = Math.max(0, x0); x < x1; x++) {
       const o = this.world.objAt.get(x + "," + y); if (!o) continue;
       const px = x * TS - camX, py = y * TS - camY;
@@ -593,12 +613,14 @@ export class Game {
     const dark = hr < 5 || hr >= 20 ? 0.25 : hr < 6.5 || hr >= 18.5 ? 0.12 : 0;
     if (dark) { g.fillStyle = `rgba(20,30,70,${dark})`; g.fillRect(0, 0, this.W, this.H); }
     // v4: 캠프에 가족 2명 이상 + 나도 그 안이면 시간과 상관없이 저녁 하늘
+    this.d12.drawIslandLights(g, TS, camX, camY);
     this.lakeL.drawEvening(g, this.W, this.H, this.camp.eveningOn(), dt, now / 1000);
   }
 
   drawHouse() {
     const g = this.g, TS = this.TS, room = this.data.rooms[this.room], { ox, oy } = this.houseOrigin();
     const color = familyOf(this.houseMid).color, up = room.floor === 2;
+    const hp = this.housePlayer, style = hp ? this.d12.styleOf(hp, this.room) : null;   // v12 벽지·바닥
     g.imageSmoothingEnabled = false;
     g.fillStyle = "#3a2d22"; g.fillRect(0, 0, this.W, this.H);
     for (let y = 0; y < room.h; y++) for (let x = 0; x < room.w; x++) {
@@ -607,12 +629,15 @@ export class Game {
       const link = isLink && room.links.find(l => l.x === x && l.y === y);
       if (link && link.stairs) { drawStairs(g, sx, sy, TS, true); continue; }
       if (isLink) { g.fillStyle = "#6d4c30"; g.fillRect(sx, sy, TS + 1, TS + 1); g.fillStyle = "#a77b4f"; g.fillRect(sx + TS * 0.15, sy + TS * 0.1, TS * 0.7, TS * 0.9); continue; }
-      if (y === 0 || x === 0 || x === room.w - 1 || (y === room.h - 1 && !isDoor)) {
+      if ((y === 0 || x === 0 || x === room.w - 1 || (y === room.h - 1 && !isDoor)) && hp && this.d12.wallFill(g, sx, sy, TS, x, y, style, up)) {
+        if (y === 0 && up && !room.attic && x % 4 === 2 && x < room.w - 1) drawWindow(g, sx, sy, TS);
+      } else if (y === 0 || x === 0 || x === room.w - 1 || (y === room.h - 1 && !isDoor)) {
         g.fillStyle = y === 0 ? (up ? "#f4ead6" : "#efe2c6") : (up ? "#dcc9a6" : "#d6c19d"); g.fillRect(sx, sy, TS + 1, TS + 1);
         if (y === 0) { g.fillStyle = color; g.globalAlpha = 0.3; g.fillRect(sx, sy + TS * 0.62, TS + 1, TS * 0.12); g.globalAlpha = 1; }
         if (y === 0 && up && !room.attic && x % 4 === 2 && x < room.w - 1) drawWindow(g, sx, sy, TS);
       } else if (isDoor && room.stairsDown) drawStairs(g, sx, sy, TS, false);
       else if (isDoor) { g.fillStyle = "#2a2018"; g.fillRect(sx, sy, TS + 1, TS + 1); }
+      else if (hp && this.d12.floorFill(g, sx, sy, TS, x, y, style)) { /* v12 바닥 */ }
       else { g.fillStyle = up ? ((x + y) % 2 ? "#e0bd8a" : "#e9c897") : ((x + y) % 2 ? "#c99e6e" : "#d4aa79"); g.fillRect(sx, sy, TS + 1, TS + 1); }
     }
     if (room.attic) drawAtticRoof(g, ox, oy, room, TS);
@@ -620,22 +645,13 @@ export class Game {
     const list = [];
     if (this.room === "living") for (const [bx, by] of room.blocked) list.push({ y: by + 1, f: () => g.drawImage(SPR.bench, ox + bx * TS, oy + by * TS, TS, TS) });
     const p = this.housePlayer;
-    if (p) for (const [id, f] of Object.entries(p.furn)) {
-      if (f.state !== "placed" || f.room !== this.room) continue;
-      const d = this.data.furniture[f.type]; if (!d) continue;
-      const [w, h] = (f.rot || 0) % 2 ? [d.h, d.w] : [d.w, d.h];
-      list.push({ y: f.y + h, f: () => {
-        g.imageSmoothingEnabled = true;
-        const fc = furnArt(f.type, w, h, f.rot || 0), up = fc.over || 0;   // 도트 그림 가구는 위로 솟을 수 있음
-        g.drawImage(fc, ox + f.x * TS, oy + (f.y - up) * TS, w * TS, (h + up) * TS);
-        g.imageSmoothingEnabled = false;
-        if (this.deco && this.deco.picked === id) { g.strokeStyle = "#ffd35c"; g.lineWidth = 3; g.strokeRect(ox + f.x * TS, oy + f.y * TS, w * TS, h * TS); }
-      } });
-    }
+    // v12: 러그는 바닥 바로 위, 벽걸이·소품·바닥 가구는 앞뒤 순서 목록(색칠·전시 포함)
+    if (p) for (const fl of this.d12.addHouseItems(list, g, p, this.room, ox, oy, TS, this.deco)) fl();
     for (const o of W.othersHere().values()) list.push({ y: o.y, f: () => this.drawPerson(o.m, ox + o.x * TS, oy + o.y * TS, o.d || 0, o.walk, o.moving, { x: o.tx, y: o.ty, boat: false }) });
     list.push({ y: this.me.y, f: () => this.drawPerson(state.mid, ox + this.me.x * TS, oy + this.me.y * TS, this.me.dir, this.me.walk, this.me.moving, { x: this.me.x, y: this.me.y, boat: false }) });
     this.ranch.addPets(list, g, TS, ox, oy, performance.now() / 1000);
     list.sort((a, b) => a.y - b.y).forEach(i => i.f());
+    if (p) this.d12.drawNight(g, p, this.room, ox, oy, TS, this.W, this.H);   // v12 밤엔 어둡고 등 둘레만 밝게
     g.font = `${Math.round(TS * 0.45)}px Jua, sans-serif`; g.textAlign = "center"; g.fillStyle = "#fffdf6";
     const owner = nameOf(this.houseMid);
     const title = `${this.houseMid === state.mid ? "우리 집" : owner + "네 집"} · ${room.name}${this.houseMid === state.mid ? "" : " (구경 중)"}`;

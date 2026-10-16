@@ -26,6 +26,10 @@ function dimensions(defs, furniture, rot) {
   return rot % 2 === 0 ? [def.w, def.h] : [def.h, def.w];
 }
 
+// v12: 가구 층. 없음 = 바닥 가구, rug = 바닥 깔개(걸어 다님), wall = 맨 위 벽 줄, top = 탁자 위 소품, yard·path = 섬 마당(방에 못 놓음)
+export const layerOf = (defs, type) => (record(defs) && record(defs[type]) && typeof defs[type].layer === "string") ? defs[type].layer : "floor";
+const ROOM_LAYERS = new Set(["floor", "rug", "wall", "top"]);
+
 function wall(room, info, x, y) {
   return x === 0 || x === room.w - 1 || y === 0 || (y === room.h - 1 && !info.door.has(key(x, y)));
 }
@@ -78,6 +82,9 @@ export function canPlace(room, furnDefs, player, furnId, x, y, rot) {
   if (!record(furniture) || !["stored", "placed"].includes(furniture.state)) return fail("잘못된 가구");
   const size = dimensions(furnDefs, furniture, rot);
   if (!size) return fail("잘못된 가구 정의");
+  const layer = layerOf(furnDefs, furniture.type);
+  if (!ROOM_LAYERS.has(layer)) return fail("마당 물건");
+  if (layer !== "floor") return canPlaceLayer(room, info, furnDefs, player, furnId, layer, x, y, rot, size);
   const candidate = footprint(room, info, x, y, ...size);
   if (!candidate.ok) return fail(candidate.reason);
   const occupied = new Set();
@@ -85,6 +92,7 @@ export function canPlace(room, furnDefs, player, furnId, x, y, rot) {
     if (otherId === furnId) continue;
     if (!record(other) || !["stored", "placed"].includes(other.state)) return fail("잘못된 가구");
     if (other.state !== "placed" || other.room !== room.id) continue;
+    if (layerOf(furnDefs, other.type) !== "floor") continue;   // v12: 러그·벽걸이·소품은 바닥 가구 자리·길을 막지 않음
     if (!integer(other.x) || !integer(other.y) || !validRot(other.rot)) return fail("잘못된 가구");
     const otherSize = dimensions(furnDefs, other, other.rot);
     if (!otherSize) return fail("잘못된 가구 정의");
@@ -102,6 +110,66 @@ export function canPlace(room, furnDefs, player, furnId, x, y, rot) {
   return { ok: true, reason: null };
 }
 
+// 같은 방에 놓인 그 층 가구들의 칸 → 가구 id
+function layerCells(room, furnDefs, player, layer, skipId) {
+  const cells = new Map();
+  for (const [otherId, other] of Object.entries(player.furn)) {
+    if (otherId === skipId || !record(other) || other.state !== "placed" || other.room !== room.id) continue;
+    if (layerOf(furnDefs, other.type) !== layer || !integer(other.x) || !integer(other.y)) continue;
+    const s = dimensions(furnDefs, other, validRot(other.rot) ? other.rot : 0); if (!s) continue;
+    for (let dy = 0; dy < s[1]; dy++) for (let dx = 0; dx < s[0]; dx++) cells.set(key(other.x + dx, other.y + dy), otherId);
+  }
+  return cells;
+}
+
+function canPlaceLayer(room, info, furnDefs, player, furnId, layer, x, y, rot, [width, height]) {
+  if (x < 0 || y < 0 || width > room.w - x || height > room.h - y) return fail("방 밖");
+  const links = new Set((Array.isArray(room.links) ? room.links : []).map(l => key(l.x, l.y)));
+  const mine = [];
+  for (let dy = 0; dy < height; dy++) for (let dx = 0; dx < width; dx++) mine.push([x + dx, y + dy]);
+  if (layer === "wall") {
+    if (rot !== 0) return fail("벽걸이는 돌릴 수 없어요");
+    if (y !== 0 || height !== 1) return fail("벽에만 걸어요");
+    if (mine.some(([cx]) => cx < 1 || cx > room.w - 2)) return fail("벽 모서리");
+    if (mine.some(([cx, cy]) => links.has(key(cx, cy)))) return fail("문");
+  } else {
+    if (mine.some(([cx, cy]) => cx < 1 || cy < 1 || cx > room.w - 2 || cy > room.h - 2)) return fail("벽");
+    if (mine.some(([cx, cy]) => info.door.has(key(cx, cy)))) return fail("문");
+    if (mine.some(([cx, cy]) => info.blocked.has(key(cx, cy)))) return fail("막힌 칸");
+  }
+  if (layer === "top") {
+    if (width !== 1 || height !== 1) return fail("잘못된 가구 정의");
+    const under = layerCells(room, furnDefs, player, "floor", furnId).get(key(x, y));
+    if (!under || !record(furnDefs[player.furn[under].type]) || furnDefs[player.furn[under].type].surface !== true) return fail("탁자 위에만 올려요");
+  }
+  const same = layerCells(room, furnDefs, player, layer, furnId);
+  if (mine.some(([cx, cy]) => same.has(key(cx, cy)))) return fail("다른 것과 겹침");
+  return { ok: true, reason: null };
+}
+
+// v12: 탁자(surface)를 옮기거나 돌리거나 넣으면 그 위 소품은 보관함으로(떠 있는 소품이 없게)
+function storeTopsOn(furnDefs, furn, furnId) {
+  const base = furn[furnId];
+  if (!record(base) || base.state !== "placed" || !record(furnDefs[base.type]) || furnDefs[base.type].surface !== true) return furn;
+  const s = dimensions(furnDefs, base, validRot(base.rot) ? base.rot : 0); if (!s) return furn;
+  let out = furn;
+  for (const [id2, f] of Object.entries(furn)) {
+    if (id2 === furnId || !record(f) || f.state !== "placed" || f.room !== base.room || layerOf(furnDefs, f.type) !== "top") continue;
+    if (f.x >= base.x && f.x < base.x + s[0] && f.y >= base.y && f.y < base.y + s[1]) {
+      if (out === furn) out = { ...furn };
+      out[id2] = keep(f, { type: f.type, state: "stored" });
+    }
+  }
+  return out;
+}
+// 색칠·전시 같은 꾸밈 값은 옮기거나 넣어도 그대로
+const keep = (prev, next) => {
+  const out = { ...next };
+  if (integer(prev.tint)) out.tint = prev.tint;
+  if (typeof prev.show === "string") out.show = prev.show;
+  return out;
+};
+
 export function place(room, furnDefs, player, furnId, x, y, rot) {
   if (!validRev(player)) return fail("잘못된 플레이어");
   const checked = canPlace(room, furnDefs, player, furnId, x, y, rot);
@@ -115,14 +183,14 @@ export function place(room, furnDefs, player, furnId, x, y, rot) {
     ok: true,
     player: {
       ...player,
-      furn: { ...player.furn, [furnId]: { type: previous.type, state: "placed", room: room.id, x, y, rot } },
+      furn: { ...storeTopsOn(furnDefs, player.furn, furnId), [furnId]: keep(previous, { type: previous.type, state: "placed", room: room.id, x, y, rot }) },
       rev: player.rev + 1,
     },
     changed: true,
   };
 }
 
-export function store(player, furnId) {
+export function store(player, furnId, furnDefs) {
   if (!validRev(player) || !record(player.furn) || !id(furnId)) return fail("잘못된 플레이어");
   if (!Object.hasOwn(player.furn, furnId)) return fail("주인 아님");
   const previous = player.furn[furnId];
@@ -131,7 +199,7 @@ export function store(player, furnId) {
   if (!integer(player.rev + 1)) return fail("잘못된 플레이어");
   return {
     ok: true,
-    player: { ...player, furn: { ...player.furn, [furnId]: { type: previous.type, state: "stored" } }, rev: player.rev + 1 },
+    player: { ...player, furn: { ...(furnDefs ? storeTopsOn(furnDefs, player.furn, furnId) : player.furn), [furnId]: keep(previous, { type: previous.type, state: "stored" }) }, rev: player.rev + 1 },
     changed: true,
   };
 }

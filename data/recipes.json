@@ -305,5 +305,399 @@
       "gem": 3,
       "branch": 2
     }
+  },
+  "rug_round": {
+    "type": "rug_round",
+    "items": {
+      "weed": 6,
+      "flower_red": 1
+    }
+  },
+  "rug_stripe": {
+    "type": "rug_stripe",
+    "items": {
+      "weed": 6,
+      "thread": 2
+    }
+  },
+  "rug_flower": {
+    "type": "rug_flower",
+    "items": {
+      "cloth": 1,
+      "flower_white": 2,
+      "flower_red": 1
+    }
+  },
+  "rug_big": {
+    "type": "rug_big",
+    "items": {
+      "cloth": 2,
+      "thread": 2
+    }
+  },
+  "wall_frame": {
+    "type": "wall_frame",
+    "items": {
+      "branch": 3,
+      "flower_yellow": 1
+    }
+  },
+  "wall_clock": {
+    "type": "wall_clock",
+    "items": {
+      "branch": 2,
+      "stone": 2
+    }
+  },
+  "wall_shelf": {
+    "type": "wall_shelf",
+    "items": {
+      "branch": 5,
+      "weed": 2
+    }
+  },
+  "wall_banner": {
+    "type": "wall_banner",
+    "items": {
+      "thread": 2,
+      "flower_red": 1,
+      "flower_yellow": 1
+    }
+  },
+  "wall_curtain": {
+    "type": "wall_curtain",
+    "items": {
+      "cloth": 1,
+      "branch": 2
+    }
+  },
+  "wall_insect": {
+    "type": "wall_insect",
+    "items": {
+      "branch": 3,
+      "shell": 1
+    }
+  },
+  "wall_fish": {
+    "type": "wall_fish",
+    "items": {
+      "branch": 4,
+      "shell": 1
+    }
+  },
+  "top_vase": {
+    "type": "top_vase",
+    "items": {
+      "shell": 1,
+      "flower_red": 1,
+      "flower_white": 1
+    }
+  },
+  "top_cups": {
+    "type": "top_cups",
+    "items": {
+      "shell": 2,
+      "stone": 1
+    }
+  },
+  "top_books": {
+    "type": "top_books",
+    "items": {
+      "branch": 2,
+      "weed": 3
+    }
+  },
+  "top_doll": {
+    "type": "top_doll",
+    "items": {
+      "wool": 2,
+      "thread": 1
+    }
+  },
+  "top_candle": {
+    "type": "top_candle",
+    "items": {
+      "honeycomb": 1,
+      "stone": 1
+    }
+  },
+  "lamp_floor": {
+    "type": "lamp_floor",
+    "items": {
+      "branch": 3,
+      "cloth": 1,
+      "shell": 1
+    }
+  },
+  "lamp_lantern": {
+    "type": "lamp_lantern",
+    "items": {
+      "branch": 2,
+      "flower_white": 2
+    }
+  },
+  "yard_bench": {
+    "type": "yard_bench",
+    "items": {
+      "branch": 8,
+      "stone": 1
+    }
+  },
+  "yard_lamppost": {
+    "type": "yard_lamppost",
+    "items": {
+      "stone": 4,
+      "shell": 2
+    }
+  },
+  "yard_flowerbed": {
+    "type": "yard_flowerbed",
+    "items": {
+      "branch": 4,
+      "flower_red": 1,
+      "flower_yellow": 1
+    }
+  },
+  "yard_jar": {
+    "type": "yard_jar",
+    "items": {
+      "stone": 6
+    }
+  },
+  "yard_tent": {
+    "type": "yard_tent",
+    "items": {
+      "cloth": 2,
+      "branch": 4
+    }
+  },
+  "yard_birdbath": {
+    "type": "yard_birdbath",
+    "items": {
+      "stone": 5,
+      "shell": 1
+    }
+  },
+  "yard_fence": {
+    "type": "yard_fence",
+    "items": {
+      "branch": 3
+    }
+  },
+  "yard_table": {
+    "type": "yard_table",
+    "items": {
+      "branch": 6,
+      "cloth": 1
+    }
+  },
+  "yard_scarecrow": {
+    "type": "yard_scarecrow",
+    "items": {
+      "weed": 6,
+      "branch": 2
+    }
+  },
+  "path_stone": {
+    "type": "path_stone",
+    "items": {
+      "stone": 1
+    }
+  },
+  "path_brick": {
+    "type": "path_brick",
+    "items": {
+      "stone": 1,
+      "weed": 1
+    }
+  },
+  "path_deck": {
+    "type": "path_deck",
+    "items": {
+      "branch": 1
+    }
+  },
+  "plant_red": {
+    "type": "plant_red",
+    "items": {
+      "flower_red": 1
+    }
+  },
+  "plant_yellow": {
+    "type": "plant_yellow",
+    "items": {
+      "flower_yellow": 1
+    }
+  },
+  "plant_white": {
+    "type": "plant_white",
+    "items": {
+      "flower_white": 1
+    }
+  },
+  "plant_pink": {
+    "type": "plant_pink",
+    "items": {
+      "flower_pink": 1
+    }
+  },
+  "plant_orange": {
+    "type": "plant_orange",
+    "items": {
+      "flower_orange": 1
+    }
+  },
+  "plant_purple": {
+    "type": "plant_purple",
+    "items": {
+      "flower_purple": 1
+    }
+  },
+  "plant_blue": {
+    "type": "plant_blue",
+    "items": {
+      "flower_blue": 1
+    }
+  },
+  "plant_gold": {
+    "type": "plant_gold",
+    "items": {
+      "flower_gold": 1
+    }
+  },
+  "wp_mint": {
+    "outputKind": "item",
+    "out": {
+      "wp_mint": 1
+    },
+    "items": {
+      "weed": 3,
+      "paint_green": 1
+    }
+  },
+  "wp_pink": {
+    "outputKind": "item",
+    "out": {
+      "wp_pink": 1
+    },
+    "items": {
+      "paint_pink": 1,
+      "flower_white": 1
+    }
+  },
+  "wp_star": {
+    "outputKind": "item",
+    "out": {
+      "wp_star": 1
+    },
+    "items": {
+      "paint_yellow": 1,
+      "shell": 2
+    }
+  },
+  "wp_wood": {
+    "outputKind": "item",
+    "out": {
+      "wp_wood": 1
+    },
+    "items": {
+      "branch": 6
+    }
+  },
+  "wp_flower": {
+    "outputKind": "item",
+    "out": {
+      "wp_flower": 1
+    },
+    "items": {
+      "flower_red": 2,
+      "flower_yellow": 2
+    }
+  },
+  "wp_sky": {
+    "outputKind": "item",
+    "out": {
+      "wp_sky": 1
+    },
+    "items": {
+      "paint_white": 1,
+      "flower_white": 2
+    }
+  },
+  "wp_brick": {
+    "outputKind": "item",
+    "out": {
+      "wp_brick": 1
+    },
+    "items": {
+      "stone": 6
+    }
+  },
+  "fl_check": {
+    "outputKind": "item",
+    "out": {
+      "fl_check": 1
+    },
+    "items": {
+      "stone": 4,
+      "paint_white": 1
+    }
+  },
+  "fl_grass": {
+    "outputKind": "item",
+    "out": {
+      "fl_grass": 1
+    },
+    "items": {
+      "weed": 10
+    }
+  },
+  "fl_tile": {
+    "outputKind": "item",
+    "out": {
+      "fl_tile": 1
+    },
+    "items": {
+      "shell": 3,
+      "stone": 2
+    }
+  },
+  "fl_pink": {
+    "outputKind": "item",
+    "out": {
+      "fl_pink": 1
+    },
+    "items": {
+      "wool": 2,
+      "paint_pink": 1
+    }
+  },
+  "fl_dark": {
+    "outputKind": "item",
+    "out": {
+      "fl_dark": 1
+    },
+    "items": {
+      "branch": 8
+    }
+  },
+  "fl_sand": {
+    "outputKind": "item",
+    "out": {
+      "fl_sand": 1
+    },
+    "items": {
+      "shell": 2,
+      "weed": 2
+    }
+  },
+  "fl_stone": {
+    "outputKind": "item",
+    "out": {
+      "fl_stone": 1
+    },
+    "items": {
+      "stone": 8
+    }
   }
 }
